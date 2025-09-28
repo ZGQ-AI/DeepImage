@@ -1,4 +1,3 @@
-
 <!-- 
   主应用组件
   作为整个应用的根组件，负责渲染基础布局
@@ -13,6 +12,12 @@
 <script setup lang="ts">
 // 导入基础布局组件
 import BasicLayout from './layout/BasicLayout.vue'
+import { useLoginUserStore } from './stores/UseLoginUserStore';
+
+const loginUserStore = useLoginUserStore();
+
+loginUserStore.fetchLoginUser();
+
 </script>
 
 <style scoped>
