@@ -1,0 +1,109 @@
+---
+alwaysApply: false
+---
+# 数据库实体Java代码编写规范
+
+## 1. 实体类 (Entity)
+
+### 标准模板
+```java
+@Data
+@TableName("table_name")
+public class EntityName {
+    
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
+    
+    @TableField("column_name")
+    private String fieldName;
+    
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+}
+```
+
+### 规范要点
+- 使用 `@Data` 注解，**不要使用** `@EqualsAndHashCode`
+- 主键使用 `@TableId(value = "id", type = IdType.AUTO)`
+- 普通字段使用 `@TableField("column_name")`
+- 时间字段使用 `FieldFill` 自动填充
+- 字段命名：数据库下划线 → Java驼峰命名
+
+## 2. Mapper接口
+
+### 标准模板
+```java
+@Mapper
+public interface EntityNameMapper extends BaseMapper<EntityName> {
+
+}
+```
+
+### 规范要点
+- 继承 `BaseMapper<EntityName>`
+- 使用 `@Mapper` 注解
+- 获得基础CRUD操作能力
+
+## 3. Mapper XML文件
+
+### 标准模板
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.tech.ai.deepimage.mapper.EntityNameMapper">
+
+</mapper>
+```
+
+### 规范要点
+- **保持空文件**，MyBatis-Plus自动处理CRUD
+- 需要自定义SQL时再添加具体查询
+
+## 4. Service接口
+
+### 标准模板
+```java
+public interface EntityNameService extends IService<EntityName> {
+
+}
+```
+
+### 规范要点
+- 继承 `IService<EntityName>`
+- 获得基础业务操作能力
+
+## 5. Service实现类
+
+### 标准模板
+```java
+@Service
+public class EntityNameServiceImpl extends ServiceImpl<EntityNameMapper, EntityName> implements EntityNameService {
+
+}
+```
+
+### 规范要点
+- 继承 `ServiceImpl<EntityNameMapper, EntityName>`
+- 实现对应的Service接口
+- 使用 `@Service` 注解
+
+
+## 字段类型映射
+
+| 数据库类型 | Java类型 | 注解 |
+|-----------|---------|------|
+| BIGSERIAL | Long | @TableId |
+| VARCHAR | String | @TableField |
+| BOOLEAN | Boolean | @TableField |
+| SMALLINT | Integer | @TableField |
+| TIMESTAMP | LocalDateTime | @TableField + FieldFill |
+
+## 注意事项
+
+1. **不要使用** `@EqualsAndHashCode` 注解
+2. 所有字段都要有注释说明
+3. 时间字段使用 `LocalDateTime`
+4. 逻辑删除字段统一使用 `deleteFlag`
