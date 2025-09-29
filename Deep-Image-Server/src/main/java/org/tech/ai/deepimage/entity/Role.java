@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 角色信息表
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @since 2025-09-29
  */
 @Data
-@TableName("roles")
+@TableName("sys_roles")
 public class Role {
 
     /**
@@ -49,14 +49,14 @@ public class Role {
     /**
      * 角色创建时间
      */
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    @TableField(value = "created_at")
+    private OffsetDateTime createdAt;
 
     /**
      * 角色信息最后更新时间
      */
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    @TableField(value = "updated_at")
+    private OffsetDateTime updatedAt;
 
     /**
      * 创建者用户ID

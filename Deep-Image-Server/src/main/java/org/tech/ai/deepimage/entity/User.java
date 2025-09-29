@@ -2,9 +2,8 @@ package org.tech.ai.deepimage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 用户信息表
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
  * @since 2025-09-29
  */
 @Data
-@TableName("users")
+@TableName("sys_users")
 public class User {
 
     /**
@@ -41,18 +40,6 @@ public class User {
     private String passwordHash;
 
     /**
-     * 用户名字
-     */
-    @TableField("first_name")
-    private String firstName;
-
-    /**
-     * 用户姓氏
-     */
-    @TableField("last_name")
-    private String lastName;
-
-    /**
      * 电话号码
      */
     @TableField("phone")
@@ -67,6 +54,7 @@ public class User {
     /**
      * 删除标志：0=未删除，1=已删除
      */
+    @TableLogic
     @TableField("delete_flag")
     private Integer deleteFlag;
 
@@ -79,12 +67,12 @@ public class User {
     /**
      * 账户创建时间
      */
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    @TableField(value = "created_at")
+    private OffsetDateTime createdAt;
 
     /**
      * 账户信息最后更新时间
      */
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    @TableField(value = "updated_at")
+    private OffsetDateTime updatedAt;
 }

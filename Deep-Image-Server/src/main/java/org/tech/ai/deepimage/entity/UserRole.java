@@ -2,9 +2,8 @@ package org.tech.ai.deepimage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 用户角色关联表
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
  * @since 2025-09-29
  */
 @Data
-@TableName("user_roles")
+@TableName("sys_user_roles")
 public class UserRole {
 
     /**
@@ -23,13 +22,13 @@ public class UserRole {
     private Long id;
 
     /**
-     * 用户ID，引用users表
+     * 用户ID，引用sys_users表
      */
     @TableField("user_id")
     private Long userId;
 
     /**
-     * 角色ID，引用roles表
+     * 角色ID，引用sys_roles表
      */
     @TableField("role_id")
     private Long roleId;
@@ -43,12 +42,12 @@ public class UserRole {
     /**
      * 关联关系创建时间
      */
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    @TableField(value = "created_at")
+    private OffsetDateTime createdAt;
 
     /**
      * 关联关系最后更新时间
      */
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    @TableField(value = "updated_at")
+    private OffsetDateTime updatedAt;
 }

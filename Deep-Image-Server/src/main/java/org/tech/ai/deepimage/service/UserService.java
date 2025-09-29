@@ -10,5 +10,6 @@ import org.tech.ai.deepimage.entity.User;
  * @since 2025-09-29
  */
 public interface UserService extends IService<User> {
-
+    boolean existsByUsernameAll(String username);
+    boolean existsByEmailAll(String email);
 }

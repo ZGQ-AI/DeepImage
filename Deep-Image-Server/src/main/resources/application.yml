@@ -9,3 +9,31 @@ spring:
     url: jdbc:postgresql://localhost:5432/deepimage
     username: postgres
     password: postgres
+
+mybatis-plus:
+  mapper-locations: classpath:/mappers/**/*.xml
+  global-config:
+    db-config:
+      logic-delete-field: delete_flag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+sa-token:
+  jwt-secret-key: deepImage-secret-key
+  timeout: 1800
+  token-name: deepImage-Token
+  is-log: true
+  is-concurrent: true
+  is-share: false
+  is-read-header: true
+  is-write-header: true
+  token-style: jwt
+
+deepimage:
+  auth:
+    refresh-ttl-seconds: 2592000   # 30天
+    rotate-on-refresh: true        # 刷新时是否轮换新的RT
+    revoke-on-login: true          # 登录时是否撤销旧RT

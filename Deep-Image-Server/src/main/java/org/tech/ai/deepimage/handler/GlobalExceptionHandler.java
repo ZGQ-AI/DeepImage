@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.tech.ai.deepimage.exception.BusinessException;
-import org.tech.ai.deepimage.response.ApiResponse;
+import org.tech.ai.deepimage.dto.response.ApiResponse;
 
 @ControllerAdvice
 @Slf4j

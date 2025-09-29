@@ -14,5 +14,13 @@ import org.tech.ai.deepimage.service.UserService;
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+    @Override
+    public boolean existsByUsernameAll(String username) {
+        return baseMapper.countByUsernameAll(username) > 0;
+    }
 
+    @Override
+    public boolean existsByEmailAll(String email) {
+        return baseMapper.countByEmailAll(email) > 0;
+    }
 }

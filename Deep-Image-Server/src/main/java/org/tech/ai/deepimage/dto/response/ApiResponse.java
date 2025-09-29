@@ -1,4 +1,4 @@
-package org.tech.ai.deepimage.response;
+package org.tech.ai.deepimage.dto.response;
 
 import org.tech.ai.deepimage.constant.ResponseConstant;
 
@@ -35,6 +35,10 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> error(int code, String message, T data) {
         return new ApiResponse<>(code, message, data);
+    }
+
+    public static <T> ApiResponse<T> paramError(String message) {
+        return new ApiResponse<>(ResponseConstant.PARAM_ERROR, message, null);
     }
 
 }

@@ -21,4 +21,11 @@ public class ResponseConstant {
     public static final String SERVICE_UNAVAILABLE_MESSAGE = "service unavailable";
     public static final String GATEWAY_TIMEOUT_MESSAGE = "gateway timeout";
 
+    // auth error messages
+    public static final String INVALID_CREDENTIALS_MESSAGE = "invalid email or password";
+    public static final String INVALID_REFRESH_TOKEN_MESSAGE = "invalid or expired refresh token";
+    public static final String EMAIL_OR_USERNAME_EXISTS_MESSAGE = "email or username already exists";
+    public static final String USER_NOT_FOUND_MESSAGE = "user not found";
+    public static final String EMAIL_NOT_VERIFIED_MESSAGE = "email not verified";
+
 }
