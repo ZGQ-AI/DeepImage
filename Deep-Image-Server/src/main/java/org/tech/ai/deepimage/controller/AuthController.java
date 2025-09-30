@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.tech.ai.deepimage.dto.request.LoginRequest;
-import org.tech.ai.deepimage.dto.request.RefreshTokenRequest;
-import org.tech.ai.deepimage.dto.request.RegisterRequest;
-import org.tech.ai.deepimage.dto.request.ResetPasswordRequest;
-import org.tech.ai.deepimage.dto.response.ApiResponse;
-import org.tech.ai.deepimage.dto.response.TokenPairResponse;
+import org.tech.ai.deepimage.model.dto.request.LoginRequest;
+import org.tech.ai.deepimage.model.dto.request.RefreshTokenRequest;
+import org.tech.ai.deepimage.model.dto.request.RegisterRequest;
+import org.tech.ai.deepimage.model.dto.request.ResetPasswordRequest;
+import org.tech.ai.deepimage.model.dto.response.ApiResponse;
+import org.tech.ai.deepimage.model.dto.response.TokenPairResponse;
 import org.tech.ai.deepimage.service.AuthService;
 
 @RestController

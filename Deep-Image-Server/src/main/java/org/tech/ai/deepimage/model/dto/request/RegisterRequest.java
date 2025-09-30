@@ -1,4 +1,4 @@
-package org.tech.ai.deepimage.dto.request;
+package org.tech.ai.deepimage.model.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class ResetPasswordRequest {
+public class RegisterRequest {
     @NotBlank
     @Email
     private String email;
@@ -15,12 +15,10 @@ public class ResetPasswordRequest {
     @NotBlank
     @Size(min = 8, message = "password length must be at least 8")
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "password must contain letters and numbers")
-    private String oldPassword;
+    private String password;
 
     @NotBlank
-    @Size(min = 8, message = "password length must be at least 8")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "password must contain letters and numbers")
-    private String newPassword;
+    private String username;
 }
 
 

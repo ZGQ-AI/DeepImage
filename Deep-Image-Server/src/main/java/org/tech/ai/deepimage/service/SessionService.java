@@ -1,7 +1,7 @@
 package org.tech.ai.deepimage.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.tech.ai.deepimage.dto.request.FindSessionByTokenRequest;
+import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.entity.Session;
 
 /**

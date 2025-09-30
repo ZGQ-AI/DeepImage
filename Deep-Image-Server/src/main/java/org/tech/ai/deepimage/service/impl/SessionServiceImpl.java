@@ -1,10 +1,9 @@
 package org.tech.ai.deepimage.service.impl;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
-import org.tech.ai.deepimage.dto.request.FindSessionByTokenRequest;
+import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.mapper.SessionMapper;
 import org.tech.ai.deepimage.service.SessionService;

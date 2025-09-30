@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.tech.ai.deepimage.constant.ResponseConstant;
 import org.tech.ai.deepimage.constant.SessionStatus;
-import org.tech.ai.deepimage.dto.request.FindSessionByTokenRequest;
+import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.exception.BusinessException;
 import org.tech.ai.deepimage.service.SessionService;

@@ -1,4 +1,4 @@
-package org.tech.ai.deepimage.dto.response;
+package org.tech.ai.deepimage.model.dto.response;
 
 import org.tech.ai.deepimage.constant.ResponseConstant;
 

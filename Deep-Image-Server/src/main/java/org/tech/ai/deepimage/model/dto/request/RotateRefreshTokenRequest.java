@@ -1,4 +1,4 @@
-package org.tech.ai.deepimage.dto.request;
+package org.tech.ai.deepimage.model.dto.request;
 
 import lombok.Data;
 

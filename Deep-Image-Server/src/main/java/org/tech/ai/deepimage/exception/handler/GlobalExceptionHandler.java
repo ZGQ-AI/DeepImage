@@ -1,4 +1,4 @@
-package org.tech.ai.deepimage.handler;
+package org.tech.ai.deepimage.exception.handler;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotPermissionException;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.tech.ai.deepimage.constant.ResponseConstant;
-import org.tech.ai.deepimage.dto.response.ApiResponse;
+import org.tech.ai.deepimage.model.dto.response.ApiResponse;
 import org.tech.ai.deepimage.exception.BusinessException;
 
 @RestControllerAdvice
