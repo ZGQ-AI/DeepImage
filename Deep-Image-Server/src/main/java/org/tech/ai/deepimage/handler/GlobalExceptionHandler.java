@@ -1,32 +1,42 @@
 package org.tech.ai.deepimage.handler;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.tech.ai.deepimage.constant.ResponseConstant;
 import org.tech.ai.deepimage.dto.response.ApiResponse;
 import org.tech.ai.deepimage.exception.BusinessException;
 
-@ControllerAdvice
-@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
-//
-   @ExceptionHandler(value = BusinessException.class)
-   public ApiResponse<String> handleBusinessException(BusinessException e) {
-       log.error("Business exception: ", e);
-       return ApiResponse.error(e.getCode(), e.getMessage());
-   }
 
-   @ExceptionHandler(value = RuntimeException.class)
-   public ApiResponse<String> handleRuntimeException(RuntimeException e) {
-       log.error("Runtime exception: ", e);
-       return ApiResponse.error("A runtime error occurred: " + e.getMessage());
-   }
-
-    @ExceptionHandler(value = Exception.class)
-    public ApiResponse<String> handleGenericException(Exception e) {
-        log.error("System exception: ", e);
-        return ApiResponse.error("A system error occurred: " + e.getMessage());
+    @ExceptionHandler(BusinessException.class)
+    public ApiResponse<Void> handleBusiness(BusinessException e) {
+        return ApiResponse.error(e.getCode(), e.getMessage());
     }
 
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class, HttpMessageNotReadableException.class})
+    public ApiResponse<Void> handleParam(Exception e) {
+        return ApiResponse.error(ResponseConstant.PARAM_ERROR, ResponseConstant.PARAM_INVALID_MESSAGE);
+    }
 
+    @ExceptionHandler(NotLoginException.class)
+    public ApiResponse<Void> handleNotLogin(NotLoginException e) {
+        return ApiResponse.error(ResponseConstant.UNAUTHORIZED, ResponseConstant.NOT_LOGIN_MESSAGE);
+    }
+
+    @ExceptionHandler({NotRoleException.class, NotPermissionException.class})
+    public ApiResponse<Void> handleAuth(Exception e) {
+        return ApiResponse.error(ResponseConstant.FORBIDDEN, ResponseConstant.FORBIDDEN_MESSAGE_DETAIL);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ApiResponse<Void> handleOther(Exception e) {
+        return ApiResponse.error(ResponseConstant.SYSTEM_ERROR, e.getMessage());
+    }
 }

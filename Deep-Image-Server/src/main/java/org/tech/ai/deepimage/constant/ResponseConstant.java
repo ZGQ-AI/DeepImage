@@ -28,4 +28,9 @@ public class ResponseConstant {
     public static final String USER_NOT_FOUND_MESSAGE = "user not found";
     public static final String EMAIL_NOT_VERIFIED_MESSAGE = "email not verified";
 
+    // unified error messages
+    public static final String NOT_LOGIN_MESSAGE = "not login";
+    public static final String FORBIDDEN_MESSAGE_DETAIL = "permission denied";
+    public static final String PARAM_INVALID_MESSAGE = "parameter invalid";
+
 }
