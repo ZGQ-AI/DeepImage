@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.tech.ai.deepimage.config.RefreshTokenProperties;
 import org.tech.ai.deepimage.constant.TokenConstants;
 import org.tech.ai.deepimage.dto.request.CreateRefreshTokenRequest;
+import org.tech.ai.deepimage.dto.request.RevokeRefreshTokenBySessionRequest;
 import org.tech.ai.deepimage.entity.RefreshToken;
 import org.tech.ai.deepimage.mapper.RefreshTokenMapper;
 import org.tech.ai.deepimage.service.RefreshTokenService;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 
 /**
  * 刷新令牌表 服务实现类
- * 
+ *
  * @author zgq
  * @since 2025-09-29
  */
@@ -25,8 +26,13 @@ public class RefreshTokenServiceImpl extends ServiceImpl<RefreshTokenMapper, Ref
     @Autowired
     private RefreshTokenProperties refreshProps;
 
-    private String hash(String plain) { return CryptoUtil.sha256Hex(plain); }
-    private String randomToken() { return CryptoUtil.randomToken(); }
+    private String hash(String plain) {
+        return CryptoUtil.sha256Hex(plain);
+    }
+
+    private String randomToken() {
+        return CryptoUtil.randomToken();
+    }
 
     @Override
     public String createAndStoreRefreshToken(CreateRefreshTokenRequest request) {
@@ -57,18 +63,19 @@ public class RefreshTokenServiceImpl extends ServiceImpl<RefreshTokenMapper, Ref
 
 
     @Override
-    public void revokeAllByUserId(Long userId) {
-        lambdaUpdate()
-                .eq(RefreshToken::getUserId, userId)
-                .set(RefreshToken::getRevoked, 1)
-                .update();
-    }
-
-    @Override
     public void revoke(String refreshTokenPlain) {
         String hash = hash(refreshTokenPlain);
         lambdaUpdate()
                 .eq(RefreshToken::getTokenHash, hash)
+                .set(RefreshToken::getRevoked, TokenConstants.REVOKED)
+                .update();
+    }
+
+    @Override
+    public void revokeAllBySessionId(RevokeRefreshTokenBySessionRequest request) {
+        lambdaUpdate()
+                .eq(RefreshToken::getSessionId, request.getSessionId())
+                .eq(RefreshToken::getRevoked, TokenConstants.NOT_REVOKED)
                 .set(RefreshToken::getRevoked, TokenConstants.REVOKED)
                 .update();
     }

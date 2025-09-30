@@ -2,6 +2,7 @@ package org.tech.ai.deepimage.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.tech.ai.deepimage.dto.request.CreateRefreshTokenRequest;
+import org.tech.ai.deepimage.dto.request.RevokeRefreshTokenBySessionRequest;
 import org.tech.ai.deepimage.entity.RefreshToken;
 
 /**
@@ -23,12 +24,12 @@ public interface RefreshTokenService extends IService<RefreshToken> {
 
 
     /**
-     * 撤销指定用户的全部 RefreshToken
-     */
-    void revokeAllByUserId(Long userId);
-
-    /**
      * 撤销指定的 RefreshToken
      */
     void revoke(String refreshTokenPlain);
+
+    /**
+     * 撤销指定会话的所有 RefreshToken
+     */
+    void revokeAllBySessionId(RevokeRefreshTokenBySessionRequest request);
 }

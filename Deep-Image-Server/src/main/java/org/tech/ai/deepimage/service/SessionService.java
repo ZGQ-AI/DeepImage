@@ -1,6 +1,7 @@
 package org.tech.ai.deepimage.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.tech.ai.deepimage.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.entity.Session;
 
 /**
@@ -11,4 +12,8 @@ import org.tech.ai.deepimage.entity.Session;
  */
 public interface SessionService extends IService<Session> {
 
+    /**
+     * 根据accessToken和用户ID查找会话
+     */
+    Session findByAccessTokenAndUserId(FindSessionByTokenRequest request);
 }

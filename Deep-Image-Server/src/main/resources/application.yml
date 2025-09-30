@@ -28,12 +28,8 @@ sa-token:
   is-log: true
   is-concurrent: true
   is-share: false
-  is-read-header: true
-  is-write-header: true
   token-style: jwt
 
 deepimage:
   auth:
     refresh-ttl-seconds: 2592000   # 30天
-    rotate-on-refresh: true        # 刷新时是否轮换新的RT
-    revoke-on-login: true          # 登录时是否撤销旧RT

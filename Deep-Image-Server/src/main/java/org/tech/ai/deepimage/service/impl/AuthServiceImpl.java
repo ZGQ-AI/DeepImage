@@ -5,13 +5,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.tech.ai.deepimage.config.RefreshTokenProperties;
 import org.tech.ai.deepimage.constant.JwtClaimConstant;
 import org.tech.ai.deepimage.constant.ResponseConstant;
-import org.tech.ai.deepimage.dto.request.CreateRefreshTokenRequest;
-import org.tech.ai.deepimage.dto.request.LoginRequest;
-import org.tech.ai.deepimage.dto.request.RegisterRequest;
-import org.tech.ai.deepimage.dto.request.ResetPasswordRequest;
+import org.tech.ai.deepimage.constant.SessionStatus;
+import org.tech.ai.deepimage.dto.request.*;
 import org.tech.ai.deepimage.dto.response.TokenPairResponse;
 import org.tech.ai.deepimage.entity.RefreshToken;
 import org.tech.ai.deepimage.entity.Session;
@@ -38,8 +35,6 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private SessionService sessionService;
 
-    @Autowired
-    private RefreshTokenProperties refreshProps;
 
     @Override
     public TokenPairResponse loginByEmail(LoginRequest request) {
@@ -148,7 +143,29 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Boolean logout() {
-        return false;
+        // 1. 获取当前登录用户ID
+        long loginUserId = StpUtil.getLoginIdAsLong();
+
+        // 2. 获取当前会话
+        String accessToken = StpUtil.getTokenValue();
+
+        FindSessionByTokenRequest findReq = new FindSessionByTokenRequest();
+        findReq.setAccessToken(accessToken);
+        findReq.setUserId(loginUserId);
+        Session session = sessionService.findByAccessTokenAndUserId(findReq);
+
+        // 3. 标记会话为非活跃状态
+        if (session != null) {
+            session.setActive(SessionStatus.INACTIVE);
+            sessionService.updateById(session);
+
+            // 4. 撤销该会话关联的所有refresh token
+            RevokeRefreshTokenBySessionRequest revokeReq = new RevokeRefreshTokenBySessionRequest();
+            revokeReq.setSessionId(session.getId());
+            refreshTokenService.revokeAllBySessionId(revokeReq);
+        }
+        StpUtil.logout();
+        return true;
     }
 
     @Override
