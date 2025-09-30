@@ -22,27 +22,41 @@
             </a-col>
 
             <!-- 用户操作区域：固定宽度100px -->
-            <a-col flex="100px">
+            <a-col flex="160px">
                 <div class="user-login-status">
-                    <div v-if="loginUserStore.loginUser.id">
-                        {{ loginUserStore.loginUser.userName }}
-                    </div>
-                    <div v-else>
-                        <a-button type="primary" href="/user/login">登录</a-button>
-                    </div>
+                    <template v-if="loginUserStore.loginUser.id">
+                        <a-dropdown trigger="['click']">
+                            <a-space class="user-entry">
+                                <a-avatar size="small">{{ initials }}</a-avatar>
+                                <span class="username">{{ loginUserStore.loginUser.userName }}</span>
+                            </a-space>
+                            <template #overlay>
+                                <a-menu @click="onUserMenuClick">
+                                    <a-menu-item key="profile">个人中心</a-menu-item>
+                                    <a-menu-divider />
+                                    <a-menu-item key="logout">退出登录</a-menu-item>
+                                </a-menu>
+                            </template>
+                        </a-dropdown>
+                    </template>
+                    <template v-else>
+                        <a-button type="primary" @click="goLogin">登录</a-button>
+                    </template>
                 </div>
             </a-col>
         </a-row>
     </div>
 </template>
 <script lang="ts" setup>
-import { h, ref } from 'vue';
+import { h, ref, computed } from 'vue';
 import { HomeOutlined, GithubOutlined } from '@ant-design/icons-vue';
 import type { MenuProps } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '../stores/UseLoginUserStore';
+import { useAuthStore } from '../stores/useAuthStore';
 
 const loginUserStore = useLoginUserStore();
+const authStore = useAuthStore();
 const current = ref<string[]>([]);
 const items = ref<MenuProps['items']>([
     {
@@ -71,6 +85,21 @@ const doMenuClick = ({ key }: { key: string }) => {
 router.afterEach((to, form, next) => {
     current.value = [to.path]
 })
+
+const goLogin = () => router.push({ name: 'login' });
+const initials = computed(() => {
+    const name = loginUserStore.loginUser.userName || '';
+    return name ? name.slice(0,1).toUpperCase() : '?'
+});
+
+async function onUserMenuClick({ key }: { key: string }) {
+    if (key === 'logout') {
+        await authStore.logout();
+        router.replace({ name: 'login' });
+    } else if (key === 'profile') {
+        router.push('/about');
+    }
+}
 </script>
 
 <style scoped>
@@ -90,4 +119,10 @@ router.afterEach((to, form, next) => {
     height: 28px;
     padding-top: 5px;
 }
+.user-login-status {
+    display: flex;
+    justify-content: flex-end;
+}
+.user-entry { cursor: pointer; }
+.username { font-size: 13px; }
 </style>

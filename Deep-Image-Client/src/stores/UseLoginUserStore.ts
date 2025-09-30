@@ -13,13 +13,8 @@ export const useLoginUserStore = defineStore('loginUser', () => {
     }
 
     async function fetchLoginUser() {
-        //测试三秒后登录
-        setTimeout(() => {
-            loginUser.value = {
-                id: 1,
-                userName: 'test'
-            }
-        }, 3000)
+        // 保持占位：后续可在此请求后端用户资料并更新 loginUser
+        return;
     }
 
     return { loginUser, setLoginUser, fetchLoginUser }
