@@ -170,7 +170,42 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Boolean resetPassword(ResetPasswordRequest request) {
-        return false;
+        // 1) 按 email 查用户
+        User user = userService.getOne(new LambdaQueryWrapper<User>()
+                .eq(User::getEmail, request.getEmail()));
+        BusinessException.throwIf(user == null,
+                ResponseConstant.UNAUTHORIZED,
+                ResponseConstant.USER_NOT_FOUND_MESSAGE);
+
+        // 2) 校验旧密码
+        boolean oldOk = CryptoUtil.match(request.getOldPassword(), user.getPasswordHash());
+        BusinessException.throwIf(!oldOk,
+                ResponseConstant.UNAUTHORIZED,
+                ResponseConstant.INVALID_CREDENTIALS_MESSAGE);
+
+        // 3) 更新为新密码
+        user.setPasswordHash(CryptoUtil.encode(request.getNewPassword()));
+        userService.updateById(user);
+
+        // 4) 强制全端下线：将该用户所有会话置为 INACTIVE，并撤销其 refresh tokens
+        Long userId = user.getId();
+        for (Session s : sessionService.list(new LambdaQueryWrapper<Session>()
+                .eq(Session::getUserId, userId))) {
+            // 标记会话为非活跃
+            s.setActive(SessionStatus.INACTIVE);
+            sessionService.updateById(s);
+            // 撤销该会话的所有 refresh token
+            RevokeRefreshTokenBySessionRequest revokeReq = new RevokeRefreshTokenBySessionRequest();
+            revokeReq.setSessionId(s.getId());
+            refreshTokenService.revokeAllBySessionId(revokeReq);
+        }
+
+        // 5) 可选：清理当前上下文登录状态（无状态JWT主要作用是清cookie/storage）
+        try {
+            StpUtil.logout();
+        } catch (Exception ignored) {}
+
+        return true;
     }
 
 
