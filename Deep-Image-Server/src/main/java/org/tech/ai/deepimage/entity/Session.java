@@ -58,10 +58,10 @@ public class Session {
     private Integer active;
 
     /**
-     * 最后访问时间，用于清理长期未使用的会话
+     * 最后刷新时间，用于清理长期未使用的会话
      */
-    @TableField("last_accessed_at")
-    private LocalDateTime lastAccessedAt;
+    @TableField("last_refresh_at")
+    private LocalDateTime lastRefreshAt;
 
     /**
      * 删除标志：0=未删除，1=已删除

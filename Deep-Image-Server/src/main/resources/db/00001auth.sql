@@ -159,7 +159,7 @@ CREATE TABLE sys_sessions (
     ip_address VARCHAR(45),
     user_agent TEXT,
     active SMALLINT DEFAULT 1,
-    last_accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_refresh_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     delete_flag SMALLINT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -173,7 +173,7 @@ COMMENT ON COLUMN sys_sessions.device_info IS 'Device information (device type, 
 COMMENT ON COLUMN sys_sessions.ip_address IS 'Login IP address';
 COMMENT ON COLUMN sys_sessions.user_agent IS 'User agent string for device identification';
 COMMENT ON COLUMN sys_sessions.active IS 'Session active status: 0=revoked, 1=active';
-COMMENT ON COLUMN sys_sessions.last_accessed_at IS 'Last access time, for cleaning up long-unused sessions';
+COMMENT ON COLUMN sys_sessions.last_refresh_at IS 'Last refresh time, for cleaning up long-unused sessions';
 COMMENT ON COLUMN sys_sessions.delete_flag IS 'Delete flag: 0=not deleted, 1=deleted';
 COMMENT ON COLUMN sys_sessions.created_at IS 'Session creation time';
 COMMENT ON COLUMN sys_sessions.updated_at IS 'Session information last update time';

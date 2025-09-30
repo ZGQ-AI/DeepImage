@@ -63,4 +63,13 @@ public class RefreshTokenServiceImpl extends ServiceImpl<RefreshTokenMapper, Ref
                 .set(RefreshToken::getRevoked, 1)
                 .update();
     }
+
+    @Override
+    public void revoke(String refreshTokenPlain) {
+        String hash = hash(refreshTokenPlain);
+        lambdaUpdate()
+                .eq(RefreshToken::getTokenHash, hash)
+                .set(RefreshToken::getRevoked, TokenConstants.REVOKED)
+                .update();
+    }
 }

@@ -13,6 +13,7 @@ import org.tech.ai.deepimage.dto.request.LoginRequest;
 import org.tech.ai.deepimage.dto.request.RegisterRequest;
 import org.tech.ai.deepimage.dto.request.ResetPasswordRequest;
 import org.tech.ai.deepimage.dto.response.TokenPairResponse;
+import org.tech.ai.deepimage.entity.RefreshToken;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.entity.User;
 import org.tech.ai.deepimage.exception.BusinessException;
@@ -77,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
         session.setDeviceInfo(null);
         session.setIpAddress(ip);
         session.setUserAgent(userAgent);
-        session.setLastAccessedAt(LocalDateTime.now());
+        session.setLastRefreshAt(LocalDateTime.now());
         sessionService.save(session);
 
 
@@ -92,7 +93,39 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenPairResponse refreshToken(String refreshTokenPlain) {
-        return null;
+        // 1. 验证 refresh token 是否有效
+        RefreshToken refreshToken = refreshTokenService.verifyAndGet(refreshTokenPlain);
+        BusinessException.throwIf(refreshToken == null, ResponseConstant.UNAUTHORIZED, ResponseConstant.INVALID_REFRESH_TOKEN_MESSAGE);
+
+        // 2. 撤销旧的 refresh token
+        refreshTokenService.revoke(refreshTokenPlain);
+
+        // 3. 获取用户信息
+        User user = userService.getById(refreshToken.getUserId());
+        BusinessException.throwIf(user == null, ResponseConstant.UNAUTHORIZED, ResponseConstant.USER_NOT_FOUND_MESSAGE);
+
+        // 4. 生成新的 access token
+        StpUtil.login(user.getId(), new SaLoginModel()
+                .setExtra(JwtClaimConstant.USERNAME, user.getUsername())
+                .setExtra(JwtClaimConstant.EMAIL, user.getEmail()));
+        String accessToken = StpUtil.getTokenValue();
+
+        // 5. 更新会话信息
+        Session session = sessionService.getById(refreshToken.getSessionId());
+        if (session != null) {
+            session.setAccessTokenHash(CryptoUtil.sha256Hex(accessToken));
+            session.setLastRefreshAt(LocalDateTime.now());
+            sessionService.updateById(session);
+        }
+
+        // 6. 生成新的 refresh token
+        CreateRefreshTokenRequest createReq = new CreateRefreshTokenRequest();
+        createReq.setUserId(user.getId());
+        createReq.setSessionId(refreshToken.getSessionId());
+        String newRefreshTokenPlain = refreshTokenService.createAndStoreRefreshToken(createReq);
+
+        // 7. 返回新的 token pair
+        return new TokenPairResponse(accessToken, newRefreshTokenPlain);
     }
 
     @Override

@@ -26,4 +26,9 @@ public interface RefreshTokenService extends IService<RefreshToken> {
      * 撤销指定用户的全部 RefreshToken
      */
     void revokeAllByUserId(Long userId);
+
+    /**
+     * 撤销指定的 RefreshToken
+     */
+    void revoke(String refreshTokenPlain);
 }
