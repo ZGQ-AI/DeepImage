@@ -23,7 +23,7 @@ import org.tech.ai.deepimage.service.UserService;
 import org.tech.ai.deepimage.util.CryptoUtil;
 import org.tech.ai.deepimage.util.HttpRequestUtil;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -77,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
         session.setDeviceInfo(null);
         session.setIpAddress(ip);
         session.setUserAgent(userAgent);
-        session.setLastAccessedAt(OffsetDateTime.now());
+        session.setLastAccessedAt(LocalDateTime.now());
         sessionService.save(session);
 
 

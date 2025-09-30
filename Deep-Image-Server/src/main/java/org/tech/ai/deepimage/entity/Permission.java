@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 权限信息表
@@ -49,13 +49,13 @@ public class Permission {
      * 权限创建时间
      */
     @TableField(value = "created_at")
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 权限信息最后更新时间
      */
     @TableField(value = "updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     /**
      * 创建者用户ID

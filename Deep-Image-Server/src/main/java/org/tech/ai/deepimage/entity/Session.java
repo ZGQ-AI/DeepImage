@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 用户会话表
@@ -61,7 +61,7 @@ public class Session {
      * 最后访问时间，用于清理长期未使用的会话
      */
     @TableField("last_accessed_at")
-    private OffsetDateTime lastAccessedAt;
+    private LocalDateTime lastAccessedAt;
 
     /**
      * 删除标志：0=未删除，1=已删除
@@ -74,11 +74,11 @@ public class Session {
      * 会话创建时间
      */
     @TableField(value = "created_at")
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 会话信息最后更新时间
      */
     @TableField(value = "updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

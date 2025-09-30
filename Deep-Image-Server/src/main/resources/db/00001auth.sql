@@ -8,8 +8,8 @@ CREATE TABLE sys_users (
     avatar_url VARCHAR(500),
     delete_flag SMALLINT DEFAULT 0,
     verified BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE sys_users IS 'User information table, stores basic information of system users';
@@ -34,8 +34,8 @@ CREATE TABLE sys_roles (
     role_code VARCHAR(50) UNIQUE NOT NULL,
     description VARCHAR(100),
     delete_flag SMALLINT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
     updated_by BIGINT NOT NULL
 );
@@ -61,8 +61,8 @@ CREATE TABLE sys_permissions (
     permission_code VARCHAR(100) UNIQUE NOT NULL,
     description VARCHAR(100),
     delete_flag SMALLINT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
     updated_by BIGINT NOT NULL
 );
@@ -87,8 +87,8 @@ CREATE TABLE sys_user_roles (
     user_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,
     delete_flag SMALLINT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, role_id)
 );
 
@@ -109,8 +109,8 @@ CREATE TABLE sys_role_permissions (
     role_id BIGINT NOT NULL,
     permission_id BIGINT NOT NULL,
     delete_flag SMALLINT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(role_id, permission_id)
 );
 
@@ -131,12 +131,12 @@ CREATE TABLE sys_refresh_tokens (
     user_id BIGINT NOT NULL,
     token_hash VARCHAR(255) UNIQUE NOT NULL,
     session_id BIGINT NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    last_used_at TIMESTAMP WITH TIME ZONE,
+    expires_at TIMESTAMP NOT NULL,
+    last_used_at TIMESTAMP,
     revoked SMALLINT DEFAULT 0,
     delete_flag SMALLINT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE sys_refresh_tokens IS 'Refresh token table, manages refresh tokens';
@@ -159,10 +159,10 @@ CREATE TABLE sys_sessions (
     ip_address VARCHAR(45),
     user_agent TEXT,
     active SMALLINT DEFAULT 1,
-    last_accessed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     delete_flag SMALLINT DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE sys_sessions IS 'User session table, manages user login sessions and access tokens';

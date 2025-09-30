@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 用户角色关联表
@@ -43,11 +43,11 @@ public class UserRole {
      * 关联关系创建时间
      */
     @TableField(value = "created_at")
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 关联关系最后更新时间
      */
     @TableField(value = "updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

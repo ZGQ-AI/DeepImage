@@ -12,7 +12,7 @@ import org.tech.ai.deepimage.mapper.RefreshTokenMapper;
 import org.tech.ai.deepimage.service.RefreshTokenService;
 import org.tech.ai.deepimage.util.CryptoUtil;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 刷新令牌表 服务实现类
@@ -37,7 +37,7 @@ public class RefreshTokenServiceImpl extends ServiceImpl<RefreshTokenMapper, Ref
         entity.setUserId(request.getUserId());
         entity.setSessionId(request.getSessionId());
         entity.setTokenHash(hash);
-        entity.setExpiresAt(OffsetDateTime.now().plusSeconds(refreshProps.getRefreshTtlSeconds()));
+        entity.setExpiresAt(LocalDateTime.now().plusSeconds(refreshProps.getRefreshTtlSeconds()));
         save(entity);
         return plain;
     }
@@ -49,7 +49,7 @@ public class RefreshTokenServiceImpl extends ServiceImpl<RefreshTokenMapper, Ref
                 .eq(RefreshToken::getTokenHash, hash)
                 .eq(RefreshToken::getRevoked, TokenConstants.NOT_REVOKED));
         if (token == null) return null;
-        if (token.getExpiresAt() != null && token.getExpiresAt().isBefore(OffsetDateTime.now())) {
+        if (token.getExpiresAt() != null && token.getExpiresAt().isBefore(LocalDateTime.now())) {
             return null;
         }
         return token;

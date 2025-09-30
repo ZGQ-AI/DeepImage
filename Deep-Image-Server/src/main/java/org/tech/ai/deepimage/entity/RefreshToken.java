@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 刷新令牌表
@@ -43,13 +43,13 @@ public class RefreshToken {
      * 刷新令牌过期时间
      */
     @TableField("expires_at")
-    private OffsetDateTime expiresAt;
+    private LocalDateTime expiresAt;
 
     /**
      * 最后使用时间，用于活动统计
      */
     @TableField("last_used_at")
-    private OffsetDateTime lastUsedAt;
+    private LocalDateTime lastUsedAt;
 
     /**
      * 使用状态：0=未使用，1=已使用
@@ -68,11 +68,11 @@ public class RefreshToken {
      * 令牌创建时间
      */
     @TableField(value = "created_at")
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 令牌信息最后更新时间
      */
     @TableField(value = "updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }
