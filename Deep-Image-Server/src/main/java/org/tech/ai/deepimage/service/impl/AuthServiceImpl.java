@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.tech.ai.deepimage.constant.JwtClaimConstant;
 import org.tech.ai.deepimage.constant.ResponseConstant;
 import org.tech.ai.deepimage.constant.SessionStatus;
+import org.tech.ai.deepimage.constant.RefreshTokenStatus;
 import org.tech.ai.deepimage.dto.request.*;
 import org.tech.ai.deepimage.dto.response.TokenPairResponse;
 import org.tech.ai.deepimage.entity.RefreshToken;
@@ -192,10 +193,12 @@ public class AuthServiceImpl implements AuthService {
         sessionService.lambdaUpdate()
                 .set(Session::getActive, SessionStatus.INACTIVE)
                 .eq(Session::getUserId, userId)
+                .eq(Session::getActive, SessionStatus.ACTIVE)
                 .update();
         refreshTokenService.lambdaUpdate()
-                .set(RefreshToken::getRevoked, 1)
+                .set(RefreshToken::getRevoked, RefreshTokenStatus.REVOKED)
                 .eq(RefreshToken::getUserId, userId)
+                .eq(RefreshToken::getRevoked, RefreshTokenStatus.NOT_REVOKED)
                 .update();
 
         // 5) 可选：清理当前上下文登录状态（无状态JWT主要作用是清cookie/storage）
