@@ -187,18 +187,16 @@ public class AuthServiceImpl implements AuthService {
         user.setPasswordHash(CryptoUtil.encode(request.getNewPassword()));
         userService.updateById(user);
 
-        // 4) 强制全端下线：将该用户所有会话置为 INACTIVE，并撤销其 refresh tokens
+        // 4) 强制全端下线：按 userId 批量失活会话与撤销 refresh tokens
         Long userId = user.getId();
-        for (Session s : sessionService.list(new LambdaQueryWrapper<Session>()
-                .eq(Session::getUserId, userId))) {
-            // 标记会话为非活跃
-            s.setActive(SessionStatus.INACTIVE);
-            sessionService.updateById(s);
-            // 撤销该会话的所有 refresh token
-            RevokeRefreshTokenBySessionRequest revokeReq = new RevokeRefreshTokenBySessionRequest();
-            revokeReq.setSessionId(s.getId());
-            refreshTokenService.revokeAllBySessionId(revokeReq);
-        }
+        sessionService.lambdaUpdate()
+                .set(Session::getActive, SessionStatus.INACTIVE)
+                .eq(Session::getUserId, userId)
+                .update();
+        refreshTokenService.lambdaUpdate()
+                .set(RefreshToken::getRevoked, 1)
+                .eq(RefreshToken::getUserId, userId)
+                .update();
 
         // 5) 可选：清理当前上下文登录状态（无状态JWT主要作用是清cookie/storage）
         try {
