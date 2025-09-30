@@ -201,7 +201,6 @@ public class AuthServiceImpl implements AuthService {
                 .eq(RefreshToken::getRevoked, RefreshTokenStatus.NOT_REVOKED)
                 .update();
 
-        // 5) 可选：清理当前上下文登录状态（无状态JWT主要作用是清cookie/storage）
         try {
             StpUtil.logout();
         } catch (Exception ignored) {}
