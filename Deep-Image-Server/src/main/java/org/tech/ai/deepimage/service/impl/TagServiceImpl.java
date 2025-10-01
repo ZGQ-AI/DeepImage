@@ -15,6 +15,7 @@ import org.tech.ai.deepimage.exception.BusinessException;
 import org.tech.ai.deepimage.mapper.FileTagMapper;
 import org.tech.ai.deepimage.mapper.TagMapper;
 import org.tech.ai.deepimage.model.dto.request.CreateTagRequest;
+import org.tech.ai.deepimage.model.dto.request.DeleteTagRequest;
 import org.tech.ai.deepimage.model.dto.request.UpdateTagRequest;
 import org.tech.ai.deepimage.model.dto.response.TagResponse;
 import org.tech.ai.deepimage.service.TagService;
@@ -85,9 +86,10 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public TagResponse updateTag(Long tagId, UpdateTagRequest request) {
+    public TagResponse updateTag(UpdateTagRequest request) {
         // 从Sa-Token获取当前登录用户ID
         Long userId = StpUtil.getLoginIdAsLong();
+        Long tagId = request.getTagId();
         log.info("更新标签: userId={}, tagId={}", userId, tagId);
         
         // 查询标签并校验权限
@@ -148,9 +150,10 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteTag(Long tagId) {
+    public void deleteTag(DeleteTagRequest request) {
         // 从Sa-Token获取当前登录用户ID
         Long userId = StpUtil.getLoginIdAsLong();
+        Long tagId = request.getTagId();
         log.info("删除标签: userId={}, tagId={}", userId, tagId);
         
         // 查询标签并校验权限

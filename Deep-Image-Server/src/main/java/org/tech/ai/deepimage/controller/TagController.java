@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.tech.ai.deepimage.model.dto.request.CreateTagRequest;
+import org.tech.ai.deepimage.model.dto.request.DeleteTagRequest;
 import org.tech.ai.deepimage.model.dto.request.UpdateTagRequest;
 import org.tech.ai.deepimage.model.dto.response.ApiResponse;
 import org.tech.ai.deepimage.model.dto.response.TagResponse;
@@ -50,27 +51,24 @@ public class TagController {
     /**
      * 更新标签
      * 
-     * @param tagId 标签ID
      * @param request 更新标签请求
      * @return 标签响应
      */
-    @PutMapping("/{tagId}")
-    public ApiResponse<TagResponse> updateTag(
-            @PathVariable Long tagId,
-            @Valid @RequestBody UpdateTagRequest request) {
-        TagResponse response = tagService.updateTag(tagId, request);
+    @PutMapping
+    public ApiResponse<TagResponse> updateTag(@Valid @RequestBody UpdateTagRequest request) {
+        TagResponse response = tagService.updateTag(request);
         return ApiResponse.success(response);
     }
     
     /**
      * 删除标签
      * 
-     * @param tagId 标签ID
+     * @param request 删除标签请求
      * @return 成功响应
      */
-    @DeleteMapping("/{tagId}")
-    public ApiResponse<Void> deleteTag(@PathVariable Long tagId) {
-        tagService.deleteTag(tagId);
+    @DeleteMapping
+    public ApiResponse<Void> deleteTag(@Valid @RequestBody DeleteTagRequest request) {
+        tagService.deleteTag(request);
         return ApiResponse.success(null);
     }
 }
