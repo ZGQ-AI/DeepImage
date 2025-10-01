@@ -22,7 +22,7 @@ import java.util.UUID;
  * 专门处理OAuth2.0流程，不涉及数据库存储
  * 
  * @author zgq
- * @since 2025-10-01
+ * @since 2025-10-02
  */
 @Service
 @Slf4j

@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.tech.ai.deepimage.constant.JwtClaimConstant;
 import org.tech.ai.deepimage.constant.ResponseConstant;
-import org.tech.ai.deepimage.constant.SessionStatus;
-import org.tech.ai.deepimage.constant.RefreshTokenStatus;
+import org.tech.ai.deepimage.enums.SessionStatusEnum;
+import org.tech.ai.deepimage.enums.RefreshTokenStatusEnum;
 import org.tech.ai.deepimage.model.dto.request.*;
 import org.tech.ai.deepimage.model.dto.response.TokenPairResponse;
 import org.tech.ai.deepimage.entity.RefreshToken;
@@ -160,7 +160,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. 标记会话为非活跃状态
         if (session != null) {
-            session.setActive(SessionStatus.INACTIVE);
+            session.setActive(SessionStatusEnum.INACTIVE.getValue());
             sessionService.updateById(session);
 
             // 4. 撤销该会话关联的所有refresh token
@@ -194,14 +194,14 @@ public class AuthServiceImpl implements AuthService {
         // 4) 强制全端下线：按 userId 批量失活会话与撤销 refresh tokens
         Long userId = user.getId();
         sessionService.lambdaUpdate()
-                .set(Session::getActive, SessionStatus.INACTIVE)
+                .set(Session::getActive, SessionStatusEnum.INACTIVE.getValue())
                 .eq(Session::getUserId, userId)
-                .eq(Session::getActive, SessionStatus.ACTIVE)
+                .eq(Session::getActive, SessionStatusEnum.ACTIVE.getValue())
                 .update();
         refreshTokenService.lambdaUpdate()
-                .set(RefreshToken::getRevoked, RefreshTokenStatus.REVOKED)
+                .set(RefreshToken::getRevoked, RefreshTokenStatusEnum.REVOKED.getValue())
                 .eq(RefreshToken::getUserId, userId)
-                .eq(RefreshToken::getRevoked, RefreshTokenStatus.NOT_REVOKED)
+                .eq(RefreshToken::getRevoked, RefreshTokenStatusEnum.NOT_REVOKED.getValue())
                 .update();
 
         try {
@@ -233,7 +233,7 @@ public class AuthServiceImpl implements AuthService {
         session.setAccessTokenHash(accessTokenHash);
         session.setIpAddress(ip);
         session.setUserAgent(userAgent);
-        session.setActive(SessionStatus.ACTIVE);
+        session.setActive(SessionStatusEnum.ACTIVE.getValue());
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
         session.setLastRefreshAt(LocalDateTime.now());

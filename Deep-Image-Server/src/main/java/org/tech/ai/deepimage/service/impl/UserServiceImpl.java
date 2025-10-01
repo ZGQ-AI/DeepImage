@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.tech.ai.deepimage.constant.RefreshTokenStatus;
 import org.tech.ai.deepimage.constant.ResponseConstant;
-import org.tech.ai.deepimage.constant.SessionStatus;
+import org.tech.ai.deepimage.enums.RefreshTokenStatusEnum;
+import org.tech.ai.deepimage.enums.SessionStatusEnum;
 import org.tech.ai.deepimage.entity.RefreshToken;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.entity.User;
@@ -122,7 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 构建查询条件 - 只查询活跃的会话
         LambdaQueryWrapper<Session> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Session::getUserId, userId)
-                    .eq(Session::getActive, SessionStatus.ACTIVE)  // 固定查询活跃会话
+                    .eq(Session::getActive, SessionStatusEnum.ACTIVE.getValue())  // 固定查询活跃会话
                     .orderByDesc(Session::getCreatedAt);  // 按创建时间降序排列
         
         // 查询所有活跃会话（不分页，通常会话数量不会太多）
@@ -177,17 +177,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         );
         
         // 标记会话为非活跃
-        session.setActive(SessionStatus.INACTIVE);
+        session.setActive(SessionStatusEnum.INACTIVE.getValue());
         session.setUpdatedAt(LocalDateTime.now());
         sessionService.updateById(session);
         
         // 撤销该会话关联的所有refresh_token
         LambdaQueryWrapper<RefreshToken> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RefreshToken::getSessionId, sessionId)
-               .eq(RefreshToken::getRevoked, RefreshTokenStatus.NOT_REVOKED);
+               .eq(RefreshToken::getRevoked, RefreshTokenStatusEnum.NOT_REVOKED.getValue());
         
         RefreshToken updateEntity = new RefreshToken();
-        updateEntity.setRevoked(RefreshTokenStatus.REVOKED);
+        updateEntity.setRevoked(RefreshTokenStatusEnum.REVOKED.getValue());
         updateEntity.setUpdatedAt(LocalDateTime.now());
         refreshTokenService.update(updateEntity, wrapper);
         
@@ -209,7 +209,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 批量更新其他会话为非活跃状态
         LambdaQueryWrapper<Session> sessionWrapper = new LambdaQueryWrapper<>();
         sessionWrapper.eq(Session::getUserId, userId)
-                     .eq(Session::getActive, SessionStatus.ACTIVE);
+                     .eq(Session::getActive, SessionStatusEnum.ACTIVE.getValue());
         if (currentSessionId != null) {
             sessionWrapper.ne(Session::getId, currentSessionId);
         }
@@ -219,20 +219,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         // 执行更新
         Session updateSession = new Session();
-        updateSession.setActive(SessionStatus.INACTIVE);
+        updateSession.setActive(SessionStatusEnum.INACTIVE.getValue());
         updateSession.setUpdatedAt(LocalDateTime.now());
         sessionService.update(updateSession, sessionWrapper);
         
         // 批量撤销相关的refresh_token
         LambdaQueryWrapper<RefreshToken> tokenWrapper = new LambdaQueryWrapper<>();
         tokenWrapper.eq(RefreshToken::getUserId, userId)
-                   .eq(RefreshToken::getRevoked, RefreshTokenStatus.NOT_REVOKED);
+                   .eq(RefreshToken::getRevoked, RefreshTokenStatusEnum.NOT_REVOKED.getValue());
         if (currentSessionId != null) {
             tokenWrapper.ne(RefreshToken::getSessionId, currentSessionId);
         }
         
         RefreshToken updateToken = new RefreshToken();
-        updateToken.setRevoked(RefreshTokenStatus.REVOKED);
+        updateToken.setRevoked(RefreshTokenStatusEnum.REVOKED.getValue());
         updateToken.setUpdatedAt(LocalDateTime.now());
         refreshTokenService.update(updateToken, tokenWrapper);
         

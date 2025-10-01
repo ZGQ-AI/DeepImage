@@ -12,7 +12,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.tech.ai.deepimage.constant.ResponseConstant;
-import org.tech.ai.deepimage.constant.SessionStatus;
+import org.tech.ai.deepimage.enums.SessionStatusEnum;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.exception.BusinessException;
 import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
@@ -44,7 +44,7 @@ public class SaTokenConfigure implements WebMvcConfigurer {
                 req.setAccessToken(token);
                 req.setUserId(userId);
                 Session s = sessionService.findByAccessTokenAndUserId(req);
-                if (s == null || s.getActive() == null || s.getActive() != SessionStatus.ACTIVE) {
+                if (s == null || s.getActive() == null || s.getActive() != SessionStatusEnum.ACTIVE.getValue()) {
                     throw BusinessException.of(ResponseConstant.UNAUTHORIZED, ResponseConstant.NOT_LOGIN_MESSAGE);
                 }
                 return true;

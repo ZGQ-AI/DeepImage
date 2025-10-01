@@ -1,6 +1,6 @@
 package org.tech.ai.deepimage.enums;
 
-public enum DeviceType {
+public enum DeviceTypeEnum {
     WEB,
     APP,
     PC
