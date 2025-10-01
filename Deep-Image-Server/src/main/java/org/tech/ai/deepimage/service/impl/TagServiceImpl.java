@@ -1,5 +1,6 @@
 package org.tech.ai.deepimage.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -37,7 +38,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public TagResponse createTag(Long userId, CreateTagRequest request) {
+    public TagResponse createTag(CreateTagRequest request) {
+        // 从Sa-Token获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("创建标签: userId={}, tagName={}", userId, request.getTagName());
         
         // 构建标签实体
@@ -61,7 +64,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     }
 
     @Override
-    public List<TagResponse> listUserTags(Long userId) {
+    public List<TagResponse> listUserTags() {
+        // 从Sa-Token获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("查询用户所有标签: userId={}", userId);
         
         // 查询用户的所有标签，按使用次数降序
@@ -80,7 +85,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public TagResponse updateTag(Long userId, Long tagId, UpdateTagRequest request) {
+    public TagResponse updateTag(Long tagId, UpdateTagRequest request) {
+        // 从Sa-Token获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("更新标签: userId={}, tagId={}", userId, tagId);
         
         // 查询标签并校验权限
@@ -141,7 +148,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteTag(Long userId, Long tagId) {
+    public void deleteTag(Long tagId) {
+        // 从Sa-Token获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
         log.info("删除标签: userId={}, tagId={}", userId, tagId);
         
         // 查询标签并校验权限

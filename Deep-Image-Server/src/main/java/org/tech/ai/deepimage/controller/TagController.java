@@ -1,6 +1,5 @@
 package org.tech.ai.deepimage.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +32,7 @@ public class TagController {
      */
     @PostMapping
     public ApiResponse<TagResponse> createTag(@Valid @RequestBody CreateTagRequest request) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        TagResponse response = tagService.createTag(userId, request);
+        TagResponse response = tagService.createTag(request);
         return ApiResponse.success(response);
     }
     
@@ -45,8 +43,7 @@ public class TagController {
      */
     @GetMapping
     public ApiResponse<List<TagResponse>> listTags() {
-        Long userId = StpUtil.getLoginIdAsLong();
-        List<TagResponse> tags = tagService.listUserTags(userId);
+        List<TagResponse> tags = tagService.listUserTags();
         return ApiResponse.success(tags);
     }
     
@@ -61,8 +58,7 @@ public class TagController {
     public ApiResponse<TagResponse> updateTag(
             @PathVariable Long tagId,
             @Valid @RequestBody UpdateTagRequest request) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        TagResponse response = tagService.updateTag(userId, tagId, request);
+        TagResponse response = tagService.updateTag(tagId, request);
         return ApiResponse.success(response);
     }
     
@@ -74,8 +70,7 @@ public class TagController {
      */
     @DeleteMapping("/{tagId}")
     public ApiResponse<Void> deleteTag(@PathVariable Long tagId) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        tagService.deleteTag(userId, tagId);
+        tagService.deleteTag(tagId);
         return ApiResponse.success(null);
     }
 }

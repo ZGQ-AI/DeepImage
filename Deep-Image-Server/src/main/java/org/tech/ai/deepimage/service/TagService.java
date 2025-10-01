@@ -19,36 +19,32 @@ public interface TagService extends IService<Tag> {
     /**
      * 创建标签
      * 
-     * @param userId 用户ID
      * @param request 创建标签请求
      * @return 标签响应
      */
-    TagResponse createTag(Long userId, CreateTagRequest request);
+    TagResponse createTag(CreateTagRequest request);
     
     /**
-     * 查询用户所有标签
+     * 查询当前用户所有标签
      * 
-     * @param userId 用户ID
      * @return 标签列表
      */
-    List<TagResponse> listUserTags(Long userId);
+    List<TagResponse> listUserTags();
     
     /**
      * 更新标签
      * 
-     * @param userId 用户ID
      * @param tagId 标签ID
      * @param request 更新标签请求
      * @return 标签响应
      */
-    TagResponse updateTag(Long userId, Long tagId, UpdateTagRequest request);
+    TagResponse updateTag(Long tagId, UpdateTagRequest request);
     
     /**
      * 删除标签
      * 
-     * @param userId 用户ID
      * @param tagId 标签ID
      */
-    void deleteTag(Long userId, Long tagId);
+    void deleteTag(Long tagId);
 }
 
