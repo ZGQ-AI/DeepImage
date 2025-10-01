@@ -1,6 +1,5 @@
 package org.tech.ai.deepimage.config;
 
-import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.jwt.StpLogicJwtForStateless;
 import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
@@ -14,9 +13,9 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.tech.ai.deepimage.constant.ResponseConstant;
 import org.tech.ai.deepimage.constant.SessionStatus;
-import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.exception.BusinessException;
+import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.service.SessionService;
 
 @Configuration
@@ -53,7 +52,7 @@ public class SaTokenConfigure implements WebMvcConfigurer {
         })
                 .addPathPatterns("/**")
                 .excludePathPatterns("/api/auth/login","/api/auth/register","/api/auth/refresh",
-                        "/api/auth/reset-password","/api/health");
+                        "/api/auth/reset-password","/api/health","/api/auth/google/login","/api/auth/google/callback");
     }
 
 

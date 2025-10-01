@@ -35,6 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
       const id = (payload.loginId ?? payload.sub) as any
       const username = (payload.username ?? payload.USERNAME ?? payload.name) as any
       const email = payload.email as any
+      const avatarUrl = payload.avatarUrl as any
       
       // 更新用户基本信息（用于头部显示）
       if (id && username) {
@@ -42,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
           id,
           username,
           email: email || '',
+          avatarUrl: avatarUrl || '',
           verified: false,
           createdAt: '',
           updatedAt: '',
@@ -134,6 +136,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     expiresIn,
     isAuthenticated,
+    applyTokenPair,
     login,
     refresh,
     logout,

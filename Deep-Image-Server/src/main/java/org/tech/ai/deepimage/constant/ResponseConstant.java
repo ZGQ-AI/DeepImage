@@ -39,4 +39,16 @@ public class ResponseConstant {
     public static final String CANNOT_DELETE_CURRENT_SESSION_MESSAGE = "不能删除当前会话";
     public static final String SESSION_NOT_BELONG_TO_USER_MESSAGE = "该会话不属于当前用户";
 
+    // google oauth error messages
+    public static final String GOOGLE_OAUTH_AUTHORIZATION_FAILED = "GOOGLE_OAUTH_AUTHORIZATION_FAILED";
+    public static final String GOOGLE_OAUTH_MISSING_CODE = "GOOGLE_OAUTH_MISSING_CODE";
+    public static final String GOOGLE_OAUTH_TOKEN_EXCHANGE_FAILED = "GOOGLE_OAUTH_TOKEN_EXCHANGE_FAILED";
+    public static final String GOOGLE_OAUTH_MISSING_ID_TOKEN = "GOOGLE_OAUTH_MISSING_ID_TOKEN";
+    public static final String GOOGLE_OAUTH_MISSING_EMAIL = "GOOGLE_OAUTH_MISSING_EMAIL";
+    public static final String GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED = "GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED";
+    public static final String GOOGLE_OAUTH_SERVICE_UNAVAILABLE = "GOOGLE_OAUTH_SERVICE_UNAVAILABLE";
+
+    // default redirect urls
+    public static final String DEFAULT_FRONTEND_URL = "http://localhost:5173";
+
 }

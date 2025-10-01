@@ -12,6 +12,15 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: () => import('../pages/AuthCallback.vue'),
+      meta: { 
+        public: true,
+        title: 'Google登录回调'
+      },
+    },
+    {
       path: '/',
       name: 'home',
       component: HomeView,

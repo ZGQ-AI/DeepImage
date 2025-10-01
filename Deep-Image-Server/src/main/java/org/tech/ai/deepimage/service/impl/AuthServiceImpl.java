@@ -23,6 +23,7 @@ import org.tech.ai.deepimage.util.CryptoUtil;
 import org.tech.ai.deepimage.util.HttpRequestUtil;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -60,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
         SaLoginModel model = new SaLoginModel();
         model.setExtra(JwtClaimConstant.USERNAME, user.getUsername());
         model.setExtra(JwtClaimConstant.EMAIL, user.getEmail());
+        model.setExtra(JwtClaimConstant.AVATAR_URL, user.getAvatarUrl());
         StpUtil.login(user.getId(), model);
         String accessToken = StpUtil.getTokenValue();
 
@@ -103,7 +105,8 @@ public class AuthServiceImpl implements AuthService {
         // 4. 生成新的 access token
         StpUtil.login(user.getId(), new SaLoginModel()
                 .setExtra(JwtClaimConstant.USERNAME, user.getUsername())
-                .setExtra(JwtClaimConstant.EMAIL, user.getEmail()));
+                .setExtra(JwtClaimConstant.EMAIL, user.getEmail())
+                .setExtra(JwtClaimConstant.AVATAR_URL, user.getAvatarUrl()));
         String accessToken = StpUtil.getTokenValue();
 
         // 5. 更新会话信息
@@ -206,6 +209,91 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception ignored) {}
 
         return true;
+    }
+
+    @Override
+    public TokenPairResponse loginByGoogle(User user) {
+        // 1. 使用Sa-Token登录
+        StpUtil.login(user.getId(), new SaLoginModel()
+                .setExtra(JwtClaimConstant.EMAIL, user.getEmail())
+                .setExtra(JwtClaimConstant.USERNAME, user.getUsername())
+                .setExtra(JwtClaimConstant.AVATAR_URL, user.getAvatarUrl()));
+
+        // 2. 获取access_token
+        String accessToken = StpUtil.getTokenValue();
+        String accessTokenHash = CryptoUtil.sha256Hex(accessToken);
+
+        // 3. 采集请求头中的 IP 与 UA
+        String ip = HttpRequestUtil.extractClientIp();
+        String userAgent = HttpRequestUtil.extractUserAgent();
+
+        // 4. 创建Session记录
+        Session session = new Session();
+        session.setUserId(user.getId());
+        session.setAccessTokenHash(accessTokenHash);
+        session.setIpAddress(ip);
+        session.setUserAgent(userAgent);
+        session.setActive(SessionStatus.ACTIVE);
+        session.setCreatedAt(LocalDateTime.now());
+        session.setUpdatedAt(LocalDateTime.now());
+        session.setLastRefreshAt(LocalDateTime.now());
+        sessionService.save(session);
+
+        // 5. 生成refresh_token
+        CreateRefreshTokenRequest createReq = new CreateRefreshTokenRequest();
+        createReq.setUserId(user.getId());
+        createReq.setSessionId(session.getId());
+        String refreshTokenPlain = refreshTokenService.createAndStoreRefreshToken(createReq);
+
+        // 6. 返回TokenPairResponse
+        return new TokenPairResponse(accessToken, refreshTokenPlain);
+    }
+
+    @Override
+    public User registerGoogleUser(RegisterGoogleUserRequest registerGoogleUserRequest) {
+        // 1. 检查email是否已存在
+        User existingUser = userService.getOne(new LambdaQueryWrapper<User>()
+                .eq(User::getEmail, registerGoogleUserRequest.getEmail()));
+        
+        if (existingUser != null) {
+            // 更新已存在用户的头像（如果Google提供了新头像）
+            if (registerGoogleUserRequest.getPicture() != null && !registerGoogleUserRequest.getPicture().isEmpty()) {
+                existingUser.setAvatarUrl(registerGoogleUserRequest.getPicture());
+                existingUser.setUpdatedAt(LocalDateTime.now());
+                userService.updateById(existingUser);
+            }
+            return existingUser;
+        }
+
+        // 2. 创建新用户
+        User user = new User();
+        user.setEmail(registerGoogleUserRequest.getEmail());
+        
+        // 优先使用Google提供的name，否则从email提取
+        if (registerGoogleUserRequest.getName() != null && !registerGoogleUserRequest.getName().isEmpty()) {
+            user.setUsername(registerGoogleUserRequest.getName());
+        } else {
+            user.setUsername(registerGoogleUserRequest.getEmail().split("@")[0]);
+        }
+        
+        // 保存Google头像URL
+        if (registerGoogleUserRequest.getPicture() != null && !registerGoogleUserRequest.getPicture().isEmpty()) {
+            user.setAvatarUrl(registerGoogleUserRequest.getPicture());
+        }
+        
+        // 设置随机密码（Google用户不需要密码登录）
+        user.setPasswordHash(CryptoUtil.sha256Hex(UUID.randomUUID().toString()));
+        
+        // Google账号默认已验证
+        user.setVerified(true);
+        
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        
+        // 3. 保存用户
+        userService.save(user);
+        
+        return user;
     }
 
 

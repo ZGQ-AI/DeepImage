@@ -104,8 +104,10 @@ router.afterEach((to) => {
 })
 
 const goLogin = () => router.push({ name: 'auth' })
+
+// 计算用户名首字符（用于头像兜底）
 const initials = computed(() => {
-  const name = userStore.loginUser.userName || ''
+  const name = userStore.profile?.username || ''
   return name ? name.slice(0, 1).toUpperCase() : '?'
 })
 

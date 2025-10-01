@@ -32,6 +32,15 @@ public final class HttpRequestUtil {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         return extractUserAgent(attrs != null ? attrs.getRequest() : null);
     }
+    
+    // Alias methods for consistency
+    public static String getClientIp(HttpServletRequest request) {
+        return extractClientIp(request);
+    }
+    
+    public static String getUserAgent(HttpServletRequest request) {
+        return extractUserAgent(request);
+    }
 }
 
 

@@ -39,7 +39,7 @@ public class UserController {
 
     /**
      * 更新个人信息
-     * @param request 更新请求
+     * @param request 更新请求 
      * @return 更新后的用户信息
      */
     @PutMapping("/profile")

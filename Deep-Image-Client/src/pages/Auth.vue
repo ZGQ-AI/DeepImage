@@ -18,6 +18,22 @@
         >
           <!-- 登录 Tab -->
           <a-tab-pane key="login" tab="登录">
+            <!-- Google登录按钮 -->
+            <a-button
+              class="google-login-btn"
+              size="large"
+              block
+              @click="handleGoogleLogin"
+            >
+              <template #icon>
+                <img src="@/assets/google.svg" alt="Google" class="google-icon" />
+              </template>
+              使用 Google 账号登录
+            </a-button>
+
+            <!-- 分隔线 -->
+            <a-divider>或使用邮箱密码登录</a-divider>
+
             <a-form
               ref="loginFormRef"
               :model="loginForm"
@@ -408,6 +424,19 @@ async function onResetPassword() {
     loading.value = false
   }
 }
+
+// Google登录
+function handleGoogleLogin() {
+  // 构建回调URL（当前前端地址）
+  const callbackUrl = `${window.location.origin}/auth/callback`
+  
+  // 跳转到后端OAuth发起接口
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+  const loginUrl = `${apiBaseUrl}/api/auth/google/login?fromUrl=${encodeURIComponent(callbackUrl)}`
+  
+  // 直接跳转（浏览器会重定向到Google）
+  window.location.href = loginUrl
+}
 </script>
 
 <style scoped>
@@ -558,6 +587,42 @@ async function onResetPassword() {
 
 :deep(.ant-btn-primary:active) {
   transform: translateY(0);
+}
+
+/* Google登录按钮样式 */
+.google-login-btn {
+  border: 1px solid #dadce0;
+  color: #3c4043;
+  background: white;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.google-login-btn:hover {
+  background: #f7f8f8;
+  border-color: #dadce0;
+  color: #3c4043;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.google-login-btn:active {
+  transform: translateY(0);
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+
+:deep(.ant-divider) {
+  margin: 20px 0;
+  font-size: 13px;
+  color: #8c8c8c;
 }
 
 /* 响应式设计 */
