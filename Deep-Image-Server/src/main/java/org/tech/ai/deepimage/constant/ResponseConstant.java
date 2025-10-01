@@ -33,4 +33,10 @@ public class ResponseConstant {
     public static final String FORBIDDEN_MESSAGE_DETAIL = "permission denied";
     public static final String PARAM_INVALID_MESSAGE = "parameter invalid";
 
+    // user error messages
+    public static final String USERNAME_ALREADY_EXISTS_MESSAGE = "用户名已被占用";
+    public static final String SESSION_NOT_FOUND_MESSAGE = "会话不存在";
+    public static final String CANNOT_DELETE_CURRENT_SESSION_MESSAGE = "不能删除当前会话";
+    public static final String SESSION_NOT_BELONG_TO_USER_MESSAGE = "该会话不属于当前用户";
+
 }

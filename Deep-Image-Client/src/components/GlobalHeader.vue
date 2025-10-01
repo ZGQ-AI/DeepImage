@@ -29,17 +29,29 @@
       <!-- 用户操作区域：固定宽度100px -->
       <a-col flex="160px">
         <div class="user-login-status">
-          <template v-if="loginUserStore.loginUser.id">
+          <template v-if="userStore.loginUser.id">
             <a-dropdown trigger="['click']">
               <a-space class="user-entry">
-                <a-avatar size="small">{{ initials }}</a-avatar>
-                <span class="username">{{ loginUserStore.loginUser.userName }}</span>
+                <!-- 优先显示用户头像，没有头像则显示用户名首字母 -->
+                <a-avatar 
+                  size="small" 
+                  :src="userStore.profile?.avatarUrl"
+                >
+                  <template v-if="!userStore.profile?.avatarUrl">
+                    {{ initials }}
+                  </template>
+                </a-avatar>
+                <span class="username">{{ userStore.loginUser.userName }}</span>
               </a-space>
               <template #overlay>
                 <a-menu @click="onUserMenuClick">
-                  <a-menu-item key="profile">个人中心</a-menu-item>
+                  <a-menu-item key="profile">
+                    <UserOutlined /> 个人中心
+                  </a-menu-item>
                   <a-menu-divider />
-                  <a-menu-item key="logout">退出登录</a-menu-item>
+                  <a-menu-item key="logout">
+                    <LogoutOutlined /> 退出登录
+                  </a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
@@ -54,13 +66,13 @@
 </template>
 <script lang="ts" setup>
 import { h, ref, computed } from 'vue'
-import { HomeOutlined, GithubOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, GithubOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
-import { useLoginUserStore } from '../stores/UseLoginUserStore'
+import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 
-const loginUserStore = useLoginUserStore()
+const userStore = useUserStore()
 const authStore = useAuthStore()
 const current = ref<string[]>([])
 const items = ref<MenuProps['items']>([
@@ -93,7 +105,7 @@ router.afterEach((to) => {
 
 const goLogin = () => router.push({ name: 'auth' })
 const initials = computed(() => {
-  const name = loginUserStore.loginUser.userName || ''
+  const name = userStore.loginUser.userName || ''
   return name ? name.slice(0, 1).toUpperCase() : '?'
 })
 
@@ -102,7 +114,7 @@ async function onUserMenuClick({ key }: { key: string }) {
     await authStore.logout()
     router.replace({ name: 'auth' })
   } else if (key === 'profile') {
-    router.push('/about')
+    router.push('/profile')
   }
 }
 </script>

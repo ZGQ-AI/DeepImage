@@ -30,6 +30,7 @@ sa-token:
   is-share: false
   token-style: jwt
   is-write-header: true
+  token-prefix: Bearer
 
 deepimage:
   auth:
