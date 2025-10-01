@@ -12,12 +12,11 @@
 <script setup lang="ts">
 // 导入基础布局组件
 import BasicLayout from './layout/BasicLayout.vue'
-import { useLoginUserStore } from './stores/UseLoginUserStore';
+import { useLoginUserStore } from './stores/UseLoginUserStore'
 
-const loginUserStore = useLoginUserStore();
+const loginUserStore = useLoginUserStore()
 
-loginUserStore.fetchLoginUser();
-
+loginUserStore.fetchLoginUser()
 </script>
 
 <style scoped>

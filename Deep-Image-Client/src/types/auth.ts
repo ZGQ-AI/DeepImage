@@ -1,30 +1,28 @@
 // moved to src/types/api.ts
 
 export interface LoginRequest {
-    email: string;
-    password: string;
+  email: string
+  password: string
 }
 
 export interface RegisterRequest {
-    email: string;
-    username: string;
-    password: string;
+  email: string
+  username: string
+  password: string
 }
 
 export interface RefreshTokenRequest {
-    refreshToken: string;
+  refreshToken: string
 }
 
 export interface TokenPairResponse {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn?: number;
+  accessToken: string
+  refreshToken: string
+  expiresIn?: number
 }
 
 export interface ResetPasswordRequest {
-    email: string;
-    oldPassword: string;
-    newPassword: string;
+  email: string
+  oldPassword: string
+  newPassword: string
 }
-
-

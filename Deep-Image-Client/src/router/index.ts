@@ -6,22 +6,10 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/login',
-      name: 'login',
-      component: () => import('../pages/Login.vue'),
-      meta: { public: true }
-    },
-    {
-      path: '/register',
-      name: 'register',
-      component: () => import('../pages/Register.vue'),
-      meta: { public: true }
-    },
-    {
-      path: '/reset-password',
-      name: 'reset-password',
-      component: () => import('../pages/ResetPassword.vue'),
-      meta: { public: true }
+      path: '/auth',
+      name: 'auth',
+      component: () => import('../pages/Auth.vue'),
+      meta: { public: true },
     },
     {
       path: '/',
@@ -48,7 +36,7 @@ router.beforeEach(async (to) => {
     if (auth.isAuthenticated) return true
     const ok = await auth.bootstrap()
     if (ok) return true
-    return { name: 'login', query: { redirect: to.fullPath } }
+    return { name: 'auth', query: { redirect: to.fullPath } }
   }
   return true
 })
