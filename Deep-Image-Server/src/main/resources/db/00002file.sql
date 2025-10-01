@@ -135,3 +135,59 @@ COMMENT ON COLUMN di_file_access_logs.created_at IS '访问时间';
 CREATE INDEX idx_di_file_access_logs_file_id ON di_file_access_logs(file_id);
 CREATE INDEX idx_di_file_access_logs_user_id ON di_file_access_logs(user_id);
 CREATE INDEX idx_di_file_access_logs_created_at ON di_file_access_logs(created_at);
+
+-- ============================================
+-- 标签表 - 文件标签分类
+-- ============================================
+CREATE TABLE di_tags (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    tag_name VARCHAR(50) NOT NULL,
+    color VARCHAR(20),
+    usage_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(user_id, tag_name)
+);
+
+-- 表注释
+COMMENT ON TABLE di_tags IS '标签表,用户自定义标签用于文件分类';
+
+-- 字段注释
+COMMENT ON COLUMN di_tags.id IS '标签唯一标识,主键';
+COMMENT ON COLUMN di_tags.user_id IS '标签所属用户ID,用户隔离';
+COMMENT ON COLUMN di_tags.tag_name IS '标签名称,如:#工作, #旅行, #重要';
+COMMENT ON COLUMN di_tags.color IS '标签颜色,十六进制格式,如:#FF5733';
+COMMENT ON COLUMN di_tags.usage_count IS '标签使用次数统计';
+COMMENT ON COLUMN di_tags.created_at IS '标签创建时间';
+COMMENT ON COLUMN di_tags.updated_at IS '标签最后更新时间';
+
+-- 索引设计
+CREATE INDEX idx_di_tags_user_id ON di_tags(user_id);
+CREATE INDEX idx_di_tags_name ON di_tags(tag_name);
+
+-- ============================================
+-- 文件-标签关联表 (多对多)
+-- ============================================
+CREATE TABLE di_file_tags (
+    id BIGSERIAL PRIMARY KEY,
+    file_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(file_id, tag_id)
+);
+
+-- 表注释
+COMMENT ON TABLE di_file_tags IS '文件-标签关联表,多对多关系';
+
+-- 字段注释
+COMMENT ON COLUMN di_file_tags.id IS '关联记录唯一标识';
+COMMENT ON COLUMN di_file_tags.file_id IS '文件ID,引用di_file_records表';
+COMMENT ON COLUMN di_file_tags.tag_id IS '标签ID,引用di_tags表';
+COMMENT ON COLUMN di_file_tags.created_at IS '标签添加时间';
+
+-- 索引设计
+CREATE INDEX idx_di_file_tags_file_id ON di_file_tags(file_id);
+CREATE INDEX idx_di_file_tags_tag_id ON di_file_tags(tag_id);
