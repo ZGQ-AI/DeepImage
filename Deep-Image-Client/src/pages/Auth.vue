@@ -231,6 +231,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { MailOutlined, LockOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useUserStore } from '../stores/useUserStore'
 import { register as registerApi, resetPassword as resetPasswordApi } from '../api/auth'
 import type { LoginRequest, RegisterRequest, ResetPasswordRequest } from '../types/auth'
 
@@ -241,9 +242,13 @@ const authStore = useAuthStore()
 // 当前激活的 Tab
 const activeTab = ref((route.query.tab as string) || 'login')
 
-// 监听 tab 变化，更新 URL
-watch(activeTab, (newTab) => {
-  router.replace({ query: { ...route.query, tab: newTab } })
+// 监听 tab 变化，更新 URL（保持 redirect 参数）
+watch(activeTab, (newTab, oldTab) => {
+  // 只有在用户真正切换 tab 时才更新 URL
+  if (oldTab !== undefined) {
+    const newQuery = { ...route.query, tab: newTab }
+    router.replace({ name: 'auth', query: newQuery })
+  }
 })
 
 // 加载状态
@@ -360,8 +365,18 @@ async function onLogin() {
     }
     await authStore.login(payload)
     message.success('登录成功！')
+    
+    // 获取用户完整信息
+    const userStore = useUserStore()
+    try {
+      await userStore.fetchProfile()
+    } catch (err) {
+      console.warn('Failed to fetch user profile:', err)
+    }
+    
+    // 获取重定向地址并跳转
     const redirect = (route.query.redirect as string) || '/'
-    router.replace(redirect)
+    await router.push(redirect)
   } catch (e: any) {
     message.error(e?.message || '登录失败')
   } finally {
@@ -427,8 +442,14 @@ async function onResetPassword() {
 
 // Google登录
 function handleGoogleLogin() {
-  // 构建回调URL（当前前端地址）
-  const callbackUrl = `${window.location.origin}/auth/callback`
+  // 获取 redirect 参数
+  const redirect = (route.query.redirect as string) || ''
+  
+  // 构建回调URL，将 redirect 参数传递给回调页面
+  let callbackUrl = `${window.location.origin}/auth/callback`
+  if (redirect) {
+    callbackUrl += `?redirect=${encodeURIComponent(redirect)}`
+  }
   
   // 跳转到后端OAuth发起接口
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'

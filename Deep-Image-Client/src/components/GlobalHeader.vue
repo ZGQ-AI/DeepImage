@@ -48,6 +48,9 @@
                   <a-menu-item key="profile">
                     <UserOutlined /> 个人中心
                   </a-menu-item>
+                  <a-menu-item key="tags">
+                    <TagsOutlined /> 标签管理
+                  </a-menu-item>
                   <a-menu-divider />
                   <a-menu-item key="logout">
                     <LogoutOutlined /> 退出登录
@@ -66,7 +69,7 @@
 </template>
 <script lang="ts" setup>
 import { h, ref, computed } from 'vue'
-import { HomeOutlined, GithubOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, GithubOutlined, UserOutlined, LogoutOutlined, TagsOutlined } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/useUserStore'
@@ -117,6 +120,8 @@ async function onUserMenuClick({ key }: { key: string }) {
     router.replace({ name: 'auth' })
   } else if (key === 'profile') {
     router.push('/profile')
+  } else if (key === 'tags') {
+    router.push('/tags')
   }
 }
 </script>

@@ -36,6 +36,7 @@ const userStore = useUserStore()
 const loading = ref(true)
 const error = ref(false)
 const errorMessage = ref('')
+const redirectPath = ref('/')
 
 onMounted(async () => {
   try {
@@ -45,6 +46,7 @@ onMounted(async () => {
     const refreshToken = params.get('refresh_token')
     const loginError = params.get('loginError')
     const loginSuccess = params.get('loginSuccess')
+    redirectPath.value = params.get('redirect') || '/'
     
     // 检查是否有错误
     if (loginError || loginSuccess === 'false') {
@@ -72,15 +74,13 @@ onMounted(async () => {
       'local'
     )
     
-    // 获取用户信息
-    await userStore.fetchProfile()
+    // 获取用户信息（带重试机制）
+    await fetchProfileWithRetry()
     
     message.success('登录成功！')
     
-    // 跳转到首页
-    setTimeout(() => {
-      router.replace('/')
-    }, 500)
+    // 立即跳转到指定页面
+    router.replace(redirectPath.value)
     
   } catch (err: any) {
     error.value = true
@@ -88,6 +88,31 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+/**
+ * 带重试机制的用户信息获取
+ * 网络波动时自动重试，提高成功率
+ */
+async function fetchProfileWithRetry(maxRetries = 2) {
+  let lastError
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await userStore.fetchProfile()
+      return // 成功
+    } catch (err) {
+      lastError = err
+      console.warn(`获取用户信息失败，重试 ${i + 1}/${maxRetries}`)
+      
+      if (i < maxRetries - 1) {
+        // 等待 1 秒后重试
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+    }
+  }
+  
+  throw lastError // 所有重试都失败
+}
 
 function getErrorMessage(errorCode: string | null): string {
   const errorMessages: Record<string, string> = {
@@ -102,8 +127,18 @@ function getErrorMessage(errorCode: string | null): string {
   return errorMessages[errorCode || ''] || '未知错误，请重试'
 }
 
+/**
+ * 返回登录页，保留 redirect 参数
+ */
 function backToLogin() {
-  router.replace('/auth')
+  if (redirectPath.value && redirectPath.value !== '/') {
+    router.replace({ 
+      path: '/auth', 
+      query: { redirect: redirectPath.value }
+    })
+  } else {
+    router.replace('/auth')
+  }
 }
 </script>
 
