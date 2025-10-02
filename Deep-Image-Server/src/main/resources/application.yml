@@ -49,7 +49,7 @@ deepimage:
       prompt: consent
 
 minio:
-  endpoint: http://localhost:9090
+  endpoint: http://localhost:9000
   access-key: minioadmin
   secret-key: minioadmin
   bucket: deepimage
