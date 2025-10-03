@@ -3,7 +3,13 @@
  */
 import request from '../request'
 import type { ApiResponse } from '../types/api'
-import type { FileUploadResponse, BusinessType } from '../types/file'
+import type {
+  FileUploadResponse,
+  BusinessType,
+  FileInfoResponse,
+  ListFilesByTypeRequest,
+  PageResponse,
+} from '../types/file'
 
 /**
  * 上传文件
@@ -32,6 +38,17 @@ export function uploadFile(
         'Content-Type': 'multipart/form-data',
       },
     }
+  )
+}
+
+/**
+ * 按业务类型查询文件列表
+ * @param requestData 查询参数
+ */
+export function listFilesByType(requestData: ListFilesByTypeRequest) {
+  return request.post<ApiResponse<PageResponse<FileInfoResponse>>>(
+    '/api/files/list-by-type',
+    requestData
   )
 }
 

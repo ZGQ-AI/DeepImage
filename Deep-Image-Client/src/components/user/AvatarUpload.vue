@@ -65,48 +65,88 @@
           </div>
         </div>
 
-        <!-- 统一的上传区域 -->
-        <div class="unified-upload-area">
-          <!-- 主要上传区域：智能识别粘贴内容 -->
-          <div 
-            ref="uploadZoneRef"
-            class="upload-drop-zone"
-            :class="{ 'drop-zone-active': isPasteAreaActive }"
-            @paste="handleSmartPaste"
-            @dragover.prevent="isPasteAreaActive = true"
-            @dragleave="isPasteAreaActive = false"
-            @drop.prevent="handleDrop"
-            tabindex="0"
-          >
-            <div class="drop-zone-content">
-              <UploadOutlined style="font-size: 36px; color: #1890ff;" />
-              <div class="drop-zone-text">
-                <p class="main-text">拖拽图片到此处，或按 Ctrl+V (Cmd+V) 粘贴</p>
-                <p class="sub-text">支持粘贴图片文件或图片链接</p>
-                <p class="sub-text">
-                  <a-button type="link" size="small" @click="handleClickUploadZone">
-                    点击选择文件
-                  </a-button>
-                </p>
+        <!-- 上传方式切换 -->
+        <a-tabs v-model:activeKey="uploadTab" size="small">
+          <a-tab-pane key="upload" tab="上传新头像">
+            <!-- 统一的上传区域 -->
+            <div class="unified-upload-area">
+              <!-- 主要上传区域：智能识别粘贴内容 -->
+              <div 
+                ref="uploadZoneRef"
+                class="upload-drop-zone"
+                :class="{ 'drop-zone-active': isPasteAreaActive }"
+                @paste="handleSmartPaste"
+                @dragover.prevent="isPasteAreaActive = true"
+                @dragleave="isPasteAreaActive = false"
+                @drop.prevent="handleDrop"
+                tabindex="0"
+              >
+                <div class="drop-zone-content">
+                  <UploadOutlined style="font-size: 36px; color: #1890ff;" />
+                  <div class="drop-zone-text">
+                    <p class="main-text">拖拽图片到此处，或按 Ctrl+V (Cmd+V) 粘贴</p>
+                    <p class="sub-text">支持粘贴图片文件或图片链接</p>
+                    <p class="sub-text">
+                      <a-button type="link" size="small" @click="handleClickUploadZone">
+                        点击选择文件
+                      </a-button>
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              <!-- 隐藏的文件输入 -->
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                style="display: none"
+                @change="handleFileChange"
+              />
             </div>
-          </div>
 
-          <!-- 隐藏的文件输入 -->
-          <input
-            ref="fileInputRef"
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
-            style="display: none"
-            @change="handleFileChange"
-          />
-        </div>
+            <!-- 上传提示 -->
+            <div class="upload-tips">
+              <InfoCircleOutlined style="margin-right: 4px; color: #1890ff;" />
+              支持 JPG、PNG、WEBP 格式 · 大小不超过 {{ maxSizeMB }}MB · 建议尺寸 400x400 像素
+            </div>
+          </a-tab-pane>
 
-        <!-- 上传提示 -->
-        <div class="upload-tips">
-          <InfoCircleOutlined style="margin-right: 4px; color: #1890ff;" />
-          支持 JPG、PNG、WEBP 格式 · 大小不超过 {{ maxSizeMB }}MB · 建议尺寸 400x400 像素
-        </div>
+          <a-tab-pane key="history" tab="历史头像">
+            <div class="history-avatars-wrapper">
+              <a-spin :spinning="loadingHistory">
+                <div v-if="historyAvatars.length > 0" class="history-sections">
+                  <div
+                    v-for="group in groupedHistoryAvatars"
+                    :key="group.date"
+                    class="history-group"
+                  >
+                    <div class="history-group-title">{{ group.label }}</div>
+                    <div class="history-grid">
+                      <div
+                        v-for="avatar in group.avatars"
+                        :key="avatar.fileId"
+                        class="history-avatar-item"
+                        :class="{ 'history-avatar-selected': previewImageUrl === avatar.fileUrl }"
+                        @click="selectHistoryAvatar(avatar)"
+                      >
+                        <img
+                          :src="avatar.thumbnailUrl || avatar.fileUrl"
+                          :alt="avatar.originalFilename"
+                          class="history-avatar-img"
+                        />
+                        <div class="history-avatar-overlay">
+                          <CheckCircleOutlined v-if="previewImageUrl === avatar.fileUrl" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <a-empty v-else description="暂无历史头像" />
+              </a-spin>
+            </div>
+          </a-tab-pane>
+        </a-tabs>
       </div>
 
       <template #footer>
@@ -127,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -136,10 +176,11 @@ import {
   PictureOutlined,
   UploadOutlined,
   InfoCircleOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons-vue'
-import type { UploadProps } from 'ant-design-vue'
-import { uploadFile } from '../../api/file'
+import { uploadFile, listFilesByType } from '../../api/file'
 import { BusinessType } from '../../types/file'
+import type { FileInfoResponse } from '../../types/file'
 
 interface Props {
   /** 当前头像 URL */
@@ -167,11 +208,17 @@ const uploading = ref(false)
 const isPasteAreaActive = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadZoneRef = ref<HTMLElement | null>(null)
+const uploadTab = ref<'upload' | 'history'>('upload')
 
 // 预览相关
 const previewImageUrl = ref('') // 模态框中预览的图片 URL（本地 base64 或网络 URL）
 const previewFile = ref<File | null>(null) // 待上传的文件对象
-const previewSource = ref<'file' | 'url'>('file') // 预览来源
+const previewSource = ref<'file' | 'url' | 'history'>('file') // 预览来源
+const selectedHistoryFileId = ref<number>(0) // 选中的历史头像 ID
+
+// 历史头像相关
+const historyAvatars = ref<FileInfoResponse[]>([])
+const loadingHistory = ref(false)
 
 // 已确认的头像 URL（父组件传入的）
 const confirmedImageUrl = computed(() => props.modelValue)
@@ -180,11 +227,70 @@ const confirmedImageUrl = computed(() => props.modelValue)
 const maxSizeMB = computed(() => props.maxSize)
 const maxSizeBytes = computed(() => props.maxSize * 1024 * 1024)
 
+// 按日期分组的历史头像
+const groupedHistoryAvatars = computed(() => {
+  const groups: Array<{ date: string; label: string; avatars: FileInfoResponse[] }> = []
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+  // 按日期分组
+  const todayAvatars: FileInfoResponse[] = []
+  const yesterdayAvatars: FileInfoResponse[] = []
+  const thisWeekAvatars: FileInfoResponse[] = []
+  const thisMonthAvatars: FileInfoResponse[] = []
+  const olderAvatars: FileInfoResponse[] = []
+
+  historyAvatars.value.forEach((avatar) => {
+    const createdDate = new Date(avatar.createdAt)
+    
+    if (createdDate >= today) {
+      todayAvatars.push(avatar)
+    } else if (createdDate >= yesterday) {
+      yesterdayAvatars.push(avatar)
+    } else if (createdDate >= weekAgo) {
+      thisWeekAvatars.push(avatar)
+    } else if (createdDate >= monthAgo) {
+      thisMonthAvatars.push(avatar)
+    } else {
+      olderAvatars.push(avatar)
+    }
+  })
+
+  // 构建分组数据
+  if (todayAvatars.length > 0) {
+    groups.push({ date: 'today', label: '今天', avatars: todayAvatars })
+  }
+  if (yesterdayAvatars.length > 0) {
+    groups.push({ date: 'yesterday', label: '昨天', avatars: yesterdayAvatars })
+  }
+  if (thisWeekAvatars.length > 0) {
+    groups.push({ date: 'thisWeek', label: '本周', avatars: thisWeekAvatars })
+  }
+  if (thisMonthAvatars.length > 0) {
+    groups.push({ date: 'thisMonth', label: '本月', avatars: thisMonthAvatars })
+  }
+  if (olderAvatars.length > 0) {
+    groups.push({ date: 'older', label: '更早', avatars: olderAvatars })
+  }
+
+  return groups
+})
+
 // 常量定义
 const CONSTANTS = {
   AUTO_FOCUS_DELAY: 100,     // DOM 更新后自动聚焦的延迟时间
   IMAGE_LOAD_TIMEOUT: 10000,  // 图片加载超时时间（10秒）
 }
+
+// 监听上传标签页切换，加载历史头像
+watch(uploadTab, (newTab) => {
+  if (newTab === 'history' && historyAvatars.value.length === 0) {
+    loadHistoryAvatars()
+  }
+})
 
 /**
  * 将文件读取为 Data URL
@@ -226,6 +332,42 @@ function validateFile(file: File): boolean {
 }
 
 /**
+ * 加载历史头像列表
+ */
+async function loadHistoryAvatars() {
+  loadingHistory.value = true
+  try {
+    const { data } = await listFilesByType({
+      businessType: BusinessType.AVATAR,
+      page: 1,
+      pageSize: 20,
+    })
+
+    if (data.code === 200 && data.data) {
+      historyAvatars.value = data.data.records
+    } else {
+      throw new Error(data.message || '获取历史头像失败')
+    }
+  } catch (error) {
+    console.error('加载历史头像失败:', error)
+    message.error('加载历史头像失败')
+  } finally {
+    loadingHistory.value = false
+  }
+}
+
+/**
+ * 选择历史头像
+ */
+function selectHistoryAvatar(avatar: FileInfoResponse) {
+  previewImageUrl.value = avatar.fileUrl
+  previewFile.value = null
+  previewSource.value = 'history'
+  selectedHistoryFileId.value = avatar.fileId
+  message.success('已选择此头像，请确认后应用')
+}
+
+/**
  * 显示上传模态框
  */
 function showUploadModal() {
@@ -233,6 +375,7 @@ function showUploadModal() {
   // 重置状态
   previewImageUrl.value = ''
   previewFile.value = null
+  uploadTab.value = 'upload'
   
   // 等待 DOM 更新后自动聚焦到上传区域，使其可以直接粘贴
   setTimeout(() => {
@@ -306,6 +449,12 @@ async function handleConfirmUpload() {
       emit('upload-success', previewImageUrl.value, 0) // fileId 为 0 表示外部 URL
       message.success('头像设置成功！')
       uploadModalVisible.value = false
+    } else if (previewSource.value === 'history') {
+      // 历史头像，直接使用
+      emit('update:modelValue', previewImageUrl.value)
+      emit('upload-success', previewImageUrl.value, selectedHistoryFileId.value)
+      message.success('头像已更换！')
+      uploadModalVisible.value = false
     } else if (previewFile.value) {
       // 文件来源，上传到服务器
       const { data } = await uploadFile(previewFile.value, BusinessType.AVATAR)
@@ -323,6 +472,11 @@ async function handleConfirmUpload() {
         emit('upload-success', avatarUrl, response.fileId)
         message.success('头像上传成功！')
         uploadModalVisible.value = false
+        
+        // 刷新历史头像列表
+        if (historyAvatars.value.length > 0) {
+          loadHistoryAvatars()
+        }
       } else {
         throw new Error(data.message || '上传失败')
       }
@@ -658,6 +812,92 @@ function handleClearAvatar() {
   color: #666;
   text-align: center;
   border: 1px solid #d6e4ff;
+}
+
+/* 历史头像区域 */
+.history-avatars-wrapper {
+  min-height: 300px;
+  padding: 16px 0;
+}
+
+.history-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.history-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-group-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.history-avatar-item {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; /* 1:1 正方形 */
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #d9d9d9;
+  transition: all 0.3s;
+}
+
+.history-avatar-item:hover {
+  border-color: #1890ff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.history-avatar-selected {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.history-avatar-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.history-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(24, 144, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.history-avatar-selected .history-avatar-overlay {
+  opacity: 1;
+}
+
+.history-avatar-overlay .anticon {
+  font-size: 32px;
+  color: #1890ff;
 }
 </style>
 

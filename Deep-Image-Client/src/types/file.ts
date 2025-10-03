@@ -52,3 +52,55 @@ export interface FileUploadResponse {
   uploadedAt: string
 }
 
+/**
+ * 文件信息响应
+ */
+export interface FileInfoResponse {
+  /** 文件ID */
+  fileId: number
+  /** 原始文件名 */
+  originalFilename: string
+  /** 文件访问 URL */
+  fileUrl: string
+  /** 缩略图 URL */
+  thumbnailUrl?: string
+  /** 文件大小（字节） */
+  fileSize: number
+  /** 内容类型 */
+  contentType: string
+  /** 业务类型 */
+  businessType: string
+  /** 创建时间 */
+  createdAt: string
+  /** 更新时间 */
+  updatedAt: string
+}
+
+/**
+ * 按业务类型查询文件请求
+ */
+export interface ListFilesByTypeRequest {
+  /** 业务类型 */
+  businessType: BusinessType
+  /** 页码，默认第1页 */
+  page?: number
+  /** 每页数量，默认20条 */
+  pageSize?: number
+}
+
+/**
+ * 分页响应
+ */
+export interface PageResponse<T> {
+  /** 当前页数据 */
+  records: T[]
+  /** 总记录数 */
+  total: number
+  /** 当前页码 */
+  current: number
+  /** 每页数量 */
+  size: number
+  /** 总页数 */
+  pages: number
+}
+

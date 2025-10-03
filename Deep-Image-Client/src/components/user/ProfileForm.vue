@@ -180,9 +180,8 @@ function resetForm() {
 }
 
 // 头像上传成功回调
-function handleAvatarUploadSuccess(url: string) {
+function handleAvatarUploadSuccess() {
   // 头像 URL 已通过 v-model 自动更新到 form.avatarUrl
-  // 这里可以添加额外的处理逻辑
   message.success('头像已更新，请点击"保存修改"按钮')
 }
 
