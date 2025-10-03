@@ -15,6 +15,7 @@ import type {
   UpdateTagRequest,
   TagResponse,
 } from '../types/tag'
+import { handleApiError } from '../utils/error'
 
 export const useTagStore = defineStore('tag', () => {
   // 标签列表
@@ -38,7 +39,7 @@ export const useTagStore = defineStore('tag', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '获取标签列表失败')
+      handleApiError(error, '获取标签列表失败')
       throw error
     } finally {
       tagsLoading.value = false
@@ -62,7 +63,7 @@ export const useTagStore = defineStore('tag', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '创建标签失败')
+      handleApiError(error, '创建标签失败')
       throw error
     } finally {
       operationLoading.value = false
@@ -86,7 +87,7 @@ export const useTagStore = defineStore('tag', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '更新标签失败')
+      handleApiError(error, '更新标签失败')
       throw error
     } finally {
       operationLoading.value = false
@@ -110,7 +111,7 @@ export const useTagStore = defineStore('tag', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '删除标签失败')
+      handleApiError(error, '删除标签失败')
       throw error
     } finally {
       operationLoading.value = false

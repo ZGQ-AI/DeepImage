@@ -16,6 +16,7 @@ import type {
   UpdateUserProfileRequest,
   SessionItemResponse,
 } from '../types/user'
+import { handleApiError } from '../utils/error'
 
 export const useUserStore = defineStore('user', () => {
   // 用户信息
@@ -48,7 +49,7 @@ export const useUserStore = defineStore('user', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '获取用户信息失败')
+      handleApiError(error, '获取用户信息失败')
       throw error
     } finally {
       profileLoading.value = false
@@ -71,7 +72,7 @@ export const useUserStore = defineStore('user', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '更新失败')
+      handleApiError(error, '更新失败')
       throw error
     } finally {
       profileLoading.value = false
@@ -92,7 +93,7 @@ export const useUserStore = defineStore('user', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '获取会话列表失败')
+      handleApiError(error, '获取会话列表失败')
       throw error
     } finally {
       sessionsLoading.value = false
@@ -115,7 +116,7 @@ export const useUserStore = defineStore('user', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '移除失败')
+      handleApiError(error, '移除失败')
       throw error
     }
   }
@@ -137,7 +138,7 @@ export const useUserStore = defineStore('user', () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '移除失败')
+      handleApiError(error, '移除失败')
       throw error
     }
   }
