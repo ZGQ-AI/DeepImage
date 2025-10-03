@@ -167,6 +167,7 @@ watch(
 async function handleOk() {
   try {
     await formRef.value?.validate()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any = {
       tagName: formState.tagName,
       color: formState.color,

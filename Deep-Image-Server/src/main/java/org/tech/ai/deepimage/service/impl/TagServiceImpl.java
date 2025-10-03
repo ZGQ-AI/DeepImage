@@ -10,6 +10,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.tech.ai.deepimage.constant.ResponseConstant;
 import org.tech.ai.deepimage.entity.Tag;
 import org.tech.ai.deepimage.exception.BusinessException;
 import org.tech.ai.deepimage.mapper.FileTagMapper;
@@ -20,8 +21,11 @@ import org.tech.ai.deepimage.model.dto.request.UpdateTagRequest;
 import org.tech.ai.deepimage.model.dto.response.TagResponse;
 import org.tech.ai.deepimage.service.TagService;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -177,6 +181,66 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         fileTagMapper.delete(wrapper);
         
         log.info("标签删除成功: tagId={}, 删除了 {} 个文件关联", tagId, tag.getUsageCount());
+    }
+    
+    @Override
+    public void batchIncreaseUsageCount(Set<Long> tagIds) {
+        if (CollectionUtils.isEmpty(tagIds)) {
+            return;
+        }
+        
+        // 使用 LambdaUpdateWrapper 执行 SQL：
+        // UPDATE di_tags SET usage_count = usage_count + 1 WHERE id IN (...)
+        LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.in(Tag::getId, tagIds)
+                .setSql("usage_count = usage_count + 1");
+        
+        update(updateWrapper);
+        log.info("批量增加标签使用计数: tagIds={}", tagIds);
+    }
+    
+    @Override
+    public void batchDecreaseUsageCount(Set<Long> tagIds) {
+        if (CollectionUtils.isEmpty(tagIds)) {
+            return;
+        }
+        
+        // 使用 LambdaUpdateWrapper 执行 SQL：
+        // UPDATE di_tags SET usage_count = usage_count - 1 WHERE id IN (...) AND usage_count > 0
+        LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.in(Tag::getId, tagIds)
+                .gt(Tag::getUsageCount, 0)
+                .setSql("usage_count = usage_count - 1");
+        
+        update(updateWrapper);
+        log.info("批量减少标签使用计数: tagIds={}", tagIds);
+    }
+    
+    @Override
+    public List<Tag> listValidTagsByIds(List<Long> tagIds, Long userId) {
+        if (CollectionUtils.isEmpty(tagIds)) {
+            return List.of();
+        }
+        
+        // 批量查询标签并验证权限
+        LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Tag::getId, tagIds)
+                .eq(Tag::getUserId, userId);
+        
+        return list(wrapper);
+    }
+    
+    @Override
+    public Tag getUserTag(Long tagId, Long userId) {
+        // 带 userId 查询，确保标签属于该用户
+        LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Tag::getId, tagId)
+                .eq(Tag::getUserId, userId);
+        
+        Tag tag = getOne(wrapper);
+        BusinessException.assertNotNull(tag, ResponseConstant.TAG_NOT_FOUND_MESSAGE);
+        
+        return tag;
     }
 }
 

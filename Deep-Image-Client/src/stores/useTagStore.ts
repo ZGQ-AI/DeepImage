@@ -36,6 +36,7 @@ export const useTagStore = defineStore('tag', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '获取标签列表失败')
       throw error
@@ -59,6 +60,7 @@ export const useTagStore = defineStore('tag', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '创建标签失败')
       throw error
@@ -82,6 +84,7 @@ export const useTagStore = defineStore('tag', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '更新标签失败')
       throw error
@@ -105,6 +108,7 @@ export const useTagStore = defineStore('tag', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '删除标签失败')
       throw error

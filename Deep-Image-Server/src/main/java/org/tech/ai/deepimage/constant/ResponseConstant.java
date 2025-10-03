@@ -48,6 +48,31 @@ public class ResponseConstant {
     public static final String GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED = "GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED";
     public static final String GOOGLE_OAUTH_SERVICE_UNAVAILABLE = "GOOGLE_OAUTH_SERVICE_UNAVAILABLE";
 
+    // file error messages
+    public static final String FILE_UPLOAD_FAILED_MESSAGE = "文件上传失败";
+    public static final String FILE_NOT_FOUND_MESSAGE = "文件不存在";
+    public static final String FILE_PERMISSION_DENIED_MESSAGE = "无权操作该文件";
+    public static final String FILE_SIZE_EXCEEDED_MESSAGE = "文件大小超过限制";
+    public static final String FILE_TYPE_INVALID_MESSAGE = "业务类型不合法";
+    public static final String FILE_BEING_REFERENCED_MESSAGE = "文件正在被引用，无法删除";
+    public static final String FILE_ALREADY_EXISTS_MESSAGE = "文件已存在";
+    public static final String FILE_NOT_EXISTS_MESSAGE = "文件不存在";
+
+    // tag error messages
+    public static final String TAG_NOT_FOUND_MESSAGE = "标签不存在或无权访问";
+
+    // file share error messages
+    public static final String FILE_ACCESS_DENIED_MESSAGE = "无权访问该文件";
+    public static final String SHARE_NOT_FOUND_MESSAGE = "分享记录不存在";
+    public static final String SHARE_EXPIRED_MESSAGE = "分享已过期";
+    public static final String SHARE_PERMISSION_DENIED_MESSAGE = "无权分享该文件";
+    public static final String CANCEL_SHARE_PERMISSION_DENIED_MESSAGE = "无权取消该分享";
+    public static final String VIEW_SHARE_PERMISSION_DENIED_MESSAGE = "无权查看该分享";
+    public static final String TARGET_USER_NOT_FOUND_MESSAGE = "目标用户不存在";
+    public static final String TEMPORARY_SHARE_REQUIRES_EXPIRY_MESSAGE = "临时分享必须设置过期时间";
+    public static final String SHARE_ALREADY_EXISTS_MESSAGE = "已存在相同的分享关系";
+    public static final String VIEW_ACCESS_LOG_PERMISSION_DENIED_MESSAGE = "无权查看访问日志";
+
     // default redirect urls
     public static final String DEFAULT_FRONTEND_URL = "http://localhost:5173";
 

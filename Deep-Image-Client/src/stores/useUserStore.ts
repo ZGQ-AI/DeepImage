@@ -46,6 +46,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '获取用户信息失败')
       throw error
@@ -68,6 +69,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '更新失败')
       throw error
@@ -88,6 +90,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '获取会话列表失败')
       throw error
@@ -110,6 +113,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '移除失败')
       throw error
@@ -131,6 +135,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '移除失败')
       throw error

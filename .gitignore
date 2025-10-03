@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Application Config ###
+**/application.yml
+!**/application.yml.example
+
 ### STS ###
 .apt_generated
 .classpath
@@ -35,3 +39,6 @@ build/
 
 ### Node.js ###
 node_modules/
+
+### macOS ###
+.DS_Store

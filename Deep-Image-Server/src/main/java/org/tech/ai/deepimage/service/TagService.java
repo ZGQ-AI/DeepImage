@@ -46,5 +46,38 @@ public interface TagService extends IService<Tag> {
      * @param request 删除标签请求
      */
     void deleteTag(DeleteTagRequest request);
+    
+    /**
+     * 批量增加标签使用计数
+     * 
+     * @param tagIds 标签ID集合
+     */
+    void batchIncreaseUsageCount(java.util.Set<Long> tagIds);
+    
+    /**
+     * 批量减少标签使用计数
+     * 
+     * @param tagIds 标签ID集合
+     */
+    void batchDecreaseUsageCount(java.util.Set<Long> tagIds);
+    
+    /**
+     * 批量查询标签（验证权限）
+     * 
+     * @param tagIds 标签ID列表
+     * @param userId 用户ID
+     * @return 有效的标签列表
+     */
+    List<Tag> listValidTagsByIds(List<Long> tagIds, Long userId);
+    
+    /**
+     * 获取用户的标签（校验权限）
+     * 如果标签不存在或不属于该用户，抛出异常
+     * 
+     * @param tagId 标签ID
+     * @param userId 用户ID
+     * @return 标签实体
+     */
+    Tag getUserTag(Long tagId, Long userId);
 }
 

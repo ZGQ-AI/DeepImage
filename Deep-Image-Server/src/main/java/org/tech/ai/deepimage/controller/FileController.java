@@ -1,0 +1,301 @@
+package org.tech.ai.deepimage.controller;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.tech.ai.deepimage.model.dto.request.*;
+import org.tech.ai.deepimage.model.dto.response.*;
+import org.tech.ai.deepimage.service.FileService;
+
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+/**
+ * 文件管理Controller
+ * 
+ * @author zgq
+ * @since 2025-10-02
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/files")
+@RequiredArgsConstructor
+public class FileController {
+    
+    private final FileService fileService;
+    
+    // ========== 文件上传 ==========
+    
+    /**
+     * 单文件上传
+     * POST /api/files/upload
+     */
+    @PostMapping("/upload")
+    public ApiResponse<FileUploadResponse> uploadFile(
+            @RequestParam MultipartFile file,
+            @RequestParam String businessType,
+            @RequestParam(required = false) List<Long> tagIds) {
+        
+        UploadFileRequest request = new UploadFileRequest();
+        request.setFile(file);
+        request.setBusinessType(businessType);
+        request.setTagIds(tagIds);
+        
+        FileUploadResponse response = fileService.uploadFile(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 检查文件是否已存在
+     * POST /api/files/check-exists
+     */
+    @PostMapping("/check-exists")
+    public ApiResponse<FileExistsResponse> checkFileExists(@Valid @RequestBody FileExistsCheckRequest request) {
+        FileExistsResponse response = fileService.checkFileExists(request);
+        return ApiResponse.success(response);
+    }
+    
+    // ========== 文件查询 ==========
+    
+    /**
+     * 分页查询文件列表
+     * POST /api/files/list
+     */
+    @PostMapping("/list")
+    public ApiResponse<Page<FileInfoResponse>> listFiles(@Valid @RequestBody ListFilesRequest request) {
+        Page<FileInfoResponse> response = fileService.listFiles(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 查询文件详情
+     * GET /api/files/detail
+     */
+    @GetMapping("/detail")
+    public ApiResponse<FileDetailResponse> getFileDetail(@RequestParam Long fileId) {
+        FileDetailResponse response = fileService.getFileDetail(fileId);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 按标签查询文件
+     * POST /api/files/list-by-tag
+     */
+    @PostMapping("/list-by-tag")
+    public ApiResponse<Page<FileInfoResponse>> listFilesByTag(@Valid @RequestBody ListFilesByTagRequest request) {
+        Page<FileInfoResponse> response = fileService.listFilesByTag(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 按业务类型查询文件
+     * POST /api/files/list-by-type
+     */
+    @PostMapping("/list-by-type")
+    public ApiResponse<Page<FileInfoResponse>> listFilesByType(@Valid @RequestBody ListFilesByTypeRequest request) {
+        Page<FileInfoResponse> response = fileService.listFilesByType(request);
+        return ApiResponse.success(response);
+    }
+    
+    // ========== 文件下载 ==========
+    
+    /**
+     * 下载文件
+     * GET /api/files/download
+     */
+    @GetMapping("/download")
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam Long fileId) throws Exception {
+        // 获取文件详情
+        FileDetailResponse fileDetail = fileService.getFileDetail(fileId);
+        
+        // 下载文件流
+        InputStream inputStream = fileService.downloadFile(fileId);
+        
+        // 设置响应头
+        String encodedFilename = URLEncoder.encode(fileDetail.getOriginalFilename(), StandardCharsets.UTF_8)
+                .replace("+", "%20");
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, 
+                "attachment; filename*=UTF-8''" + encodedFilename);
+        headers.add(HttpHeaders.CONTENT_TYPE, fileDetail.getContentType());
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(new InputStreamResource(inputStream));
+    }
+    
+    /**
+     * 获取文件预览URL
+     * GET /api/files/preview-url
+     */
+    @GetMapping("/preview-url")
+    public ApiResponse<FilePreviewResponse> getPreviewUrl(
+            @RequestParam Long fileId,
+            @RequestParam(required = false) Integer expirySeconds) {
+        FilePreviewResponse response = fileService.getPreviewUrl(fileId, expirySeconds);
+        return ApiResponse.success(response);
+    }
+    
+    // ========== 文件管理 ==========
+    
+    /**
+     * 重命名文件
+     * POST /api/files/rename
+     */
+    @PostMapping("/rename")
+    public ApiResponse<FileInfoResponse> renameFile(@Valid @RequestBody RenameFileRequest request) {
+        FileInfoResponse response = fileService.renameFile(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 删除文件（软删除）
+     * DELETE /api/files/delete
+     */
+    @DeleteMapping("/delete")
+    public ApiResponse<Boolean> deleteFile(@RequestParam Long fileId) {
+        Boolean result = fileService.deleteFile(fileId);
+        return ApiResponse.success(result);
+    }
+    
+    /**
+     * 批量删除文件
+     * POST /api/files/batch-delete
+     */
+    @PostMapping("/batch-delete")
+    public ApiResponse<BatchDeleteResponse> batchDeleteFiles(@Valid @RequestBody BatchDeleteFilesRequest request) {
+        BatchDeleteResponse response = fileService.batchDeleteFiles(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 彻底删除文件（从MinIO删除）
+     * DELETE /api/files/permanent-delete
+     */
+    @DeleteMapping("/permanent-delete")
+    public ApiResponse<Boolean> permanentDeleteFile(@RequestParam Long fileId) {
+        Boolean result = fileService.permanentDeleteFile(fileId);
+        return ApiResponse.success(result);
+    }
+    
+    // ========== 文件标签 ==========
+    
+    /**
+     * 为文件添加标签
+     * POST /api/files/add-tags
+     */
+    @PostMapping("/add-tags")
+    public ApiResponse<List<TagResponse>> addFileTags(@Valid @RequestBody AddFileTagsRequest request) {
+        List<TagResponse> response = fileService.addFileTags(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 移除文件标签
+     * DELETE /api/files/remove-tag
+     */
+    @DeleteMapping("/remove-tag")
+    public ApiResponse<Boolean> removeFileTag(
+            @RequestParam Long fileId,
+            @RequestParam Long tagId) {
+        Boolean result = fileService.removeFileTag(fileId, tagId);
+        return ApiResponse.success(result);
+    }
+    
+    /**
+     * 查询文件的所有标签
+     * GET /api/files/tags
+     */
+    @GetMapping("/tags")
+    public ApiResponse<List<TagResponse>> getFileTags(@RequestParam Long fileId) {
+        List<TagResponse> response = fileService.getFileTags(fileId);
+        return ApiResponse.success(response);
+    }
+    
+    // ========== 文件分享 ==========
+    
+    /**
+     * 创建文件分享
+     * POST /api/files/create-share
+     */
+    @PostMapping("/create-share")
+    public ApiResponse<FileShareResponse> createFileShare(@Valid @RequestBody CreateFileShareRequest request) {
+        FileShareResponse response = fileService.createFileShare(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 取消分享
+     * DELETE /api/files/cancel-share
+     */
+    @DeleteMapping("/cancel-share")
+    public ApiResponse<Boolean> cancelFileShare(@RequestParam Long shareId) {
+        Boolean result = fileService.cancelFileShare(shareId);
+        return ApiResponse.success(result);
+    }
+    
+    /**
+     * 查询我的分享列表（分享出去的）
+     * GET /api/files/shares/outgoing
+     */
+    @GetMapping("/shares/outgoing")
+    public ApiResponse<Page<FileShareResponse>> listOutgoingShares(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<FileShareResponse> response = fileService.listOutgoingShares(page, size);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 查询收到的分享列表
+     * GET /api/files/shares/incoming
+     */
+    @GetMapping("/shares/incoming")
+    public ApiResponse<Page<FileShareResponse>> listIncomingShares(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<FileShareResponse> response = fileService.listIncomingShares(page, size);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 查询分享详情
+     * GET /api/files/share-detail
+     */
+    @GetMapping("/share-detail")
+    public ApiResponse<FileShareResponse> getShareDetail(@RequestParam Long shareId) {
+        FileShareResponse response = fileService.getShareDetail(shareId);
+        return ApiResponse.success(response);
+    }
+    
+    // ========== 访问日志 ==========
+    
+    /**
+     * 查询文件访问日志
+     * POST /api/files/access-logs
+     */
+    @PostMapping("/access-logs")
+    public ApiResponse<Page<FileAccessLogResponse>> getFileAccessLogs(@Valid @RequestBody GetFileAccessLogsRequest request) {
+        Page<FileAccessLogResponse> response = fileService.getFileAccessLogs(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 查询用户文件统计
+     * GET /api/files/statistics
+     */
+    @GetMapping("/statistics")
+    public ApiResponse<FileStatisticsResponse> getFileStatistics() {
+        FileStatisticsResponse response = fileService.getFileStatistics();
+        return ApiResponse.success(response);
+    }
+}

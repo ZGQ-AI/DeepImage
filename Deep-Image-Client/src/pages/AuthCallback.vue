@@ -82,6 +82,7 @@ onMounted(async () => {
     // 立即跳转到指定页面
     router.replace(redirectPath.value)
     
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     error.value = true
     errorMessage.value = err.message || '登录处理失败'

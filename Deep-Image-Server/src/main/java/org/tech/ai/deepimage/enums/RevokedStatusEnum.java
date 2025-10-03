@@ -6,13 +6,13 @@ package org.tech.ai.deepimage.enums;
  * @author zgq
  * @since 2025-10-01
  */
-public enum TokenStatusEnum {
+public enum RevokedStatusEnum {
     NOT_REVOKED(0),
     REVOKED(1);
 
     private final int value;
 
-    TokenStatusEnum(int value) {
+    RevokedStatusEnum(int value) {
         this.value = value;
     }
 

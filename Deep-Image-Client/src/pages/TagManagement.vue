@@ -150,7 +150,7 @@ async function handleSubmit(data: { tagName: string; color?: string; tagId?: num
       })
     }
     modalVisible.value = false
-  } catch (error) {
+  } catch {
     // 错误已在 store 中处理
   }
 }

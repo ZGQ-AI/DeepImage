@@ -14,6 +14,7 @@ axiosInstance.interceptors.request.use(
     const token = getAccessToken()
     if (token) {
       config.headers = config.headers || {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(config.headers as any).Authorization = `Bearer ${token}`
     }
     return config

@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="auth-container">
     <div class="auth-card-wrapper">
@@ -279,6 +280,7 @@ const registerForm = reactive({
   confirmPassword: '',
 })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validatePassword = (_rule: any, value: string) => {
   if (!value) {
     return Promise.reject('请输入密码')
@@ -292,6 +294,7 @@ const validatePassword = (_rule: any, value: string) => {
   return Promise.resolve()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateConfirmPassword = (_rule: any, value: string) => {
   if (!value) {
     return Promise.reject('请再次输入密码')
@@ -321,6 +324,7 @@ const resetForm = reactive({
   confirmPassword: '',
 })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateNewPassword = (_rule: any, value: string) => {
   if (!value) {
     return Promise.reject('请输入新密码')
@@ -334,6 +338,7 @@ const validateNewPassword = (_rule: any, value: string) => {
   return Promise.resolve()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateResetConfirmPassword = (_rule: any, value: string) => {
   if (!value) {
     return Promise.reject('请再次输入新密码')
@@ -377,6 +382,7 @@ async function onLogin() {
     // 获取重定向地址并跳转
     const redirect = (route.query.redirect as string) || '/'
     await router.push(redirect)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     message.error(e?.message || '登录失败')
   } finally {
@@ -404,6 +410,7 @@ async function onRegister() {
     setTimeout(() => {
       activeTab.value = 'login'
     }, 800)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     message.error(e?.message || '注册失败')
   } finally {
@@ -433,6 +440,7 @@ async function onResetPassword() {
     setTimeout(() => {
       activeTab.value = 'login'
     }, 800)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     message.error(e?.message || '重置密码失败')
   } finally {

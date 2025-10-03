@@ -32,9 +32,13 @@ export const useAuthStore = defineStore('auth', () => {
     const payload = decodeJwt(tokenPair.accessToken)
     if (payload) {
       const userStore = useUserStore()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const id = (payload.loginId ?? payload.sub) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const username = (payload.username ?? payload.USERNAME ?? payload.name) as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const email = payload.email as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const avatarUrl = payload.avatarUrl as any
       
       // 更新用户基本信息（用于头部显示）
@@ -82,6 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
       applyTokenPair(data.data)
 
       return true
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // 6. 刷新失败，清理所有 token
       clearTokens()
@@ -99,7 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     try {
       await logoutApi()
-    } catch (e) {
+    } catch {
       /* ignore */
     }
     accessToken.value = null
