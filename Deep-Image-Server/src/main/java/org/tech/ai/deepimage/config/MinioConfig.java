@@ -3,6 +3,7 @@ package org.tech.ai.deepimage.config;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.SetBucketPolicyArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -50,7 +51,7 @@ public class MinioConfig {
     @EventListener(ApplicationReadyEvent.class)
     public void initMinioBucket(ApplicationReadyEvent event) {
         try {
-            // 从ApplicationContext中获取MinioClient，避免循环依赖
+            // 从ApplicationContext中获取MinioClient和MinioService，避免循环依赖
             MinioClient minioClient = event.getApplicationContext().getBean(MinioClient.class);
             String bucketName = minioProperties.getBucket();
 
@@ -72,8 +73,53 @@ public class MinioConfig {
             } else {
                 log.info("默认存储桶已存在: {}", bucketName);
             }
+            
+            // 设置存储桶为公开只读访问（允许直接访问文件URL）
+            setBucketPublicReadOnly(minioClient, bucketName);
+            
         } catch (Exception e) {
             log.error("初始化MinIO存储桶失败", e);
+        }
+    }
+    
+    /**
+     * 设置存储桶为公开只读访问
+     * 允许匿名用户读取文件，但不能上传、删除等操作
+     * 
+     * @param minioClient MinIO客户端
+     * @param bucketName 存储桶名称
+     */
+    private void setBucketPublicReadOnly(MinioClient minioClient, String bucketName) {
+        try {
+            // MinIO 存储桶策略 JSON
+            // 注意：Principal 必须是 "*" 字符串，而不是 {"AWS": ["*"]} 对象
+            // 这是 MinIO 特定的格式要求
+            String policy = String.format("""
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": ["s3:GetObject"],
+                            "Resource": ["arn:aws:s3:::%s/*"]
+                        }
+                    ]
+                }
+                """, bucketName);
+
+            SetBucketPolicyArgs args = SetBucketPolicyArgs.builder()
+                    .bucket(bucketName)
+                    .config(policy)
+                    .build();
+
+            minioClient.setBucketPolicy(args);
+            log.info("设置存储桶公开只读访问成功: bucket={}", bucketName);
+
+        } catch (Exception e) {
+            log.error("设置存储桶公开访问失败: bucket={}, error={}", bucketName, e.getMessage(), e);
+            // 不抛出异常，只记录日志，因为这不是致命错误
+            log.warn("如需公开访问，请手动在 MinIO 控制台设置 bucket 策略");
         }
     }
 }

@@ -7,22 +7,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.tech.ai.deepimage.constant.JwtClaimConstant;
 import org.tech.ai.deepimage.constant.ResponseConstant;
-import org.tech.ai.deepimage.enums.SessionStatusEnum;
-import org.tech.ai.deepimage.enums.RefreshTokenStatusEnum;
-import org.tech.ai.deepimage.model.dto.request.*;
-import org.tech.ai.deepimage.model.dto.response.TokenPairResponse;
 import org.tech.ai.deepimage.entity.RefreshToken;
 import org.tech.ai.deepimage.entity.Session;
 import org.tech.ai.deepimage.entity.User;
+import org.tech.ai.deepimage.enums.RefreshTokenStatusEnum;
+import org.tech.ai.deepimage.enums.SessionStatusEnum;
 import org.tech.ai.deepimage.exception.BusinessException;
+import org.tech.ai.deepimage.model.dto.request.*;
+import org.tech.ai.deepimage.model.dto.response.TokenPairResponse;
 import org.tech.ai.deepimage.service.AuthService;
 import org.tech.ai.deepimage.service.RefreshTokenService;
 import org.tech.ai.deepimage.service.SessionService;
 import org.tech.ai.deepimage.service.UserService;
+import org.tech.ai.deepimage.util.ConditionalUtil;
 import org.tech.ai.deepimage.util.CryptoUtil;
 import org.tech.ai.deepimage.util.HttpRequestUtil;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -111,11 +113,11 @@ public class AuthServiceImpl implements AuthService {
 
         // 5. 更新会话信息
         Session session = sessionService.getById(refreshToken.getSessionId());
-        if (session != null) {
+        ConditionalUtil.ifNotNull(session,s->{
             session.setAccessTokenHash(CryptoUtil.sha256Hex(accessToken));
             session.setLastRefreshAt(LocalDateTime.now());
-            sessionService.updateById(session);
-        }
+            sessionService.updateById(s);
+        });
 
         // 6. 生成新的 refresh token
         CreateRefreshTokenRequest createReq = new CreateRefreshTokenRequest();
@@ -158,16 +160,16 @@ public class AuthServiceImpl implements AuthService {
         findReq.setUserId(loginUserId);
         Session session = sessionService.findByAccessTokenAndUserId(findReq);
 
-        // 3. 标记会话为非活跃状态
-        if (session != null) {
-            session.setActive(SessionStatusEnum.INACTIVE.getValue());
-            sessionService.updateById(session);
+        // 3. 标记会话为非活跃状态并撤销相关 token
+        ConditionalUtil.ifNotNull(session, s -> {
+            s.setActive(SessionStatusEnum.INACTIVE.getValue());
+            sessionService.updateById(s);
 
             // 4. 撤销该会话关联的所有refresh token
             RevokeRefreshTokenBySessionRequest revokeReq = new RevokeRefreshTokenBySessionRequest();
-            revokeReq.setSessionId(session.getId());
+            revokeReq.setSessionId(s.getId());
             refreshTokenService.revokeAllBySessionId(revokeReq);
-        }
+        });
         StpUtil.logout();
         return true;
     }
@@ -255,13 +257,7 @@ public class AuthServiceImpl implements AuthService {
         User existingUser = userService.getOne(new LambdaQueryWrapper<User>()
                 .eq(User::getEmail, registerGoogleUserRequest.getEmail()));
         
-        if (existingUser != null) {
-            // 更新已存在用户的头像（如果Google提供了新头像）
-            if (registerGoogleUserRequest.getPicture() != null && !registerGoogleUserRequest.getPicture().isEmpty()) {
-                existingUser.setAvatarUrl(registerGoogleUserRequest.getPicture());
-                existingUser.setUpdatedAt(LocalDateTime.now());
-                userService.updateById(existingUser);
-            }
+        if (Objects.nonNull(existingUser)) {
             return existingUser;
         }
 
@@ -269,17 +265,13 @@ public class AuthServiceImpl implements AuthService {
         User user = new User();
         user.setEmail(registerGoogleUserRequest.getEmail());
         
-        // 优先使用Google提供的name，否则从email提取
-        if (registerGoogleUserRequest.getName() != null && !registerGoogleUserRequest.getName().isEmpty()) {
-            user.setUsername(registerGoogleUserRequest.getName());
-        } else {
-            user.setUsername(registerGoogleUserRequest.getEmail().split("@")[0]);
-        }
+        ConditionalUtil.setIfNotBlankOrElse(
+            registerGoogleUserRequest.getName(),
+            () -> registerGoogleUserRequest.getEmail().split("@")[0],
+            user::setUsername
+        );
         
-        // 保存Google头像URL
-        if (registerGoogleUserRequest.getPicture() != null && !registerGoogleUserRequest.getPicture().isEmpty()) {
-            user.setAvatarUrl(registerGoogleUserRequest.getPicture());
-        }
+        ConditionalUtil.setIfNotBlank(registerGoogleUserRequest.getPicture(), user::setAvatarUrl);
         
         // 设置随机密码（Google用户不需要密码登录）
         user.setPasswordHash(CryptoUtil.sha256Hex(UUID.randomUUID().toString()));
