@@ -53,22 +53,11 @@
       </a-input>
     </a-form-item>
 
-    <a-form-item label="头像URL" name="avatarUrl">
-      <a-input 
-        v-model:value="form.avatarUrl" 
-        placeholder="https://example.com/avatar.jpg（可选）"
-        size="large"
-      >
-        <template #prefix>
-          <PictureOutlined style="color: rgba(0,0,0,.25)" />
-        </template>
-      </a-input>
-      <template #extra v-if="form.avatarUrl">
-        <a-space>
-          <span style="color: #999; font-size: 12px">头像预览：</span>
-          <a-avatar :src="form.avatarUrl" size="small" />
-        </a-space>
-      </template>
+    <a-form-item label="头像" name="avatarUrl">
+      <AvatarUpload 
+        v-model="form.avatarUrl"
+        @upload-success="handleAvatarUploadSuccess"
+      />
     </a-form-item>
 
     <a-form-item>
@@ -86,11 +75,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
 import {
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
-  PictureOutlined,
   SaveOutlined,
   ReloadOutlined,
   CheckCircleOutlined,
@@ -98,6 +87,7 @@ import {
 } from '@ant-design/icons-vue'
 import { useUserStore } from '../../stores/useUserStore'
 import type { UpdateUserProfileRequest } from '../../types/user'
+import AvatarUpload from './AvatarUpload.vue'
 
 const userStore = useUserStore()
 
@@ -131,13 +121,6 @@ const rules = {
     {
       pattern: /^1[3-9]\d{9}$/,
       message: '手机号格式不正确',
-      trigger: 'blur',
-    },
-  ],
-  avatarUrl: [
-    {
-      pattern: /^https?:\/\/.+/,
-      message: '头像URL格式不正确',
       trigger: 'blur',
     },
   ],
@@ -194,6 +177,13 @@ async function onSubmit() {
 // 重置表单
 function resetForm() {
   initForm()
+}
+
+// 头像上传成功回调
+function handleAvatarUploadSuccess(url: string) {
+  // 头像 URL 已通过 v-model 自动更新到 form.avatarUrl
+  // 这里可以添加额外的处理逻辑
+  message.success('头像已更新，请点击"保存修改"按钮')
 }
 
 // 组件挂载时获取用户信息
