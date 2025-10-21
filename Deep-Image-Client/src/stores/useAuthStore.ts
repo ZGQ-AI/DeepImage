@@ -15,16 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   const refreshToken = ref<string | null>(getRefreshToken())
   const expiresIn = ref<number | null>(null)
 
-  // 每次都从 storage 检查，确保与手动清除 storage 的操作同步
-  const isAuthenticated = computed(() => {
-    const token = getAccessToken()
-    // 如果 storage 中没有 token，同步更新 ref
-    if (!token && accessToken.value) {
-      accessToken.value = null
-      refreshToken.value = null
-    }
-    return !!token
-  })
+  const isAuthenticated = computed(() => !!accessToken.value)
 
   function applyTokenPair(tokenPair: TokenPairResponse, mode?: 'local' | 'session') {
     // 如果没有指定 mode，则使用当前的存储模式
