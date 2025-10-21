@@ -9,8 +9,6 @@ import {
   setTokens,
   getTokenStorageMode,
 } from '../utils/token'
-import { decodeJwt } from '../utils/jwt'
-import { useUserStore } from './useUserStore'
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(getAccessToken())
@@ -27,33 +25,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = tokenPair.refreshToken
     expiresIn.value = tokenPair.expiresIn ?? null
     setTokens(tokenPair.accessToken, tokenPair.refreshToken, storageMode)
-
-    // 解析 JWT，获取用户信息
-    const payload = decodeJwt(tokenPair.accessToken)
-    if (payload) {
-      const userStore = useUserStore()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const id = (payload.loginId ?? payload.sub) as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const username = (payload.username ?? payload.USERNAME ?? payload.name) as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const email = payload.email as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const avatarUrl = payload.avatarUrl as any
-      
-      // 更新用户基本信息（用于头部显示）
-      if (id && username) {
-        userStore.profile = {
-          id,
-          username,
-          email: email || '',
-          avatarUrl: avatarUrl || '',
-          verified: false,
-          createdAt: '',
-          updatedAt: '',
-        }
-      }
-    }
   }
 
   async function login(payload: LoginRequest & { remember?: boolean }) {
@@ -92,10 +63,6 @@ export const useAuthStore = defineStore('auth', () => {
       clearTokens()
       accessToken.value = null
       refreshToken.value = null
-      
-      // 清空用户状态
-      const userStore = useUserStore()
-      userStore.clearUserState()
 
       // 7. 抛出错误，让调用方处理（如跳转登录页）
       throw new Error(error.response?.data?.message || error.message || 'Token refresh failed')
@@ -111,10 +78,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = null
     expiresIn.value = null
     clearTokens()
-    
-    // 清空用户状态
-    const userStore = useUserStore()
-    userStore.clearUserState()
   }
 
   async function bootstrap() {

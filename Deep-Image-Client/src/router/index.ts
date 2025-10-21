@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/useAuthStore'
-import { useUserStore } from '../stores/useUserStore'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -58,35 +57,19 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  const user = useUserStore()
   const isPublic = to.meta?.public === true
   
   if (isPublic) return true
   
   if (to.meta?.requiresAuth) {
-    // 如果已经有 token，直接放行
+    // 如果已认证，直接放行（用户信息会通过 watch 自动加载）
     if (auth.isAuthenticated) {
-      // 如果用户信息未加载，尝试加载
-      if (!user.profile) {
-        try {
-          await user.fetchProfile()
-        } catch (err) {
-          console.warn('Failed to fetch user profile in router guard:', err)
-          // 即使失败也放行，因为 JWT 中有基本信息
-        }
-      }
       return true
     }
     
     // 尝试通过 refresh token 恢复登录状态
     const ok = await auth.bootstrap()
     if (ok) {
-      // bootstrap 成功后，加载用户信息
-      try {
-        await user.fetchProfile()
-      } catch (err) {
-        console.warn('Failed to fetch user profile after bootstrap:', err)
-      }
       return true
     }
     

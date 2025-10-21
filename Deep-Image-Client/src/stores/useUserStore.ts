@@ -1,7 +1,7 @@
 /**
  * 用户Store - 管理用户信息和会话
  */
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { message } from 'ant-design-vue'
 import {
@@ -16,6 +16,7 @@ import type {
   UpdateUserProfileRequest,
   SessionItemResponse,
 } from '../types/user'
+import { useAuthStore } from './useAuthStore'
 
 export const useUserStore = defineStore('user', () => {
   // 用户信息
@@ -149,6 +150,36 @@ export const useUserStore = defineStore('user', () => {
     profile.value = null
     sessions.value = []
   }
+
+  // 响应式同步：监听认证状态变化
+  const authStore = useAuthStore()
+  const isAutoFetching = ref(false) // 防止重复加载的标志
+
+  watch(
+    () => authStore.isAuthenticated,
+    async (isAuth, wasAuth) => {
+      // 从未认证 → 已认证：自动加载用户信息
+      if (isAuth && !wasAuth) {
+        // 防止重复加载
+        if (isAutoFetching.value || profile.value) return
+        
+        isAutoFetching.value = true
+        try {
+          await fetchProfile()
+        } catch (error) {
+          console.warn('Auto-fetch profile failed:', error)
+          // 静默失败，不影响认证状态
+        } finally {
+          isAutoFetching.value = false
+        }
+      }
+      // 从已认证 → 未认证：自动清空用户信息
+      else if (!isAuth && wasAuth) {
+        clearUserState()
+      }
+    },
+    { immediate: false } // 不立即执行，避免初始化时触发
+  )
 
   return {
     profile,
