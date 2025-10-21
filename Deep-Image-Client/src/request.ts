@@ -26,7 +26,13 @@ axiosInstance.interceptors.request.use(
 )
 
 let isRefreshing = false
+let isRedirectingToLogin = false // 防止多次跳转登录页
 let pendingQueue: Array<(token?: string) => void> = []
+
+// 重置登录跳转标志（供路由守卫使用）
+export function resetLoginRedirectFlag() {
+  isRedirectingToLogin = false
+}
 
 axiosInstance.interceptors.response.use(
   function onFulfilled(response) {
@@ -39,6 +45,11 @@ axiosInstance.interceptors.response.use(
     if (response && response.status === 401 && !config._retry) {
       config._retry = true
       const auth = useAuthStore()
+
+      // 如果已经在跳转登录页，直接拒绝请求（静默失败）
+      if (isRedirectingToLogin) {
+        return Promise.reject(new Error('Redirecting to login'))
+      }
 
       // 如果正在刷新，将请求加入队列
       if (isRefreshing) {
@@ -76,15 +87,19 @@ axiosInstance.interceptors.response.use(
         pendingQueue.forEach((fn) => fn(undefined))
         pendingQueue = []
 
+        // 设置跳转标志，防止多次跳转
+        isRedirectingToLogin = true
+
         await auth.logout()
 
         try {
-          router.replace({ name: 'auth', query: { redirect: router.currentRoute.value.fullPath } })
+          await router.replace({ name: 'auth', query: { redirect: router.currentRoute.value.fullPath } })
         } catch {
           // 忽略路由跳转错误
         }
 
-        return Promise.reject(error)
+        // 静默失败，不抛出错误（避免多个错误提示）
+        return Promise.reject(new Error('Authentication required'))
       } finally {
         isRefreshing = false
       }

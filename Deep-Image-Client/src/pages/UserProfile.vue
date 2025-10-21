@@ -48,20 +48,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ReloadOutlined,
   DeleteOutlined,
 } from '@ant-design/icons-vue'
 import { useUserStore } from '../stores/useUserStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import ProfileForm from '../components/user/ProfileForm.vue'
 import SessionList from '../components/user/SessionList.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const authStore = useAuthStore()
 
 const loading = ref(false)
+
+// 监听认证状态，如果退出登录则跳转到登录页
+watch(
+  () => authStore.isAuthenticated,
+  (isAuth) => {
+    if (!isAuth) {
+      router.replace({ name: 'auth', query: { redirect: '/profile' } })
+    }
+  },
+)
 
 // 刷新所有数据
 async function handleRefresh() {
@@ -71,6 +83,9 @@ async function handleRefresh() {
       userStore.fetchProfile(),
       userStore.fetchSessions(),
     ])
+  } catch (error) {
+    // 如果是认证错误，不需要处理，watch 会自动跳转
+    console.error('Failed to refresh data:', error)
   } finally {
     loading.value = false
   }

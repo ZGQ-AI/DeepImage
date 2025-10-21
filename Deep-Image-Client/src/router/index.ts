@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/useAuthStore'
+import { resetLoginRedirectFlag } from '../request'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -59,17 +60,23 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   const isPublic = to.meta?.public === true
   
-  if (isPublic) return true
+  // 如果是公开页面，重置登录跳转标志
+  if (isPublic) {
+    resetLoginRedirectFlag()
+    return true
+  }
   
   if (to.meta?.requiresAuth) {
     // 如果已认证，直接放行（用户信息会通过 watch 自动加载）
     if (auth.isAuthenticated) {
+      resetLoginRedirectFlag()
       return true
     }
     
     // 尝试通过 refresh token 恢复登录状态
     const ok = await auth.bootstrap()
     if (ok) {
+      resetLoginRedirectFlag()
       return true
     }
     
