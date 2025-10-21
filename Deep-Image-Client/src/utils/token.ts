@@ -1,5 +1,3 @@
-let inMemoryAccessToken: string | null = null
-
 type StorageMode = 'local' | 'session'
 
 const ACCESS_TOKEN_KEY = 'access_token'
@@ -27,7 +25,6 @@ export function setTokens(
 ) {
   setTokenStorageMode(mode)
   const storage = getStorage(mode)
-  inMemoryAccessToken = accessToken
   if (accessToken) storage.setItem(ACCESS_TOKEN_KEY, accessToken)
   else storage.removeItem(ACCESS_TOKEN_KEY)
   if (refreshToken) storage.setItem(REFRESH_TOKEN_KEY, refreshToken)
@@ -39,18 +36,14 @@ export function setTokens(
 }
 
 export function setAccessToken(token: string | null, mode?: StorageMode) {
-  inMemoryAccessToken = token
   const storage = getStorage(mode)
   if (token) storage.setItem(ACCESS_TOKEN_KEY, token)
   else storage.removeItem(ACCESS_TOKEN_KEY)
 }
 
 export function getAccessToken(): string | null {
-  if (inMemoryAccessToken) return inMemoryAccessToken
   const storage = getStorage()
-  const token = storage.getItem(ACCESS_TOKEN_KEY)
-  inMemoryAccessToken = token
-  return token
+  return storage.getItem(ACCESS_TOKEN_KEY)
 }
 
 export function setRefreshToken(token: string | null, mode?: StorageMode) {
@@ -65,7 +58,6 @@ export function getRefreshToken(): string | null {
 }
 
 export function clearTokens() {
-  inMemoryAccessToken = null
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   sessionStorage.removeItem(ACCESS_TOKEN_KEY)
