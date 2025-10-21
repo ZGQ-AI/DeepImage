@@ -150,7 +150,7 @@ watch(
       formState.color = '#1890ff'
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // 监听 open 变化，重置表单
@@ -160,7 +160,7 @@ watch(
     if (!newOpen) {
       formRef.value?.resetFields()
     }
-  }
+  },
 )
 
 // 提交表单
@@ -280,4 +280,3 @@ function handleCancel() {
   padding-top: 12px;
 }
 </style>
-

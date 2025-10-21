@@ -9,13 +9,13 @@
     <div class="avatar-preview-wrapper">
       <!-- 当前头像显示（已确认的头像） -->
       <div class="avatar-display" @click="handleClickAvatar">
-        <a-image 
-          v-if="confirmedImageUrl" 
-          :src="confirmedImageUrl" 
-          alt="avatar" 
+        <a-image
+          v-if="confirmedImageUrl"
+          :src="confirmedImageUrl"
+          alt="avatar"
           class="avatar-image"
           :preview="{
-            mask: '点击查看大图'
+            mask: '点击查看大图',
           }"
         />
         <div v-else class="upload-placeholder">
@@ -49,17 +49,17 @@
         <div class="preview-section">
           <div class="preview-label">预览</div>
           <div class="preview-wrapper">
-            <a-image 
-              v-if="previewImageUrl" 
-              :src="previewImageUrl" 
-              alt="preview" 
+            <a-image
+              v-if="previewImageUrl"
+              :src="previewImageUrl"
+              alt="preview"
               class="preview-image"
               :preview="{
-                mask: '查看大图'
+                mask: '查看大图',
               }"
             />
             <div v-else class="preview-placeholder">
-              <PictureOutlined style="font-size: 48px; color: #ccc;" />
+              <PictureOutlined style="font-size: 48px; color: #ccc" />
               <p>请选择图片</p>
             </div>
           </div>
@@ -71,7 +71,7 @@
             <!-- 统一的上传区域 -->
             <div class="unified-upload-area">
               <!-- 主要上传区域：智能识别粘贴内容 -->
-              <div 
+              <div
                 ref="uploadZoneRef"
                 class="upload-drop-zone"
                 :class="{ 'drop-zone-active': isPasteAreaActive }"
@@ -82,7 +82,7 @@
                 tabindex="0"
               >
                 <div class="drop-zone-content">
-                  <UploadOutlined style="font-size: 36px; color: #1890ff;" />
+                  <UploadOutlined style="font-size: 36px; color: #1890ff" />
                   <div class="drop-zone-text">
                     <p class="main-text">拖拽图片到此处，或按 Ctrl+V (Cmd+V) 粘贴</p>
                     <p class="sub-text">支持粘贴图片文件或图片链接</p>
@@ -107,7 +107,7 @@
 
             <!-- 上传提示 -->
             <div class="upload-tips">
-              <InfoCircleOutlined style="margin-right: 4px; color: #1890ff;" />
+              <InfoCircleOutlined style="margin-right: 4px; color: #1890ff" />
               支持 JPG、PNG、WEBP 格式 · 大小不超过 {{ maxSizeMB }}MB · 建议尺寸 400x400 像素
             </div>
           </a-tab-pane>
@@ -152,8 +152,8 @@
       <template #footer>
         <a-space>
           <a-button @click="handleCancelUpload">取消</a-button>
-          <a-button 
-            type="primary" 
+          <a-button
+            type="primary"
             :loading="uploading"
             :disabled="!previewImageUrl"
             @click="handleConfirmUpload"
@@ -245,7 +245,7 @@ const groupedHistoryAvatars = computed(() => {
 
   historyAvatars.value.forEach((avatar) => {
     const createdDate = new Date(avatar.createdAt)
-    
+
     if (createdDate >= today) {
       todayAvatars.push(avatar)
     } else if (createdDate >= yesterday) {
@@ -281,8 +281,8 @@ const groupedHistoryAvatars = computed(() => {
 
 // 常量定义
 const CONSTANTS = {
-  AUTO_FOCUS_DELAY: 100,     // DOM 更新后自动聚焦的延迟时间
-  IMAGE_LOAD_TIMEOUT: 10000,  // 图片加载超时时间（10秒）
+  AUTO_FOCUS_DELAY: 100, // DOM 更新后自动聚焦的延迟时间
+  IMAGE_LOAD_TIMEOUT: 10000, // 图片加载超时时间（10秒）
 }
 
 // 监听上传标签页切换，加载历史头像
@@ -376,7 +376,7 @@ function showUploadModal() {
   previewImageUrl.value = ''
   previewFile.value = null
   uploadTab.value = 'upload'
-  
+
   // 等待 DOM 更新后自动聚焦到上传区域，使其可以直接粘贴
   setTimeout(() => {
     uploadZoneRef.value?.focus()
@@ -405,7 +405,7 @@ function handleClickUploadZone(event: MouseEvent) {
 async function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (!file) return
 
   if (!validateFile(file)) {
@@ -472,7 +472,7 @@ async function handleConfirmUpload() {
         emit('upload-success', avatarUrl, response.fileId)
         message.success('头像上传成功！')
         uploadModalVisible.value = false
-        
+
         // 刷新历史头像列表
         if (historyAvatars.value.length > 0) {
           loadHistoryAvatars()
@@ -511,7 +511,7 @@ async function handleSmartPaste(event: ClipboardEvent) {
   if (items) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
-      
+
       if (item.type.startsWith('image/')) {
         event.preventDefault()
         const file = item.getAsFile()
@@ -544,15 +544,15 @@ async function handleSmartPaste(event: ClipboardEvent) {
   // 优先级2: 检查是否是URL链接
   if (text && text.trim()) {
     const url = text.trim()
-    
+
     // 简单验证是否是URL
     if (url.startsWith('http://') || url.startsWith('https://')) {
       event.preventDefault()
-      
+
       try {
         // 验证 URL 格式
         new URL(url)
-        
+
         // 验证图片 URL 是否可访问
         const img = new Image()
         img.crossOrigin = 'anonymous'
@@ -900,4 +900,3 @@ function handleClearAvatar() {
   color: #1890ff;
 }
 </style>
-

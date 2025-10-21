@@ -20,12 +20,7 @@
           <!-- 登录 Tab -->
           <a-tab-pane key="login" tab="登录">
             <!-- Google登录按钮 -->
-            <a-button
-              class="google-login-btn"
-              size="large"
-              block
-              @click="handleGoogleLogin"
-            >
+            <a-button class="google-login-btn" size="large" block @click="handleGoogleLogin">
               <template #icon>
                 <img src="@/assets/google.svg" alt="Google" class="google-icon" />
               </template>
@@ -370,7 +365,7 @@ async function onLogin() {
     }
     await authStore.login(payload)
     message.success('登录成功！')
-    
+
     // 获取用户完整信息
     const userStore = useUserStore()
     try {
@@ -378,11 +373,11 @@ async function onLogin() {
     } catch (err) {
       console.warn('Failed to fetch user profile:', err)
     }
-    
+
     // 获取重定向地址并跳转
     const redirect = (route.query.redirect as string) || '/'
     await router.push(redirect)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     message.error(e?.message || '登录失败')
   } finally {
@@ -410,7 +405,7 @@ async function onRegister() {
     setTimeout(() => {
       activeTab.value = 'login'
     }, 800)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     message.error(e?.message || '注册失败')
   } finally {
@@ -440,7 +435,7 @@ async function onResetPassword() {
     setTimeout(() => {
       activeTab.value = 'login'
     }, 800)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     message.error(e?.message || '重置密码失败')
   } finally {
@@ -452,17 +447,17 @@ async function onResetPassword() {
 function handleGoogleLogin() {
   // 获取 redirect 参数
   const redirect = (route.query.redirect as string) || ''
-  
+
   // 构建回调URL，将 redirect 参数传递给回调页面
   let callbackUrl = `${window.location.origin}/auth/callback`
   if (redirect) {
     callbackUrl += `?redirect=${encodeURIComponent(redirect)}`
   }
-  
+
   // 跳转到后端OAuth发起接口
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
   const loginUrl = `${apiBaseUrl}/api/auth/google/login?fromUrl=${encodeURIComponent(callbackUrl)}`
-  
+
   // 直接跳转（浏览器会重定向到Google）
   window.location.href = loginUrl
 }

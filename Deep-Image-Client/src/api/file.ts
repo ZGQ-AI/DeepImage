@@ -17,28 +17,20 @@ import type {
  * @param businessType 业务类型
  * @param tagIds 标签ID列表（可选）
  */
-export function uploadFile(
-  file: File,
-  businessType: BusinessType,
-  tagIds?: number[]
-) {
+export function uploadFile(file: File, businessType: BusinessType, tagIds?: number[]) {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('businessType', businessType)
-  
+
   if (tagIds && tagIds.length > 0) {
-    tagIds.forEach(tagId => formData.append('tagIds', String(tagId)))
+    tagIds.forEach((tagId) => formData.append('tagIds', String(tagId)))
   }
 
-  return request.post<ApiResponse<FileUploadResponse>>(
-    '/api/files/upload',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  )
+  return request.post<ApiResponse<FileUploadResponse>>('/api/files/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
 }
 
 /**
@@ -48,7 +40,6 @@ export function uploadFile(
 export function listFilesByType(requestData: ListFilesByTypeRequest) {
   return request.post<ApiResponse<PageResponse<FileInfoResponse>>>(
     '/api/files/list-by-type',
-    requestData
+    requestData,
   )
 }
-

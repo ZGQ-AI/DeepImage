@@ -1,3 +1,10 @@
+/**
+ * Authentication Store
+ *
+ * **Architecture: Stateless Token Management**
+ * This store does NOT cache tokens in reactive refs. All token access is delegated
+ * to storage utilities, ensuring single source of truth and preventing sync issues.
+ */
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { login as loginApi, refreshToken as refreshApi, logout as logoutApi } from '../api/auth'
@@ -13,22 +20,35 @@ import { decodeJwt } from '../utils/jwt'
 import { useUserStore } from './useUserStore'
 
 export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref<string | null>(getAccessToken())
-  const refreshToken = ref<string | null>(getRefreshToken())
+  // Optional: Track token expiration time for UI display only
+  // This does NOT affect authentication logic
   const expiresIn = ref<number | null>(null)
 
-  const isAuthenticated = computed(() => !!accessToken.value)
+  /**
+   * Computed property that checks authentication status
+   *
+   * **Storage-Based:** Always reads current token from storage.
+   * No cached state - reflects real-time storage state.
+   */
+  const isAuthenticated = computed(() => !!getAccessToken())
 
+  /**
+   * Apply a token pair received from the backend
+   *
+   * @param tokenPair - The access and refresh tokens from login/refresh response
+   * @param mode - Storage mode: 'local' for "remember me", 'session' for current session only
+   */
   function applyTokenPair(tokenPair: TokenPairResponse, mode?: 'local' | 'session') {
-    // 如果没有指定 mode，则使用当前的存储模式
+    // Determine storage mode (use provided or fallback to current mode)
     const storageMode = mode || getTokenStorageMode()
 
-    accessToken.value = tokenPair.accessToken
-    refreshToken.value = tokenPair.refreshToken
-    expiresIn.value = tokenPair.expiresIn ?? null
+    // Store tokens in browser storage (no memory cache)
     setTokens(tokenPair.accessToken, tokenPair.refreshToken, storageMode)
 
-    // 解析 JWT，获取用户信息
+    // Update expiration time (UI display only)
+    expiresIn.value = tokenPair.expiresIn ?? null
+
+    // Extract basic user info from JWT for immediate UI display
     const payload = decodeJwt(tokenPair.accessToken)
     if (payload) {
       const userStore = useUserStore()
@@ -40,8 +60,8 @@ export const useAuthStore = defineStore('auth', () => {
       const email = payload.email as any
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const avatarUrl = payload.avatarUrl as any
-      
-      // 更新用户基本信息（用于头部显示）
+
+      // Update user basic info (for header display)
       if (id && username) {
         userStore.profile = {
           id,
@@ -56,91 +76,120 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /**
+   * Perform user login
+   *
+   * @param payload - Login credentials with optional "remember" flag
+   * @returns Promise<true> on success
+   */
   async function login(payload: LoginRequest & { remember?: boolean }) {
     const { data } = await loginApi(payload)
     if (data.code !== 200) throw new Error(data.message)
+
+    // Store tokens based on "remember me" preference
     applyTokenPair(data.data, payload.remember ? 'local' : 'session')
     return true
   }
 
+  /**
+   * Refresh the access token using the refresh token
+   *
+   * **Storage-Based:** Reads refresh token from storage on each call.
+   */
   async function refresh() {
-    // 1. 优先从内存/状态中获取 refresh token，如果没有则从存储中读取
-    const rt = refreshToken.value || getRefreshToken()
+    // Read refresh token from storage
+    const rt = getRefreshToken()
 
-    // 2. 如果没有 refresh token，说明用户未登录或已过期
+    // If no refresh token, user is not authenticated
     if (!rt) {
       throw new Error('No refresh token available')
     }
 
     try {
-      // 3. 调用后端刷新接口
+      // Call backend refresh API
       const { data } = await refreshApi({ refreshToken: rt })
 
-      // 4. 检查响应状态码
+      // Check response
       if (data.code !== 200) {
         throw new Error(data.message || 'Failed to refresh token')
       }
 
-      // 5. 应用新的 token pair
-      // 注意：刷新时保持原有的存储模式（local 或 session）
+      // Apply new token pair (preserve current storage mode)
       applyTokenPair(data.data)
 
       return true
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // 6. 刷新失败，清理所有 token
+      // Refresh failed - clear all tokens
       clearTokens()
-      accessToken.value = null
-      refreshToken.value = null
-      
-      // 清空用户状态
+
+      // Clear user state
       const userStore = useUserStore()
       userStore.clearUserState()
 
-      // 7. 抛出错误，让调用方处理（如跳转登录页）
+      // Propagate error to caller (will trigger redirect to login)
       throw new Error(error.response?.data?.message || error.message || 'Token refresh failed')
     }
   }
+
+  /**
+   * Logout the current user
+   */
   async function logout() {
     try {
+      // Call backend logout API (best effort)
       await logoutApi()
     } catch {
-      /* ignore */
+      // Ignore logout API errors
     }
-    accessToken.value = null
-    refreshToken.value = null
-    expiresIn.value = null
+
+    // Clear all tokens from storage
     clearTokens()
-    
-    // 清空用户状态
+
+    // Clear UI state
+    expiresIn.value = null
+
+    // Clear user state
     const userStore = useUserStore()
     userStore.clearUserState()
   }
 
+  /**
+   * Bootstrap authentication on app initialization
+   *
+   * **Storage-Based:** Checks storage for refresh token and attempts to restore session.
+   *
+   * @returns Promise<true> if session restored, false otherwise
+   */
   async function bootstrap() {
-    // 如果已有 access token，直接返回
-    if (accessToken.value) return true
+    // Check if we have an access token in storage
+    if (getAccessToken()) {
+      return true
+    }
 
-    // 尝试从存储中获取 refresh token
+    // Try to restore session using refresh token
     const rt = getRefreshToken()
     if (rt) {
       try {
         await refresh()
         return true
-        } catch (err) {
-          console.warn('Bootstrap refresh failed:', err)
-          // 静默失败，不影响用户体验
-        }
+      } catch (err) {
+        console.warn('Bootstrap refresh failed:', err)
+        // Silent failure - user will see login page
+      }
     }
 
     return false
   }
 
   return {
-    accessToken,
-    refreshToken,
+    // State (UI only, not used for auth logic)
     expiresIn,
+
+    // Computed
     isAuthenticated,
+
+    // Actions
     applyTokenPair,
     login,
     refresh,

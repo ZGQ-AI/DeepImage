@@ -21,9 +21,7 @@
             <template #title>
               <a-space>
                 <span>{{ parseDeviceName(item.userAgent) }}</span>
-                <a-tag v-if="item.isCurrent" color="blue">
-                  <CheckCircleOutlined /> 当前设备
-                </a-tag>
+                <a-tag v-if="item.isCurrent" color="blue"> <CheckCircleOutlined /> 当前设备 </a-tag>
               </a-space>
             </template>
 
@@ -59,9 +57,7 @@
               cancel-text="取消"
               @confirm="handleDeleteSession(item.id)"
             >
-              <a-button type="link" danger size="small">
-                <DeleteOutlined /> 移除
-              </a-button>
+              <a-button type="link" danger size="small"> <DeleteOutlined /> 移除 </a-button>
             </a-popconfirm>
             <span v-else style="color: #999; font-size: 12px">当前使用中</span>
           </template>
@@ -151,4 +147,3 @@ onMounted(async () => {
   background-color: rgba(0, 0, 0, 0.3);
 }
 </style>
-

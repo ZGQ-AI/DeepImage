@@ -58,4 +58,3 @@ export function formatDate(dateStr: string): string {
     day: '2-digit',
   })
 }
-

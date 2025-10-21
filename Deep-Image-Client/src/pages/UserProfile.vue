@@ -7,9 +7,7 @@
     <a-page-header title="个人中心" @back="() => router.back()">
       <template #extra>
         <a-space>
-          <a-button @click="handleRefresh" :loading="loading">
-            <ReloadOutlined /> 刷新
-          </a-button>
+          <a-button @click="handleRefresh" :loading="loading"> <ReloadOutlined /> 刷新 </a-button>
         </a-space>
       </template>
     </a-page-header>
@@ -50,10 +48,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  ReloadOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons-vue'
+import { ReloadOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '../stores/useUserStore'
 import ProfileForm from '../components/user/ProfileForm.vue'
 import SessionList from '../components/user/SessionList.vue'
@@ -67,10 +62,13 @@ const loading = ref(false)
 async function handleRefresh() {
   loading.value = true
   try {
-    await Promise.all([
-      userStore.fetchProfile(),
-      userStore.fetchSessions(),
-    ])
+    await Promise.all([userStore.fetchProfile(), userStore.fetchSessions()])
+  } catch (error: any) {
+    // Silently handle auth errors (will trigger auto-redirect)
+    if (!error?.__CANCEL__ && !error?.message?.includes('No authentication token')) {
+      throw error // Re-throw non-auth errors
+    }
+    // Auth errors are silently handled - user will be redirected
   } finally {
     loading.value = false
   }
@@ -83,7 +81,16 @@ async function handleDeleteOtherSessions() {
 
 // 页面初始化
 onMounted(async () => {
-  await handleRefresh()
+  try {
+    await handleRefresh()
+  } catch (error: any) {
+    // Silently handle errors - auth errors will trigger auto-redirect
+    // Only log non-auth errors for debugging
+    if (!error?.__CANCEL__ && !error?.message?.includes('No authentication token')) {
+      console.error('Failed to load user profile:', error)
+    }
+    // Auth-related errors are handled by request interceptor (auto-redirect)
+  }
 })
 </script>
 
@@ -147,4 +154,3 @@ onMounted(async () => {
   }
 }
 </style>
-

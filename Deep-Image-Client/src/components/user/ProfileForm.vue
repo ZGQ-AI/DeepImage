@@ -2,22 +2,16 @@
   个人信息编辑表单组件
 -->
 <template>
-  <a-form
-    ref="formRef"
-    :model="form"
-    :rules="rules"
-    layout="vertical"
-    @finish="onSubmit"
-  >
+  <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @finish="onSubmit">
     <a-form-item label="用户名" name="username">
-      <a-input 
-        v-model:value="form.username" 
+      <a-input
+        v-model:value="form.username"
         placeholder="3-50个字符，支持字母、数字、下划线、中文"
         :maxlength="50"
         size="large"
       >
         <template #prefix>
-          <UserOutlined style="color: rgba(0,0,0,.25)" />
+          <UserOutlined style="color: rgba(0, 0, 0, 0.25)" />
         </template>
       </a-input>
     </a-form-item>
@@ -25,39 +19,28 @@
     <a-form-item label="邮箱" name="email">
       <a-input v-model:value="form.email" disabled size="large">
         <template #prefix>
-          <MailOutlined style="color: rgba(0,0,0,.25)" />
+          <MailOutlined style="color: rgba(0, 0, 0, 0.25)" />
         </template>
       </a-input>
       <template #extra>
         <a-space>
-          <a-tag color="green" v-if="form.verified">
-            <CheckCircleOutlined /> 已验证
-          </a-tag>
-          <a-tag color="orange" v-else>
-            <ClockCircleOutlined /> 未验证
-          </a-tag>
+          <a-tag color="green" v-if="form.verified"> <CheckCircleOutlined /> 已验证 </a-tag>
+          <a-tag color="orange" v-else> <ClockCircleOutlined /> 未验证 </a-tag>
           <span style="color: #999; font-size: 12px">邮箱无法修改</span>
         </a-space>
       </template>
     </a-form-item>
 
     <a-form-item label="手机号" name="phone">
-      <a-input 
-        v-model:value="form.phone" 
-        placeholder="请输入手机号（可选）"
-        size="large"
-      >
+      <a-input v-model:value="form.phone" placeholder="请输入手机号（可选）" size="large">
         <template #prefix>
-          <PhoneOutlined style="color: rgba(0,0,0,.25)" />
+          <PhoneOutlined style="color: rgba(0, 0, 0, 0.25)" />
         </template>
       </a-input>
     </a-form-item>
 
     <a-form-item label="头像" name="avatarUrl">
-      <AvatarUpload 
-        v-model="form.avatarUrl"
-        @upload-success="handleAvatarUploadSuccess"
-      />
+      <AvatarUpload v-model="form.avatarUrl" @upload-success="handleAvatarUploadSuccess" />
     </a-form-item>
 
     <a-form-item>
@@ -65,9 +48,7 @@
         <a-button type="primary" html-type="submit" :loading="loading" size="large">
           <SaveOutlined /> 保存修改
         </a-button>
-        <a-button @click="resetForm" size="large">
-          <ReloadOutlined /> 重置
-        </a-button>
+        <a-button @click="resetForm" size="large"> <ReloadOutlined /> 重置 </a-button>
       </a-space>
     </a-form-item>
   </a-form>
@@ -143,7 +124,7 @@ watch(
   () => {
     initForm()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // 提交表单
@@ -207,4 +188,3 @@ onMounted(async () => {
   border-radius: 8px;
 }
 </style>
-

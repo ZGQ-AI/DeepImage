@@ -16,9 +16,9 @@ const router = createRouter({
       path: '/auth/callback',
       name: 'auth-callback',
       component: () => import('../pages/AuthCallback.vue'),
-      meta: { 
+      meta: {
         public: true,
-        title: 'Google登录回调'
+        title: 'Google登录回调',
       },
     },
     {
@@ -39,18 +39,18 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: () => import('../pages/UserProfile.vue'),
-      meta: { 
+      meta: {
         requiresAuth: true,
-        title: '个人中心'
+        title: '个人中心',
       },
     },
     {
       path: '/tags',
       name: 'tags',
       component: () => import('../pages/TagManagement.vue'),
-      meta: { 
+      meta: {
         requiresAuth: true,
-        title: '标签管理'
+        title: '标签管理',
       },
     },
   ],
@@ -60,11 +60,12 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   const user = useUserStore()
   const isPublic = to.meta?.public === true
-  
+
+  // Public routes don't require authentication
   if (isPublic) return true
-  
+
   if (to.meta?.requiresAuth) {
-    // 如果已经有 token，直接放行
+    // Check authentication status (reads from storage in real-time)
     if (auth.isAuthenticated) {
       // 如果用户信息未加载，尝试加载
       if (!user.profile) {
@@ -77,7 +78,7 @@ router.beforeEach(async (to) => {
       }
       return true
     }
-    
+
     // 尝试通过 refresh token 恢复登录状态
     const ok = await auth.bootstrap()
     if (ok) {
@@ -89,11 +90,11 @@ router.beforeEach(async (to) => {
       }
       return true
     }
-    
+
     // 认证失败，跳转到登录页
     return { name: 'auth', query: { redirect: to.fullPath } }
   }
-  
+
   return true
 })
 

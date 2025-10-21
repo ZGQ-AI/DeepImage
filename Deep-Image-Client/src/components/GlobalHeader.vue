@@ -33,10 +33,7 @@
             <a-dropdown trigger="['click']">
               <a-space class="user-entry">
                 <!-- 优先显示用户头像，没有头像则显示用户名首字母 -->
-                <a-avatar 
-                  size="small" 
-                  :src="userStore.profile?.avatarUrl"
-                >
+                <a-avatar size="small" :src="userStore.profile?.avatarUrl">
                   <template v-if="!userStore.profile?.avatarUrl">
                     {{ initials }}
                   </template>
@@ -45,16 +42,10 @@
               </a-space>
               <template #overlay>
                 <a-menu @click="onUserMenuClick">
-                  <a-menu-item key="profile">
-                    <UserOutlined /> 个人中心
-                  </a-menu-item>
-                  <a-menu-item key="tags">
-                    <TagsOutlined /> 标签管理
-                  </a-menu-item>
+                  <a-menu-item key="profile"> <UserOutlined /> 个人中心 </a-menu-item>
+                  <a-menu-item key="tags"> <TagsOutlined /> 标签管理 </a-menu-item>
                   <a-menu-divider />
-                  <a-menu-item key="logout">
-                    <LogoutOutlined /> 退出登录
-                  </a-menu-item>
+                  <a-menu-item key="logout"> <LogoutOutlined /> 退出登录 </a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
@@ -69,7 +60,13 @@
 </template>
 <script lang="ts" setup>
 import { h, ref, computed } from 'vue'
-import { HomeOutlined, GithubOutlined, UserOutlined, LogoutOutlined, TagsOutlined } from '@ant-design/icons-vue'
+import {
+  HomeOutlined,
+  GithubOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  TagsOutlined,
+} from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/useUserStore'
@@ -103,7 +100,7 @@ const doMenuClick = ({ key }: { key: string }) => {
   router.push(key)
 }
 router.afterEach((to) => {
-    current.value = [to.path]
+  current.value = [to.path]
 })
 
 const goLogin = () => router.push({ name: 'auth' })

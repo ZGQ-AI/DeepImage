@@ -44,4 +44,3 @@ export function deleteSession(sessionId: number) {
 export function deleteOtherSessions() {
   return request.delete<ApiResponse<DeleteOtherSessionsResponse>>('/api/user/sessions/others')
 }
-

@@ -55,4 +55,3 @@ export interface SessionListResponse {
 export interface DeleteOtherSessionsResponse {
   deletedCount: number
 }
-

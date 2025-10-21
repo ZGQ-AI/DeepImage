@@ -2,27 +2,57 @@ import axios from 'axios'
 import { getAccessToken } from './utils/token'
 import { useAuthStore } from './stores/useAuthStore'
 import router from './router'
+import { API_BASE_URL, REQUEST_TIMEOUT, isPublicEndpoint } from './config/api'
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
-  timeout: 50000,
+  baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT,
   withCredentials: true,
 })
 
 axiosInstance.interceptors.request.use(
   function (config) {
+    // Get fresh token from storage on every request (no caching)
     const token = getAccessToken()
     if (token) {
       config.headers = config.headers || {}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(config.headers as any).Authorization = `Bearer ${token}`
+      return config
     }
-    return config
+
+    // No token available - check if this is a public endpoint
+    const url = config.url || ''
+    if (isPublicEndpoint(url)) {
+      // Public endpoints don't need token
+      return config
+    }
+
+    // Private endpoint without token - redirect to login
+    console.warn('[Request Interceptor] No token found for private endpoint, redirecting to login')
+
+    // Schedule redirect (async to avoid blocking)
+    setTimeout(() => {
+      const currentPath = window.location.pathname
+      if (currentPath !== '/auth') {
+        router.replace({
+          name: 'auth',
+          query: { redirect: currentPath },
+        })
+      }
+    }, 0)
+
+    // Cancel the request by throwing an error in the interceptor
+    // This prevents axios from trying to send the request
+    const cancelError = new Error('No authentication token available')
+    // Mark it as a cancellation to distinguish from network errors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(cancelError as any).__CANCEL__ = true
+    return Promise.reject(cancelError)
   },
   function (error) {
     return Promise.reject(error)
   },
-  { synchronous: true, runWhen: () => true },
 )
 
 let isRefreshing = false
@@ -58,10 +88,10 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true
 
       try {
-        // 调用 refresh 方法
+        // Attempt to refresh tokens (reads refresh token from storage)
         await auth.refresh()
 
-        // 刷新成功，执行队列中的所有请求
+        // Refresh succeeded - get new token from storage and retry queued requests
         const newToken = getAccessToken()
         pendingQueue.forEach((fn) => fn(newToken ?? undefined))
         pendingQueue = []

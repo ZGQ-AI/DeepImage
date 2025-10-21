@@ -37,4 +37,3 @@ export function updateTag(data: UpdateTagRequest) {
 export function deleteTag(data: DeleteTagRequest) {
   return request.delete<ApiResponse<void>>('/api/tags', { data })
 }
-

@@ -4,11 +4,7 @@
 <template>
   <div class="tag-list">
     <a-spin :spinning="loading">
-      <a-empty
-        v-if="!loading && tags.length === 0"
-        description="暂无标签"
-        style="padding: 48px 0"
-      >
+      <a-empty v-if="!loading && tags.length === 0" description="暂无标签" style="padding: 48px 0">
         <template #image>
           <TagOutlined :style="{ fontSize: '64px', color: '#d9d9d9' }" />
         </template>
@@ -45,11 +41,7 @@
 
           <!-- 操作按钮 -->
           <div class="tag-actions">
-            <a-button
-              type="text"
-              size="small"
-              @click="$emit('edit', tag)"
-            >
+            <a-button type="text" size="small" @click="$emit('edit', tag)">
               <EditOutlined />
               编辑
             </a-button>
@@ -59,11 +51,7 @@
               cancel-text="取消"
               @confirm="$emit('delete', tag.id)"
             >
-              <a-button
-                type="text"
-                size="small"
-                danger
-              >
+              <a-button type="text" size="small" danger>
                 <DeleteOutlined />
                 删除
               </a-button>
@@ -225,4 +213,3 @@ function formatTime(dateStr: string): string {
   }
 }
 </style>
-

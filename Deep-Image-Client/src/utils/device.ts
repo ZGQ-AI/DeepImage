@@ -41,4 +41,3 @@ export function parseBrowserName(userAgent: string): string {
 
   return '未知浏览器'
 }
-

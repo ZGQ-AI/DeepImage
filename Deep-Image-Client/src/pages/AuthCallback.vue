@@ -47,7 +47,7 @@ onMounted(async () => {
     const loginError = params.get('loginError')
     const loginSuccess = params.get('loginSuccess')
     redirectPath.value = params.get('redirect') || '/'
-    
+
     // 检查是否有错误
     if (loginError || loginSuccess === 'false') {
       error.value = true
@@ -55,7 +55,7 @@ onMounted(async () => {
       loading.value = false
       return
     }
-    
+
     // 检查token是否存在
     if (!accessToken || !refreshToken) {
       error.value = true
@@ -63,26 +63,26 @@ onMounted(async () => {
       loading.value = false
       return
     }
-    
+
     // 保存token到store（使用localStorage持久化）
     authStore.applyTokenPair(
       {
         accessToken,
         refreshToken,
-        expiresIn: 3600
+        expiresIn: 3600,
       },
-      'local'
+      'local',
     )
-    
+
     // 获取用户信息（带重试机制）
     await fetchProfileWithRetry()
-    
+
     message.success('登录成功！')
-    
+
     // 立即跳转到指定页面
     router.replace(redirectPath.value)
-    
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     error.value = true
     errorMessage.value = err.message || '登录处理失败'
@@ -96,7 +96,7 @@ onMounted(async () => {
  */
 async function fetchProfileWithRetry(maxRetries = 2) {
   let lastError
-  
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       await userStore.fetchProfile()
@@ -104,27 +104,27 @@ async function fetchProfileWithRetry(maxRetries = 2) {
     } catch (err) {
       lastError = err
       console.warn(`获取用户信息失败，重试 ${i + 1}/${maxRetries}`)
-      
+
       if (i < maxRetries - 1) {
         // 等待 1 秒后重试
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     }
   }
-  
+
   throw lastError // 所有重试都失败
 }
 
 function getErrorMessage(errorCode: string | null): string {
   const errorMessages: Record<string, string> = {
-    'GOOGLE_OAUTH_AUTHORIZATION_FAILED': 'Google授权失败，请重试',
-    'GOOGLE_OAUTH_MISSING_CODE': '授权码缺失',
-    'GOOGLE_OAUTH_TOKEN_EXCHANGE_FAILED': '获取访问令牌失败',
-    'GOOGLE_OAUTH_MISSING_ID_TOKEN': '无法获取用户信息',
-    'GOOGLE_OAUTH_MISSING_EMAIL': '无法获取邮箱信息',
-    'GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED': '登录处理失败',
+    GOOGLE_OAUTH_AUTHORIZATION_FAILED: 'Google授权失败，请重试',
+    GOOGLE_OAUTH_MISSING_CODE: '授权码缺失',
+    GOOGLE_OAUTH_TOKEN_EXCHANGE_FAILED: '获取访问令牌失败',
+    GOOGLE_OAUTH_MISSING_ID_TOKEN: '无法获取用户信息',
+    GOOGLE_OAUTH_MISSING_EMAIL: '无法获取邮箱信息',
+    GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED: '登录处理失败',
   }
-  
+
   return errorMessages[errorCode || ''] || '未知错误，请重试'
 }
 
@@ -133,9 +133,9 @@ function getErrorMessage(errorCode: string | null): string {
  */
 function backToLogin() {
   if (redirectPath.value && redirectPath.value !== '/') {
-    router.replace({ 
-      path: '/auth', 
-      query: { redirect: redirectPath.value }
+    router.replace({
+      path: '/auth',
+      query: { redirect: redirectPath.value },
     })
   } else {
     router.replace('/auth')
@@ -195,4 +195,3 @@ p {
   }
 }
 </style>
-

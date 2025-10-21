@@ -46,9 +46,19 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '获取用户信息失败')
+      // Don't show error message for authentication errors or cancelled requests
+      // User will be redirected to login page automatically
+      const isAuthError =
+        error?.__CANCEL__ || // Request cancelled by interceptor
+        error?.message?.includes('No authentication token') ||
+        error?.message?.includes('Token refresh failed') ||
+        error?.response?.status === 401
+
+      if (!isAuthError) {
+        message.error(error?.message || '获取用户信息失败')
+      }
       throw error
     } finally {
       profileLoading.value = false
@@ -69,7 +79,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '更新失败')
       throw error
@@ -90,9 +100,18 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '获取会话列表失败')
+      // Don't show error message for authentication errors or cancelled requests
+      const isAuthError =
+        error?.__CANCEL__ ||
+        error?.message?.includes('No authentication token') ||
+        error?.message?.includes('Token refresh failed') ||
+        error?.response?.status === 401
+
+      if (!isAuthError) {
+        message.error(error?.message || '获取会话列表失败')
+      }
       throw error
     } finally {
       sessionsLoading.value = false
@@ -113,7 +132,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '移除失败')
       throw error
@@ -135,7 +154,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         throw new Error(data.message)
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       message.error(error?.message || '移除失败')
       throw error
@@ -164,4 +183,3 @@ export const useUserStore = defineStore('user', () => {
     clearUserState,
   }
 })
-

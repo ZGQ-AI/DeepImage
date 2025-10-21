@@ -13,40 +13,28 @@
           <a-button @click="handleRefresh" :loading="tagStore.tagsLoading">
             <ReloadOutlined /> 刷新
           </a-button>
-          <a-button type="primary" @click="handleCreate">
-            <PlusOutlined /> 创建标签
-          </a-button>
+          <a-button type="primary" @click="handleCreate"> <PlusOutlined /> 创建标签 </a-button>
         </a-space>
       </template>
       <template #footer>
         <div class="statistics-wrapper">
           <a-row :gutter="16">
             <a-col :span="8">
-              <a-statistic
-                title="标签总数"
-                :value="tagStore.tags.length"
-              >
+              <a-statistic title="标签总数" :value="tagStore.tags.length">
                 <template #prefix>
                   <TagsOutlined />
                 </template>
               </a-statistic>
             </a-col>
             <a-col :span="8">
-              <a-statistic
-                title="总使用次数"
-                :value="totalUsageCount"
-              >
+              <a-statistic title="总使用次数" :value="totalUsageCount">
                 <template #prefix>
                   <FileImageOutlined />
                 </template>
               </a-statistic>
             </a-col>
             <a-col :span="8">
-              <a-statistic
-                title="平均使用次数"
-                :value="averageUsageCount"
-                :precision="1"
-              >
+              <a-statistic title="平均使用次数" :value="averageUsageCount" :precision="1">
                 <template #prefix>
                   <LineChartOutlined />
                 </template>
@@ -294,4 +282,3 @@ onMounted(async () => {
   }
 }
 </style>
-
