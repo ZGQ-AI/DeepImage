@@ -142,7 +142,9 @@ async function onUserMenuClick({ key }: { key: string }) {
 }
 .user-login-status {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  height: 64px;
 }
 .user-entry {
   cursor: pointer;
