@@ -2,7 +2,6 @@ package org.tech.ai.deepimage.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.tech.ai.deepimage.entity.FileTag;
-import org.tech.ai.deepimage.entity.Tag;
 import org.tech.ai.deepimage.model.dto.response.TagResponse;
 
 import java.util.List;

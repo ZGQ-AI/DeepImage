@@ -2,6 +2,7 @@ package org.tech.ai.deepimage.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -148,13 +149,46 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public Page<FileInfoResponse> listFiles(ListFilesRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
 
+        // 如果指定了标签ID，先查询关联的文件ID列表
+        List<Long> fileIds = null;
+        if (request.getTagId() != null) {
+            // 校验标签权限
+            Tag userTag = tagService.getUserTag(request.getTagId(), userId);
+            BusinessException.assertNotNull(userTag, ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
+
+            // 查询该标签关联的所有文件ID
+            LambdaQueryWrapper<FileTag> fileTagWrapper = new LambdaQueryWrapper<>();
+            fileTagWrapper.eq(FileTag::getTagId, request.getTagId());
+            List<FileTag> fileTags = fileTagService.list(fileTagWrapper);
+            
+            if (fileTags.isEmpty()) {
+                // 如果没有关联的文件，直接返回空结果
+                return new Page<>(request.getPage(), request.getPageSize(), 0);
+            }
+            
+            fileIds = fileTags.stream()
+                    .map(FileTag::getFileId)
+                    .collect(Collectors.toList());
+        }
+
+        // 构建查询条件
         Page<FileRecord> page = new Page<>(request.getPage(), request.getPageSize());
         LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileRecord::getUserId, userId);
         
+        // 如果有标签筛选，添加 fileIds 条件
+        if (fileIds != null) {
+            wrapper.in(FileRecord::getId, fileIds);
+        }
+        
         // 业务类型筛选
         if (StringUtils.isNotBlank(request.getBusinessType())) {
             wrapper.eq(FileRecord::getBusinessType, request.getBusinessType());
+        }
+        
+        // 文件名搜索
+        if (StringUtils.isNotBlank(request.getFilename())) {
+            wrapper.like(FileRecord::getOriginalFilename, request.getFilename());
         }
 
         // 排序
@@ -191,71 +225,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
         // 构建详情响应
         return buildFileDetailResponse(fileRecord);
-    }
-
-    @Override
-    public Page<FileInfoResponse> listFilesByTag(ListFilesByTagRequest request) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        Long tagId = request.getTagId();
-
-        // 校验标签权限（使用 TagService 封装查询和权限校验）
-        tagService.getUserTag(tagId, userId);
-
-        // 查询关联的文件ID（使用 FileTagService）
-        LambdaQueryWrapper<FileTag> fileTagWrapper = new LambdaQueryWrapper<>();
-        fileTagWrapper.eq(FileTag::getTagId, tagId);
-        List<FileTag> fileTags = fileTagService.list(fileTagWrapper);
-
-        if (fileTags.isEmpty()) {
-            return new Page<>(request.getPage(), request.getPageSize(), 0);
-        }
-
-        List<Long> fileIds = fileTags.stream()
-                .map(FileTag::getFileId)
-                .collect(Collectors.toList());
-
-        // 查询文件记录
-        Page<FileRecord> recordPage = new Page<>(request.getPage(), request.getPageSize());
-        LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(FileRecord::getId, fileIds)
-                .eq(FileRecord::getDeleteFlag, DeleteStatusEnum.NOT_DELETED.getValue())
-                .orderByDesc(FileRecord::getCreatedAt);
-
-        page(recordPage, wrapper);
-
-        // 转换响应
-        Page<FileInfoResponse> responsePage = new Page<>(recordPage.getCurrent(), recordPage.getSize(),
-                recordPage.getTotal());
-        responsePage.setRecords(recordPage.getRecords().stream()
-                .map(this::buildFileInfoResponse)
-                .collect(Collectors.toList()));
-
-        return responsePage;
-    }
-
-    @Override
-    public Page<FileInfoResponse> listFilesByType(ListFilesByTypeRequest request) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        String businessType = request.getBusinessType();
-
-        BusinessException.assertTrue(BusinessTypeEnum.isValid(businessType), ResponseConstant.FILE_TYPE_INVALID_MESSAGE);
-
-        Page<FileRecord> recordPage = new Page<>(request.getPage(), request.getPageSize());
-        LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FileRecord::getUserId, userId)
-                .eq(FileRecord::getBusinessType, businessType)
-                .eq(FileRecord::getDeleteFlag, DeleteStatusEnum.NOT_DELETED.getValue())
-                .orderByDesc(FileRecord::getCreatedAt);
-
-        page(recordPage, wrapper);
-
-        Page<FileInfoResponse> responsePage = new Page<>(recordPage.getCurrent(), recordPage.getSize(),
-                recordPage.getTotal());
-        responsePage.setRecords(recordPage.getRecords().stream()
-                .map(this::buildFileInfoResponse)
-                .collect(Collectors.toList()));
-
-        return responsePage;
     }
 
     // ========== 文件下载 ==========
@@ -342,7 +311,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     // ========== 文件管理 ==========
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public FileInfoResponse renameFile(RenameFileRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
         Long fileId = request.getFileId();
@@ -365,7 +333,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Boolean deleteFile(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -377,10 +344,12 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-        // 软删除
-        fileRecord.setDeleteFlag(DeleteStatusEnum.DELETED.getValue());
-        fileRecord.setStatus(FileStatusEnum.DELETED.name());
-        updateById(fileRecord);
+        LambdaUpdateWrapper<FileRecord> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(FileRecord::getId, fileId)
+                .set(FileRecord::getStatus, FileStatusEnum.DELETED.name())
+                .set(FileRecord::getDeleteFlag, DeleteStatusEnum.DELETED.getValue());
+        
+       update(updateWrapper);
 
         log.info("文件删除成功（软删除）: fileId={}", fileId);
         return true;

@@ -36,7 +36,8 @@ public interface FileService {
     // ========== 文件查询 ==========
     
     /**
-     * 分页查询文件列表
+     * 分页查询文件列表（统一接口）
+     * 支持按业务类型、标签ID筛选，支持自定义排序
      * 
      * @param request 查询请求
      * @return 文件列表分页结果
@@ -50,22 +51,6 @@ public interface FileService {
      * @return 文件详情
      */
     FileDetailResponse getFileDetail(Long fileId);
-    
-    /**
-     * 按标签查询文件
-     * 
-     * @param request 按标签查询请求
-     * @return 文件列表分页结果
-     */
-    Page<FileInfoResponse> listFilesByTag(ListFilesByTagRequest request);
-    
-    /**
-     * 按业务类型查询文件
-     * 
-     * @param request 按类型查询请求
-     * @return 文件列表分页结果
-     */
-    Page<FileInfoResponse> listFilesByType(ListFilesByTypeRequest request);
     
     // ========== 文件下载 ==========
     

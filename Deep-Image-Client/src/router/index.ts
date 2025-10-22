@@ -53,6 +53,15 @@ const router = createRouter({
         title: '标签管理',
       },
     },
+    {
+      path: '/gallery',
+      name: 'gallery',
+      component: () => import('../pages/ImageGallery.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '我的图库',
+      },
+    },
   ],
 })
 

@@ -178,7 +178,7 @@ import {
   InfoCircleOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons-vue'
-import { uploadFile, listFilesByType } from '../../api/file'
+import { uploadFile, listFiles } from '../../api/file'
 import { BusinessType } from '../../types/file'
 import type { FileInfoResponse } from '../../types/file'
 
@@ -337,7 +337,7 @@ function validateFile(file: File): boolean {
 async function loadHistoryAvatars() {
   loadingHistory.value = true
   try {
-    const { data } = await listFilesByType({
+    const { data } = await listFiles({
       businessType: BusinessType.AVATAR,
       page: 1,
       pageSize: 20,

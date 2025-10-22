@@ -7,9 +7,11 @@ import type {
   FileUploadResponse,
   BusinessType,
   FileInfoResponse,
-  ListFilesByTypeRequest,
+  ListFilesRequest,
   PageResponse,
+  AddFileTagsRequest,
 } from '../types/file'
+import type { TagResponse } from '../types/tag'
 
 /**
  * 上传文件
@@ -34,12 +36,76 @@ export function uploadFile(file: File, businessType: BusinessType, tagIds?: numb
 }
 
 /**
- * 按业务类型查询文件列表
+ * 查询文件列表（统一接口）
+ * 支持按业务类型、标签ID筛选，支持自定义排序
  * @param requestData 查询参数
  */
-export function listFilesByType(requestData: ListFilesByTypeRequest) {
+export function listFiles(requestData: ListFilesRequest) {
   return request.post<ApiResponse<PageResponse<FileInfoResponse>>>(
-    '/api/files/list-by-type',
+    '/api/files/list',
     requestData,
   )
 }
+
+/**
+ * 下载文件
+ * @param fileId 文件ID
+ */
+export function downloadFile(fileId: number) {
+  return request.get(`/api/files/download`, {
+    params: { fileId },
+    responseType: 'blob',
+  })
+}
+
+/**
+ * 删除文件（软删除）
+ * @param fileId 文件ID
+ */
+export function deleteFile(fileId: number) {
+  return request.delete<ApiResponse<boolean>>(`/api/files/delete`, {
+    params: { fileId },
+  })
+}
+
+/**
+ * 重命名文件
+ * @param fileId 文件ID
+ * @param newFilename 新文件名
+ */
+export function renameFile(fileId: number, newFilename: string) {
+  return request.post<ApiResponse<FileInfoResponse>>('/api/files/rename', {
+    fileId,
+    newFilename,
+  })
+}
+
+/**
+ * 为文件添加标签
+ * @param data 添加标签请求
+ */
+export function addFileTags(data: AddFileTagsRequest) {
+  return request.post<ApiResponse<TagResponse[]>>('/api/files/add-tags', data)
+}
+
+/**
+ * 移除文件标签
+ * @param fileId 文件ID
+ * @param tagId 标签ID
+ */
+export function removeFileTag(fileId: number, tagId: number) {
+  return request.delete<ApiResponse<boolean>>('/api/files/remove-tag', {
+    params: { fileId, tagId },
+  })
+}
+
+/**
+ * 查询文件的所有标签
+ * @param fileId 文件ID
+ */
+export function getFileTags(fileId: number) {
+  return request.get<ApiResponse<TagResponse[]>>('/api/files/tags', {
+    params: { fileId },
+  })
+}
+

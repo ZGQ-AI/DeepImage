@@ -62,10 +62,10 @@
 import { h, ref, computed } from 'vue'
 import {
   HomeOutlined,
-  GithubOutlined,
   UserOutlined,
   LogoutOutlined,
   TagsOutlined,
+  PictureOutlined,
 } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
@@ -79,19 +79,14 @@ const items = ref<MenuProps['items']>([
   {
     key: '/',
     icon: () => h(HomeOutlined),
-    label: 'Home',
-    title: 'Home',
+    label: '首页',
+    title: '首页',
   },
   {
-    key: '/about',
-    label: 'about',
-    title: 'about',
-  },
-  {
-    key: '/other',
-    icon: () => h(GithubOutlined),
-    label: h('a', { href: 'https://github.com/dawn83679/DeepImage', target: '_blank' }, 'GitHub'),
-    title: 'GitHub',
+    key: '/gallery',
+    icon: () => h(PictureOutlined),
+    label: '我的图库',
+    title: '我的图库',
   },
 ])
 

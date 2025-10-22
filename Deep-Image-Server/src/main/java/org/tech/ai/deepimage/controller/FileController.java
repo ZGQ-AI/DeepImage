@@ -66,15 +66,16 @@ public class FileController {
     // ========== 文件查询 ==========
     
     /**
-     * 分页查询文件列表
+     * 分页查询文件列表（统一接口）
      * POST /api/files/list
+     * 支持按业务类型、标签ID筛选，支持自定义排序
      */
     @PostMapping("/list")
     public ApiResponse<Page<FileInfoResponse>> listFiles(@Valid @RequestBody ListFilesRequest request) {
         Page<FileInfoResponse> response = fileService.listFiles(request);
         return ApiResponse.success(response);
     }
-    
+
     /**
      * 查询文件详情
      * GET /api/files/detail
@@ -84,27 +85,7 @@ public class FileController {
         FileDetailResponse response = fileService.getFileDetail(fileId);
         return ApiResponse.success(response);
     }
-    
-    /**
-     * 按标签查询文件
-     * POST /api/files/list-by-tag
-     */
-    @PostMapping("/list-by-tag")
-    public ApiResponse<Page<FileInfoResponse>> listFilesByTag(@Valid @RequestBody ListFilesByTagRequest request) {
-        Page<FileInfoResponse> response = fileService.listFilesByTag(request);
-        return ApiResponse.success(response);
-    }
-    
-    /**
-     * 按业务类型查询文件
-     * POST /api/files/list-by-type
-     */
-    @PostMapping("/list-by-type")
-    public ApiResponse<Page<FileInfoResponse>> listFilesByType(@Valid @RequestBody ListFilesByTypeRequest request) {
-        Page<FileInfoResponse> response = fileService.listFilesByType(request);
-        return ApiResponse.success(response);
-    }
-    
+
     // ========== 文件下载 ==========
     
     /**
@@ -112,7 +93,7 @@ public class FileController {
      * GET /api/files/download
      */
     @GetMapping("/download")
-    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam Long fileId) throws Exception {
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam Long fileId) {
         // 获取文件详情
         FileDetailResponse fileDetail = fileService.getFileDetail(fileId);
         
