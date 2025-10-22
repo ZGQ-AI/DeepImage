@@ -98,7 +98,10 @@ router.afterEach((to) => {
   current.value = [to.path]
 })
 
-const goLogin = () => router.push({ name: 'auth' })
+const goLogin = () => {
+  // 使用弹窗登录，而不是路由跳转
+  authStore.showLoginModal()
+}
 
 // 计算用户名首字符（用于头像兜底）
 const initials = computed(() => {
@@ -109,7 +112,7 @@ const initials = computed(() => {
 async function onUserMenuClick({ key }: { key: string }) {
   if (key === 'logout') {
     await authStore.logout()
-    router.replace({ name: 'auth' })
+    router.push('/') // 退出后回到首页
   } else if (key === 'profile') {
     router.push('/profile')
   } else if (key === 'tags') {

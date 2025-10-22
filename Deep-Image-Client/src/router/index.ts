@@ -1,17 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
+import { getAccessToken, getRefreshToken } from '../utils/token'
+import { isTokenExpired } from '../utils/jwt'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/auth',
-      name: 'auth',
-      component: () => import('../pages/Auth.vue'),
-      meta: { public: true },
-    },
     {
       path: '/auth/callback',
       name: 'auth-callback',
@@ -74,34 +70,52 @@ router.beforeEach(async (to) => {
   if (isPublic) return true
 
   if (to.meta?.requiresAuth) {
-    // Check authentication status (reads from storage in real-time)
-    if (auth.isAuthenticated) {
+    // 主动检查 access token 是否有效
+    const accessToken = getAccessToken()
+    const refreshToken = getRefreshToken()
+
+    // 情况 1: 有 accessToken 且未过期
+    if (accessToken && !isTokenExpired(accessToken, 60)) {
+      console.log('[Router Guard] Access token is valid')
+      
       // 如果用户信息未加载，尝试加载
       if (!user.profile) {
         try {
           await user.fetchProfile()
         } catch (err) {
-          console.warn('Failed to fetch user profile in router guard:', err)
-          // 即使失败也放行，因为 JWT 中有基本信息
+          console.warn('[Router Guard] Failed to fetch user profile:', err)
         }
       }
       return true
     }
 
-    // 尝试通过 refresh token 恢复登录状态
-    const ok = await auth.bootstrap()
-    if (ok) {
-      // bootstrap 成功后，加载用户信息
+    // 情况 2: accessToken 过期或不存在，但有 refreshToken
+    if (refreshToken) {
+      console.log('[Router Guard] Access token expired, attempting refresh with refresh token...')
+      
       try {
-        await user.fetchProfile()
+        await auth.refresh()
+        console.log('[Router Guard] Token refreshed successfully')
+        
+        // 刷新成功后，加载用户信息
+        try {
+          await user.fetchProfile()
+        } catch (err) {
+          console.warn('[Router Guard] Failed to fetch user profile after refresh:', err)
+        }
+        return true
       } catch (err) {
-        console.warn('Failed to fetch user profile after bootstrap:', err)
+        console.error('[Router Guard] Token refresh failed:', err)
+        // 刷新失败，继续走下面的登录流程
       }
-      return true
     }
 
-    // 认证失败，跳转到登录页
-    return { name: 'auth', query: { redirect: to.fullPath } }
+    // 情况 3: 没有有效的 token，弹出登录框
+    console.log('[Router Guard] No valid token, showing login modal')
+    auth.showLoginModal(to.fullPath)
+    
+    // 取消当前导航，保持在当前页面
+    return false
   }
 
   return true

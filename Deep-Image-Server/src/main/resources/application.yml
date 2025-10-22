@@ -23,7 +23,7 @@ mybatis-plus:
 
 sa-token:
   jwt-secret-key: deepImage-secret-key
-  timeout: 1800
+  timeout: 10
   token-name: Authorization
   is-log: true
   is-concurrent: true

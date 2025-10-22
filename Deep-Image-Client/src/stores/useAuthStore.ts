@@ -24,6 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
   // This does NOT affect authentication logic
   const expiresIn = ref<number | null>(null)
 
+  // Login modal state
+  const loginModalVisible = ref(false)
+  const loginModalRedirectPath = ref<string>('')
+
   /**
    * Computed property that checks authentication status
    *
@@ -182,9 +186,29 @@ export const useAuthStore = defineStore('auth', () => {
     return false
   }
 
+  /**
+   * Show login modal
+   *
+   * @param redirectPath - Optional path to redirect to after successful login
+   */
+  function showLoginModal(redirectPath?: string) {
+    loginModalVisible.value = true
+    loginModalRedirectPath.value = redirectPath || ''
+  }
+
+  /**
+   * Hide login modal
+   */
+  function hideLoginModal() {
+    loginModalVisible.value = false
+    loginModalRedirectPath.value = ''
+  }
+
   return {
     // State (UI only, not used for auth logic)
     expiresIn,
+    loginModalVisible,
+    loginModalRedirectPath,
 
     // Computed
     isAuthenticated,
@@ -195,5 +219,7 @@ export const useAuthStore = defineStore('auth', () => {
     refresh,
     logout,
     bootstrap,
+    showLoginModal,
+    hideLoginModal,
   }
 })

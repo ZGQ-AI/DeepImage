@@ -54,6 +54,7 @@ export const useUserStore = defineStore('user', () => {
         error?.__CANCEL__ || // Request cancelled by interceptor
         error?.message?.includes('No authentication token') ||
         error?.message?.includes('Token refresh failed') ||
+        error?.message?.includes('not login') ||
         error?.response?.status === 401
 
       if (!isAuthError) {
@@ -107,6 +108,7 @@ export const useUserStore = defineStore('user', () => {
         error?.__CANCEL__ ||
         error?.message?.includes('No authentication token') ||
         error?.message?.includes('Token refresh failed') ||
+        error?.message?.includes('not login') ||
         error?.response?.status === 401
 
       if (!isAuthError) {
