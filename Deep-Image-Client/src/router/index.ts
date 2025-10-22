@@ -66,6 +66,9 @@ router.beforeEach(async (to) => {
   const user = useUserStore()
   const isPublic = to.meta?.public === true
 
+  // Keep consistent page title for all pages
+  document.title = 'Deep Image'
+
   // Public routes don't require authentication
   if (isPublic) return true
 

@@ -68,42 +68,19 @@
         <!-- 上传方式切换 -->
         <a-tabs v-model:activeKey="uploadTab" size="small">
           <a-tab-pane key="upload" tab="上传新头像">
-            <!-- 统一的上传区域 -->
-            <div class="unified-upload-area">
-              <!-- 主要上传区域：智能识别粘贴内容 -->
-              <div
-                ref="uploadZoneRef"
-                class="upload-drop-zone"
-                :class="{ 'drop-zone-active': isPasteAreaActive }"
-                @paste="handleSmartPaste"
-                @dragover.prevent="isPasteAreaActive = true"
-                @dragleave="isPasteAreaActive = false"
-                @drop.prevent="handleDrop"
-                tabindex="0"
-              >
-                <div class="drop-zone-content">
-                  <UploadOutlined style="font-size: 36px; color: #1890ff" />
-                  <div class="drop-zone-text">
-                    <p class="main-text">拖拽图片到此处，或按 Ctrl+V (Cmd+V) 粘贴</p>
-                    <p class="sub-text">支持粘贴图片文件或图片链接</p>
-                    <p class="sub-text">
-                      <a-button type="link" size="small" @click="handleClickUploadZone">
-                        点击选择文件
-                      </a-button>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 隐藏的文件输入 -->
-              <input
-                ref="fileInputRef"
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                style="display: none"
-                @change="handleFileChange"
-              />
-            </div>
+            <!-- 使用通用文件上传组件 -->
+            <CommonFileUploader
+              ref="commonUploaderRef"
+              :max-size="maxSize"
+              :multiple="false"
+              :enable-drag-drop="true"
+              :enable-paste="true"
+              :enable-url-input="true"
+              mode="compact"
+              accept="image/*"
+              upload-text="选择头像图片"
+              @file-select="handleFileSelect"
+            />
 
             <!-- 上传提示 -->
             <div class="upload-tips">
@@ -167,17 +144,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   PictureOutlined,
-  UploadOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons-vue'
+import CommonFileUploader from '../common/CommonFileUploader.vue'
 import { uploadFile, listFiles } from '../../api/file'
 import { BusinessType } from '../../types/file'
 import type { FileInfoResponse } from '../../types/file'
@@ -205,10 +182,8 @@ const emit = defineEmits<Emits>()
 // 状态
 const uploadModalVisible = ref(false)
 const uploading = ref(false)
-const isPasteAreaActive = ref(false)
-const fileInputRef = ref<HTMLInputElement | null>(null)
-const uploadZoneRef = ref<HTMLElement | null>(null)
 const uploadTab = ref<'upload' | 'history'>('upload')
+const commonUploaderRef = ref<InstanceType<typeof CommonFileUploader>>()
 
 // 预览相关
 const previewImageUrl = ref('') // 模态框中预览的图片 URL（本地 base64 或网络 URL）
@@ -279,11 +254,6 @@ const groupedHistoryAvatars = computed(() => {
   return groups
 })
 
-// 常量定义
-const CONSTANTS = {
-  AUTO_FOCUS_DELAY: 100, // DOM 更新后自动聚焦的延迟时间
-  IMAGE_LOAD_TIMEOUT: 10000, // 图片加载超时时间（10秒）
-}
 
 // 监听上传标签页切换，加载历史头像
 watch(uploadTab, (newTab) => {
@@ -305,30 +275,24 @@ async function readFileAsDataURL(file: File): Promise<string> {
 }
 
 /**
- * 验证文件
+ * 处理通用上传组件选择的文件
  */
-function validateFile(file: File): boolean {
-  // 验证文件类型
-  const isImage = file.type.startsWith('image/')
-  if (!isImage) {
-    message.error('只能上传图片文件！')
-    return false
-  }
+async function handleFileSelect(files: File[]) {
+  const file = files[0] // 头像上传只处理第一个文件
+  if (!file) return
 
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-  if (!allowedTypes.includes(file.type)) {
-    message.error('只支持 JPG、PNG、WEBP 格式的图片！')
-    return false
+  try {
+    // 创建本地预览
+    const dataUrl = await readFileAsDataURL(file)
+    
+    previewImageUrl.value = dataUrl
+    previewFile.value = file
+    previewSource.value = 'file'
+    message.success('图片已加载，请确认后上传')
+  } catch (error) {
+    console.error('读取文件失败:', error)
+    message.error('读取文件失败')
   }
-
-  // 验证文件大小
-  const isLtMaxSize = file.size <= maxSizeBytes.value
-  if (!isLtMaxSize) {
-    message.error(`图片大小不能超过 ${maxSizeMB.value}MB！`)
-    return false
-  }
-
-  return true
 }
 
 /**
@@ -376,11 +340,13 @@ function showUploadModal() {
   previewImageUrl.value = ''
   previewFile.value = null
   uploadTab.value = 'upload'
-
+  
   // 等待 DOM 更新后自动聚焦到上传区域，使其可以直接粘贴
-  setTimeout(() => {
-    uploadZoneRef.value?.focus()
-  }, CONSTANTS.AUTO_FOCUS_DELAY)
+  nextTick(() => {
+    setTimeout(() => {
+      commonUploaderRef.value?.focus()
+    }, 300) // 增加延迟确保Modal完全渲染
+  })
 }
 
 /**
@@ -391,45 +357,6 @@ function handleClickAvatar(event: MouseEvent) {
   event.stopPropagation()
 }
 
-/**
- * 点击"选择文件"按钮
- */
-function handleClickUploadZone(event: MouseEvent) {
-  event.stopPropagation() // 阻止事件冒泡，避免影响其他交互
-  fileInputRef.value?.click()
-}
-
-/**
- * 处理文件选择
- */
-async function handleFileChange(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-
-  if (!file) return
-
-  if (!validateFile(file)) {
-    // 清空 input
-    target.value = ''
-    return
-  }
-
-  try {
-    // 创建本地预览
-    const dataUrl = await readFileAsDataURL(file)
-
-    previewImageUrl.value = dataUrl
-    previewFile.value = file
-    previewSource.value = 'file'
-    message.success('图片已加载，请确认后上传')
-  } catch (error) {
-    console.error('读取文件失败:', error)
-    message.error('读取文件失败')
-  } finally {
-    // 清空 input，允许重复选择同一文件
-    target.value = ''
-  }
-}
 
 /**
  * 确认上传
@@ -500,115 +427,6 @@ function handleCancelUpload() {
   previewFile.value = null
 }
 
-/**
- * 智能粘贴处理：自动识别图片文件或图片URL
- */
-async function handleSmartPaste(event: ClipboardEvent) {
-  const items = event.clipboardData?.items
-  const text = event.clipboardData?.getData('text')
-
-  // 优先级1: 检查是否有图片文件
-  if (items) {
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i]
-
-      if (item.type.startsWith('image/')) {
-        event.preventDefault()
-        const file = item.getAsFile()
-        if (!file) {
-          message.error('无法获取图片文件')
-          return
-        }
-
-        if (!validateFile(file)) {
-          return
-        }
-
-        try {
-          // 创建本地预览
-          const dataUrl = await readFileAsDataURL(file)
-
-          previewImageUrl.value = dataUrl
-          previewFile.value = file
-          previewSource.value = 'file'
-          message.success('图片已加载，请确认后上传')
-        } catch (error) {
-          console.error('处理粘贴图片失败:', error)
-          message.error('处理粘贴图片失败')
-        }
-        return
-      }
-    }
-  }
-
-  // 优先级2: 检查是否是URL链接
-  if (text && text.trim()) {
-    const url = text.trim()
-
-    // 简单验证是否是URL
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      event.preventDefault()
-
-      try {
-        // 验证 URL 格式
-        new URL(url)
-
-        // 验证图片 URL 是否可访问
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-
-        await new Promise((resolve, reject) => {
-          img.onload = resolve
-          img.onerror = reject
-          img.src = url
-          setTimeout(() => reject(new Error('加载超时')), CONSTANTS.IMAGE_LOAD_TIMEOUT)
-        })
-
-        previewImageUrl.value = url
-        previewFile.value = null
-        previewSource.value = 'url'
-        message.success('图片链接已加载，请确认后上传')
-      } catch (error) {
-        console.error('URL 验证失败:', error)
-        message.error('无法加载该图片链接，请检查 URL 是否正确')
-      }
-      return
-    }
-  }
-
-  // 如果都不是，提示用户
-  message.warning('请粘贴图片文件或图片链接')
-}
-
-/**
- * 处理拖拽上传（仅预览，不上传）
- */
-async function handleDrop(event: DragEvent) {
-  isPasteAreaActive.value = false
-
-  const files = event.dataTransfer?.files
-  if (!files || files.length === 0) {
-    return
-  }
-
-  const file = files[0]
-  if (!validateFile(file)) {
-    return
-  }
-
-  try {
-    // 创建本地预览
-    const dataUrl = await readFileAsDataURL(file)
-
-    previewImageUrl.value = dataUrl
-    previewFile.value = file
-    previewSource.value = 'file'
-    message.success('图片已加载，请确认后上传')
-  } catch (error) {
-    console.error('处理拖拽图片失败:', error)
-    message.error('处理拖拽图片失败')
-  }
-}
 
 /**
  * 清除头像
@@ -747,61 +565,6 @@ function handleClearAvatar() {
   font-size: 14px;
 }
 
-/* 统一上传区域 */
-.unified-upload-area {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 上传拖拽区域 */
-.upload-drop-zone {
-  min-height: 140px;
-  padding: 32px 24px;
-  border: 2px dashed #d9d9d9;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  background: #fafafa;
-  outline: none;
-}
-
-.upload-drop-zone:hover,
-.upload-drop-zone:focus {
-  border-color: #1890ff;
-  background: #f0f5ff;
-}
-
-.drop-zone-active {
-  border-color: #1890ff;
-  background: #e6f7ff;
-  transform: scale(1.01);
-}
-
-.drop-zone-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-
-.drop-zone-text {
-  text-align: center;
-}
-
-.drop-zone-text .main-text {
-  margin: 0 0 4px 0;
-  font-size: 15px;
-  color: #333;
-  font-weight: 500;
-}
-
-.drop-zone-text .sub-text {
-  margin: 0;
-  font-size: 13px;
-  color: #999;
-}
 
 /* 上传提示 */
 .upload-tips {

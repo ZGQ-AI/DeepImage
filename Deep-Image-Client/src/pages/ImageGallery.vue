@@ -147,9 +147,6 @@ import type { FileInfoResponse } from '../types/file'
 import type { ViewMode } from '../components/file/ViewModeToggle.vue'
 import type { TagResponse } from '../types/tag'
 
-// 页面标题设置
-document.title = '我的图库 - DeepImage'
-
 // 状态管理
 const showUploader = ref(false)
 const images = ref<FileInfoResponse[]>([])
