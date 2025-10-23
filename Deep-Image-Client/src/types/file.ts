@@ -168,23 +168,37 @@ export interface RenameFileRequest {
 }
 
 /**
- * 批量删除请求
+ * 批量操作请求（统一）
  */
-export interface BatchDeleteFilesRequest {
+export interface BatchOperationRequest {
   /** 文件ID列表 */
   fileIds: number[]
 }
 
 /**
- * 批量删除响应
+ * 操作结果
  */
-export interface BatchDeleteResponse {
-  /** 成功删除的数量 */
-  successCount: number
-  /** 失败的数量 */
-  failCount: number
-  /** 失败的文件ID列表 */
-  failedFileIds?: number[]
+export interface OperationResult {
+  /** 文件ID */
+  fileId: number
+  /** 状态: success | failed */
+  status: string
+  /** 失败原因（仅在失败时有值） */
+  reason?: string
+}
+
+/**
+ * 批量操作响应（统一）
+ */
+export interface BatchOperationResponse {
+  /** 总操作数量 */
+  total: number
+  /** 成功数量 */
+  success: number
+  /** 失败数量 */
+  failed: number
+  /** 操作结果详情列表 */
+  results: OperationResult[] | null
 }
 
 /**

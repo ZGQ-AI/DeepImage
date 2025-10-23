@@ -60,7 +60,7 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
         // 提取有效的标签ID
         List<Long> validTagIds = validTags.stream()
                 .map(Tag::getId)
-                .collect(Collectors.toList());
+                .toList();
         
         // 4. 批量插入新的关联关系
         LocalDateTime now = LocalDateTime.now();

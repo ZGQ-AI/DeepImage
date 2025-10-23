@@ -141,22 +141,12 @@ public class FileController {
     }
     
     /**
-     * 删除文件（软删除）
-     * DELETE /api/files/delete
-     */
-    @DeleteMapping("/delete")
-    public ApiResponse<Boolean> deleteFile(@RequestParam Long fileId) {
-        Boolean result = fileService.deleteFile(fileId);
-        return ApiResponse.success(result);
-    }
-    
-    /**
      * 批量删除文件
-     * POST /api/files/batch-delete
+     * DELETE /api/files
      */
-    @PostMapping("/batch-delete")
-    public ApiResponse<BatchDeleteResponse> batchDeleteFiles(@Valid @RequestBody BatchDeleteFilesRequest request) {
-        BatchDeleteResponse response = fileService.batchDeleteFiles(request);
+    @DeleteMapping
+    public ApiResponse<BatchOperationResponse> batchDeleteFiles(@Valid @RequestBody BatchOperationRequest request) {
+        BatchOperationResponse response = fileService.batchDeleteFiles(request);
         return ApiResponse.success(response);
     }
     

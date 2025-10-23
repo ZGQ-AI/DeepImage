@@ -12,5 +12,5 @@ import org.tech.ai.deepimage.entity.FileRecord;
  */
 @Mapper
 public interface FileRecordMapper extends BaseMapper<FileRecord> {
-    
+
 }

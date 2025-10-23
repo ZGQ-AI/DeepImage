@@ -10,6 +10,7 @@ import type {
   ListFilesRequest,
   PageResponse,
   AddFileTagsRequest,
+  BatchOperationResponse,
 } from '../types/file'
 import type { TagResponse } from '../types/tag'
 
@@ -59,12 +60,12 @@ export function downloadFile(fileId: number) {
 }
 
 /**
- * 删除文件（软删除）
- * @param fileId 文件ID
+ * 批量删除文件（软删除）
+ * @param fileIds 文件ID列表
  */
-export function deleteFile(fileId: number) {
-  return request.delete<ApiResponse<boolean>>(`/api/files/delete`, {
-    params: { fileId },
+export function batchDeleteFiles(fileIds: number[]) {
+  return request.delete<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files', {
+    data: { fileIds }
   })
 }
 

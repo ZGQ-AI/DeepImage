@@ -92,10 +92,10 @@ public interface FileService {
     /**
      * 批量删除文件
      * 
-     * @param request 批量删除请求
-     * @return 批量删除响应
+     * @param request 批量操作请求
+     * @return 批量操作响应
      */
-    BatchDeleteResponse batchDeleteFiles(BatchDeleteFilesRequest request);
+    BatchOperationResponse batchDeleteFiles(BatchOperationRequest request);
     
     /**
      * 彻底删除文件（从MinIO删除）

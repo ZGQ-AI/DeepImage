@@ -13,7 +13,16 @@
           {{ showUploader ? '收起上传' : '上传更多' }}
         </a-button>
         <a-divider type="vertical" />
-        <span class="toolbar-label">共 {{ images.length }} 张图片</span>
+        <a-button @click="toggleSelectionMode">
+          {{ selectionMode ? '退出选择' : '批量操作' }}
+        </a-button>
+        <a-divider type="vertical" />
+        <span class="toolbar-label">
+          共 {{ images.length }} 张图片
+          <template v-if="selectionMode && selectedFileIds.size > 0">
+            (已选 {{ selectedFileIds.size }} 张)
+          </template>
+        </span>
       </div>
       <div class="toolbar-right">
         <!-- 文件名搜索 -->
@@ -75,6 +84,29 @@
       />
     </div>
 
+    <!-- 批量操作工具栏 -->
+    <div v-if="selectionMode" class="batch-toolbar">
+      <div class="batch-toolbar-left">
+        <a-checkbox 
+          :checked="isAllSelected"
+          :indeterminate="selectedFileIds.size > 0 && !isAllSelected"
+          @change="handleSelectAll"
+        >
+          全选
+        </a-checkbox>
+      </div>
+      <div class="batch-toolbar-right">
+        <a-button 
+          type="primary" 
+          danger 
+          :disabled="selectedFileIds.size === 0"
+          @click="handleBatchDelete"
+        >
+          删除 ({{ selectedFileIds.size }})
+        </a-button>
+      </div>
+    </div>
+
     <!-- 图片展示区域 -->
     <div class="gallery-content">
       <!-- 图片列表 - 根据视图模式显示 -->
@@ -84,11 +116,14 @@
           v-if="viewMode === 'grid'"
           :images="images"
           :loading="loading"
+          :selection-mode="selectionMode"
+          :selected-file-ids="selectedFileIds"
           @preview="handleImagePreview"
           @download="handleImageDownload"
           @rename="handleImageRename"
           @manage-tags="handleManageTags"
           @delete="handleImageDelete"
+          @toggle-select="handleToggleSelect"
         />
         
         <!-- 列表视图 -->
@@ -96,11 +131,14 @@
           v-else-if="viewMode === 'list'"
           :images="images"
           :loading="loading"
+          :selection-mode="selectionMode"
+          :selected-file-ids="selectedFileIds"
           @preview="handleImagePreview"
           @download="handleImageDownload"
           @rename="handleImageRename"
           @manage-tags="handleManageTags"
           @delete="handleImageDelete"
+          @toggle-select="handleToggleSelect"
         />
       </div>
     </div>
@@ -140,7 +178,7 @@ import ImageGridView from '../components/file/ImageGridView.vue'
 import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
 import FileTagManager from '../components/file/FileTagManager.vue'
-import { listFiles, downloadFile, deleteFile, renameFile } from '../api/file'
+import { listFiles, downloadFile, batchDeleteFiles, renameFile } from '../api/file'
 import { listTags } from '../api/tag'
 import { BusinessType } from '../types/file'
 import type { FileInfoResponse } from '../types/file'
@@ -160,6 +198,10 @@ const currentImageForTag = ref<FileInfoResponse | null>(null)
 const availableTags = ref<TagResponse[]>([])
 const selectedTagId = ref<number | null>(null)
 
+// 批量操作状态
+const selectionMode = ref(false)
+const selectedFileIds = ref<Set<number>>(new Set())
+
 // 搜索和排序
 const searchKeyword = ref<string>('')
 const sortOption = ref<string>('createdAt-desc') // 默认按上传时间降序
@@ -171,6 +213,11 @@ const shouldShowUploader = computed(() => {
   if (images.value.length === 0) return true
   // 如果有图片，则根据用户手动控制
   return showUploader.value
+})
+
+// 计算是否全选
+const isAllSelected = computed(() => {
+  return images.value.length > 0 && selectedFileIds.value.size === images.value.length
 })
 
 // 格式化文件大小
@@ -501,17 +548,22 @@ const handleImageDelete = async (image: FileInfoResponse) => {
           duration: 0
         })
 
-        // 调用删除接口
-        const response = await deleteFile(image.fileId)
+        // 调用批量删除接口（单个文件）
+        const response = await batchDeleteFiles([image.fileId])
         
         if (response.data.code === 200 && response.data.data) {
-          // 从列表中移除该图片
-          images.value = images.value.filter(img => img.fileId !== image.fileId)
-          
-          message.success({
-            content: `图片 "${image.originalFilename}" 删除成功`,
-            key: `delete-${image.fileId}`
-          })
+          const result = response.data.data
+          if (result.success > 0) {
+            // 从列表中移除该图片
+            images.value = images.value.filter(img => img.fileId !== image.fileId)
+            
+            message.success({
+              content: `图片 "${image.originalFilename}" 删除成功`,
+              key: `delete-${image.fileId}`
+            })
+          } else {
+            throw new Error('删除失败')
+          }
         } else {
           throw new Error(response.data.message || '删除失败')
         }
@@ -520,6 +572,92 @@ const handleImageDelete = async (image: FileInfoResponse) => {
         message.error({
           content: `删除失败: ${error instanceof Error ? error.message : '未知错误'}`,
           key: `delete-${image.fileId}`
+        })
+      }
+    }
+  })
+}
+
+// 切换选择模式
+const toggleSelectionMode = () => {
+  selectionMode.value = !selectionMode.value
+  if (!selectionMode.value) {
+    selectedFileIds.value.clear()
+  }
+}
+
+// 切换单个文件选择
+const handleToggleSelect = (fileId: number) => {
+  if (selectedFileIds.value.has(fileId)) {
+    selectedFileIds.value.delete(fileId)
+  } else {
+    selectedFileIds.value.add(fileId)
+  }
+}
+
+// 全选/取消全选
+const handleSelectAll = (e: any) => {
+  if (e.target.checked) {
+    images.value.forEach(img => selectedFileIds.value.add(img.fileId))
+  } else {
+    selectedFileIds.value.clear()
+  }
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  const count = selectedFileIds.value.size
+  if (count === 0) {
+    message.warning('请先选择要删除的图片')
+    return
+  }
+
+  Modal.confirm({
+    title: '批量删除确认',
+    content: `确定要删除选中的 ${count} 张图片吗？删除后可在回收站中恢复。`,
+    okText: '确认删除',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        message.loading({
+          content: '正在删除图片...',
+          key: 'batch-delete',
+          duration: 0
+        })
+
+        const fileIds = Array.from(selectedFileIds.value)
+        const response = await batchDeleteFiles(fileIds)
+        
+        if (response.data.code === 200 && response.data.data) {
+          const result = response.data.data
+          
+          // 从列表中移除成功删除的图片
+          images.value = images.value.filter(img => !fileIds.includes(img.fileId))
+          
+          // 清空选择
+          selectedFileIds.value.clear()
+          selectionMode.value = false
+          
+          if (result.failed > 0) {
+            message.warning({
+              content: `删除完成：成功 ${result.success} 张，失败 ${result.failed} 张`,
+              key: 'batch-delete'
+            })
+          } else {
+            message.success({
+              content: `成功删除 ${result.success} 张图片`,
+              key: 'batch-delete'
+            })
+          }
+        } else {
+          throw new Error(response.data.message || '批量删除失败')
+        }
+      } catch (error) {
+        console.error('批量删除失败:', error)
+        message.error({
+          content: `批量删除失败: ${error instanceof Error ? error.message : '未知错误'}`,
+          key: 'batch-delete'
         })
       }
     }
@@ -624,6 +762,28 @@ onMounted(() => {
   background: #fafafa;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+}
+
+.batch-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  margin-bottom: 16px;
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.batch-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.batch-toolbar-right {
+  display: flex;
+  gap: 12px;
 }
 
 .images-container {

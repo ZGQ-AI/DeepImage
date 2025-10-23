@@ -3,6 +3,7 @@
     <div class="list-container">
       <!-- 表头 -->
       <div class="list-header">
+        <div v-if="selectionMode" class="header-cell checkbox-col"></div>
         <div class="header-cell thumbnail-col">预览</div>
         <div class="header-cell name-col" @click="handleSort('name')">
           文件名
@@ -22,7 +23,7 @@
             {{ sortOrder === 'asc' ? '↑' : '↓' }}
           </span>
         </div>
-        <div class="header-cell actions-col">操作</div>
+        <div v-if="!selectionMode" class="header-cell actions-col">操作</div>
       </div>
 
       <!-- 列表内容 -->
@@ -31,8 +32,12 @@
           v-for="image in sortedImages"
           :key="image.fileId"
           class="list-item"
+          :class="{ 'selected': isImageSelected(image.fileId) }"
           @click="handleImageClick(image)"
         >
+          <div v-if="selectionMode" class="list-cell checkbox-col" @click.stop="handleToggleSelect(image.fileId)">
+            <a-checkbox :checked="isImageSelected(image.fileId)" />
+          </div>
           <div class="list-cell thumbnail-col">
             <div class="thumbnail-wrapper">
               <a-image 
@@ -75,7 +80,7 @@
             <div class="date-secondary">{{ formatDateTime(image.createdAt) }}</div>
           </div>
           
-          <div class="list-cell actions-col">
+          <div v-if="!selectionMode" class="list-cell actions-col">
             <div class="action-buttons">
               <a-button 
                 type="text" 
@@ -154,10 +159,13 @@ import type { FileInfoResponse } from '../../types/file'
 interface Props {
   images: FileInfoResponse[]
   loading?: boolean
+  selectionMode?: boolean
+  selectedFileIds?: Set<number>
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
+  selectionMode: false
 })
 
 // Emits
@@ -168,7 +176,18 @@ const emit = defineEmits<{
   manageTags: [image: FileInfoResponse]
   delete: [image: FileInfoResponse]
   loadMore: []
+  toggleSelect: [fileId: number]
 }>()
+
+// 判断图片是否被选中
+const isImageSelected = (fileId: number) => {
+  return props.selectedFileIds?.has(fileId) || false
+}
+
+// 切换选择
+const handleToggleSelect = (fileId: number) => {
+  emit('toggleSelect', fileId)
+}
 
 // 排序状态
 const sortField = ref<'name' | 'size' | 'date'>('date')
@@ -257,7 +276,13 @@ const handleImageError = (event: Event) => {
 
 // 事件处理
 const handleImageClick = (image: FileInfoResponse) => {
-  // 点击行不做任何操作
+  // 如果是选择模式，点击切换选择
+  if (props.selectionMode) {
+    handleToggleSelect(image.fileId)
+  } else {
+    // 否则预览
+    handlePreview(image)
+  }
 }
 
 const handlePreview = (image: FileInfoResponse) => {
@@ -305,12 +330,20 @@ const handleDelete = (image: FileInfoResponse) => {
   color: #374151;
 }
 
+.list-header:has(.checkbox-col) {
+  grid-template-columns: 50px 80px 1fr 120px 160px;
+}
+
 .header-cell {
   display: flex;
   align-items: center;
   cursor: pointer;
   user-select: none;
   transition: color 0.2s ease;
+}
+
+.checkbox-col {
+  justify-content: center;
 }
 
 .header-cell:hover {
@@ -336,6 +369,15 @@ const handleDelete = (image: FileInfoResponse) => {
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+
+.list-item:has(.checkbox-col) {
+  grid-template-columns: 50px 80px 1fr 120px 160px;
+}
+
+.list-item.selected {
+  background-color: #e6f7ff;
+  border-left: 3px solid #1890ff;
 }
 
 .list-item:hover {

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 /**
  * 文件管理Service实现类
- * 
+ *
  * @author zgq
  * @since 2025-10-02
  */
@@ -53,6 +53,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     private final FileShareService fileShareService;
     private final FileAccessLogService fileAccessLogService;
     private final UserService userService;
+    private final FileRecordService fileRecordService;
 
     // ========== 文件上传 ==========
 
@@ -160,12 +161,12 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             LambdaQueryWrapper<FileTag> fileTagWrapper = new LambdaQueryWrapper<>();
             fileTagWrapper.eq(FileTag::getTagId, request.getTagId());
             List<FileTag> fileTags = fileTagService.list(fileTagWrapper);
-            
+
             if (fileTags.isEmpty()) {
                 // 如果没有关联的文件，直接返回空结果
                 return new Page<>(request.getPage(), request.getPageSize(), 0);
             }
-            
+
             fileIds = fileTags.stream()
                     .map(FileTag::getFileId)
                     .collect(Collectors.toList());
@@ -175,17 +176,17 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Page<FileRecord> page = new Page<>(request.getPage(), request.getPageSize());
         LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileRecord::getUserId, userId);
-        
+
         // 如果有标签筛选，添加 fileIds 条件
         if (fileIds != null) {
             wrapper.in(FileRecord::getId, fileIds);
         }
-        
+
         // 业务类型筛选
         if (StringUtils.isNotBlank(request.getBusinessType())) {
             wrapper.eq(FileRecord::getBusinessType, request.getBusinessType());
         }
-        
+
         // 文件名搜索
         if (StringUtils.isNotBlank(request.getFilename())) {
             wrapper.like(FileRecord::getOriginalFilename, request.getFilename());
@@ -265,7 +266,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             // 文件所有者不受分享时间限制，直接生成预签名URL
             String previewUrl = minioService.getPresignedDownloadUrl(fileRecord.getObjectName(), expirySeconds);
             logFileAccess(fileId, userId, AccessTypeEnum.PREVIEW.name());
-            
+
             return FilePreviewResponse.builder()
                     .previewUrl(previewUrl)
                     .expirySeconds(expirySeconds)
@@ -275,19 +276,19 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
         // 如果不是文件所有者，检查分享权限和时间限制
         FileShare fileShare = fileShareService.getValidShareByFileAndUser(fileId, userId);
-        
+
         // 如果没有找到分享记录，无权访问
         BusinessException.assertNotNull(fileShare, ResponseConstant.FILE_ACCESS_DENIED_MESSAGE);
-        
+
         // 检查分享是否过期
         LocalDateTime now = LocalDateTime.now();
         if (fileShare.getExpiresAt() != null) {
             BusinessException.throwIf(fileShare.getExpiresAt().isBefore(now) || fileShare.getExpiresAt().isEqual(now),
                     ResponseConstant.FORBIDDEN, ResponseConstant.SHARE_EXPIRED_MESSAGE);
-            
+
             // 计算分享剩余的有效时间（秒）
             long remainingSeconds = java.time.Duration.between(now, fileShare.getExpiresAt()).getSeconds();
-            
+
             // 预览URL有效期不能超过分享的剩余有效期
             if (expirySeconds > remainingSeconds) {
                 expirySeconds = (int) Math.max(60, remainingSeconds); // 确保至少 60 秒
@@ -320,7 +321,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
         // 权限校验
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
         // 更新文件名
@@ -341,15 +342,15 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
         // 权限校验
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
         LambdaUpdateWrapper<FileRecord> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(FileRecord::getId, fileId)
                 .set(FileRecord::getStatus, FileStatusEnum.DELETED.name())
                 .set(FileRecord::getDeleteFlag, DeleteStatusEnum.DELETED.getValue());
-        
-       update(updateWrapper);
+
+        update(updateWrapper);
 
         log.info("文件删除成功（软删除）: fileId={}", fileId);
         return true;
@@ -357,24 +358,31 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BatchDeleteResponse batchDeleteFiles(BatchDeleteFilesRequest request) {
-        int successCount = 0;
-        List<Long> failedFileIds = new ArrayList<>();
+    public BatchOperationResponse batchDeleteFiles(BatchOperationRequest request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        List<Long> fileIds = request.getFileIds();
 
-        for (Long fileId : request.getFileIds()) {
-            try {
-                deleteFile(fileId);
-                successCount++;
-            } catch (Exception e) {
-                log.error("批量删除-单个文件失败: fileId={}", fileId, e);
-                failedFileIds.add(fileId);
-            }
-        }
+        log.info("批量删除文件: userId={}, fileIds={}", userId, fileIds);
 
-        return BatchDeleteResponse.builder()
-                .successCount(successCount)
-                .failedCount(failedFileIds.size())
-                .failedFileIds(failedFileIds)
+        // 直接批量更新，数据库层面自动过滤用户权限
+        LambdaUpdateWrapper<FileRecord> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.in(FileRecord::getId, fileIds)
+                .eq(FileRecord::getUserId, userId)
+                .eq(FileRecord::getDeleteFlag, DeleteStatusEnum.NOT_DELETED.getValue())
+                .set(FileRecord::getDeleteFlag, DeleteStatusEnum.DELETED.getValue())
+                .set(FileRecord::getStatus, FileStatusEnum.DELETED.name());
+        int updatedCount = fileRecordService.getBaseMapper().update(updateWrapper);
+
+        int failedCount = fileIds.size() - updatedCount;
+
+        log.info("批量删除完成: total={}, success={}, failed={}",
+                fileIds.size(), updatedCount, failedCount);
+
+        return BatchOperationResponse.builder()
+                .total(fileIds.size())
+                .success(updatedCount)
+                .failed(failedCount)
+                .results(null)
                 .build();
     }
 
@@ -388,7 +396,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
         // 权限校验
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
         // 检查引用计数
@@ -426,7 +434,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         // 校验文件权限
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
         // 批量设置标签（使用 FileTagService）
@@ -444,7 +452,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         // 校验文件权限
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
         // 删除关联（使用 FileTagService）
@@ -463,7 +471,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     @Override
     public List<TagResponse> getFileTags(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
-        
+
         // 查询文件记录并校验权限
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
@@ -484,7 +492,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         // 校验文件权限
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.SHARE_PERMISSION_DENIED_MESSAGE);
 
         // 校验目标用户
@@ -492,8 +500,8 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertNotNull(targetUser, ResponseConstant.TARGET_USER_NOT_FOUND_MESSAGE);
 
         // 校验分享类型和过期时间
-        BusinessException.assertFalse(ShareTypeEnum.TEMPORARY.name().equals(request.getShareType()) 
-                && request.getExpiresAt() == null,
+        BusinessException.assertFalse(ShareTypeEnum.TEMPORARY.name().equals(request.getShareType())
+                        && request.getExpiresAt() == null,
                 ResponseConstant.TEMPORARY_SHARE_REQUIRES_EXPIRY_MESSAGE);
 
         // 检查是否已存在分享
@@ -501,7 +509,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         checkWrapper.eq(FileShare::getFileId, fileId)
                 .eq(FileShare::getShareToUserId, request.getShareToUserId())
                 .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue());
-        BusinessException.throwIf(fileShareService.count(checkWrapper) > 0, 
+        BusinessException.throwIf(fileShareService.count(checkWrapper) > 0,
                 ResponseConstant.PARAM_ERROR, ResponseConstant.SHARE_ALREADY_EXISTS_MESSAGE);
 
         // 创建分享记录
@@ -538,7 +546,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertNotNull(fileShare, ResponseConstant.SHARE_NOT_FOUND_MESSAGE);
 
         // 权限校验
-        BusinessException.assertTrue(fileShare.getShareFromUserId().equals(userId), 
+        BusinessException.assertTrue(fileShare.getShareFromUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.CANCEL_SHARE_PERMISSION_DENIED_MESSAGE);
 
         // 撤销分享
@@ -632,7 +640,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         // 校验权限（必须是文件所有者）
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId), 
+        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.VIEW_ACCESS_LOG_PERMISSION_DENIED_MESSAGE);
 
         // 查询访问日志
@@ -730,7 +738,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
     /**
      * 检查是否存在相同哈希的文件（全局查找）
-     * 
+     *
      * @param fileHash 文件SHA256哈希值
      * @return 如果存在返回第一条记录，否则返回null
      */
@@ -746,7 +754,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
      * 构建FileRecord实体
      */
     private FileRecord buildFileRecord(Long userId, MultipartFile file, String objectName,
-            String fileUrl, String fileHash, UploadFileRequest request) {
+                                       String fileUrl, String fileHash, UploadFileRequest request) {
         FileRecord fileRecord = new FileRecord();
         fileRecord.setUserId(userId);
         fileRecord.setBucketName(minioProperties.getBucket());
@@ -928,7 +936,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         // 检查是否被分享（使用 FileShareService 封装的方法）
         FileShare fileShare = fileShareService.getValidShareByFileAndUser(fileRecord.getId(), userId);
         BusinessException.assertNotNull(fileShare, ResponseConstant.FILE_ACCESS_DENIED_MESSAGE);
-        
+
         // 检查分享是否过期
         if (fileShare.getExpiresAt() != null) {
             LocalDateTime now = LocalDateTime.now();

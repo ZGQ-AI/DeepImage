@@ -5,9 +5,15 @@
         v-for="image in images"
         :key="image.fileId"
         class="grid-item"
+        :class="{ 'selected': isImageSelected(image.fileId) }"
         @click="handleImageClick(image)"
       >
         <div class="image-wrapper">
+          <!-- 选择模式下的复选框 -->
+          <div v-if="selectionMode" class="selection-checkbox" @click.stop="handleToggleSelect(image.fileId)">
+            <a-checkbox :checked="isImageSelected(image.fileId)" />
+          </div>
+          
           <a-image 
             :src="image.thumbnailUrl || image.fileUrl" 
             :alt="image.originalFilename"
@@ -16,7 +22,7 @@
             @error="handleImageError"
           />
           <!-- 悬停时显示的信息覆盖层 -->
-          <div class="image-overlay">
+          <div v-if="!selectionMode" class="image-overlay">
             <div class="image-info">
               <p class="image-name">{{ image.originalFilename }}</p>
               <p class="image-meta">{{ formatFileSize(image.fileSize) }}</p>
@@ -117,6 +123,8 @@ import type { FileInfoResponse } from '../../types/file'
 interface Props {
   images: FileInfoResponse[]
   loading?: boolean
+  selectionMode?: boolean
+  selectedFileIds?: Set<number>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -131,7 +139,18 @@ const emit = defineEmits<{
   manageTags: [image: FileInfoResponse]
   delete: [image: FileInfoResponse]
   loadMore: []
+  toggleSelect: [fileId: number]
 }>()
+
+// 判断图片是否被选中
+const isImageSelected = (fileId: number) => {
+  return props.selectedFileIds?.has(fileId) || false
+}
+
+// 切换选择
+const handleToggleSelect = (fileId: number) => {
+  emit('toggleSelect', fileId)
+}
 
 // 格式化文件大小
 const formatFileSize = (bytes: number): string => {
@@ -150,7 +169,13 @@ const handleImageError = (event: Event) => {
 
 // 事件处理
 const handleImageClick = (image: FileInfoResponse) => {
-  // 点击图片不做任何操作
+  // 如果是选择模式，点击切换选择
+  if (props.selectionMode) {
+    handleToggleSelect(image.fileId)
+  } else {
+    // 否则预览
+    handlePreview(image)
+  }
 }
 
 const handlePreview = (image: FileInfoResponse) => {
@@ -192,6 +217,10 @@ const handleDelete = (image: FileInfoResponse) => {
   aspect-ratio: 1;
 }
 
+.grid-item.selected .image-wrapper {
+  box-shadow: 0 0 0 3px #1890ff;
+}
+
 .image-wrapper {
   position: relative;
   width: 100%;
@@ -201,6 +230,17 @@ const handleDelete = (image: FileInfoResponse) => {
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
+}
+
+.selection-checkbox {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: white;
+  border-radius: 4px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .image-wrapper:hover {
