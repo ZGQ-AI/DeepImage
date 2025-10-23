@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 /**
  * 批量操作响应（统一）
  * 
@@ -33,10 +31,5 @@ public class BatchOperationResponse {
      * 失败数量
      */
     private Integer failed;
-    
-    /**
-     * 操作结果详情列表
-     */
-    private List<OperationResult> results;
 }
 

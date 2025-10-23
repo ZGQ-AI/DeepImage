@@ -271,7 +271,12 @@ const getFileExtension = (filename: string): string => {
 // 图片加载错误处理
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
-  img.src = '/placeholder-image.png' // 设置占位图
+  // 防止无限循环：如果已经是 placeholder，不再重试
+  if (img.src.includes('placeholder-image.png') || img.src.includes('data:image')) {
+    return
+  }
+  // 使用 base64 内联灰色占位图，避免额外请求
+  img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYfmlqDovb3lpLHotKU8L3RleHQ+PC9zdmc+'
 }
 
 // 事件处理

@@ -25,6 +25,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -214,6 +215,31 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         
         update(updateWrapper);
         log.info("批量减少标签使用计数: tagIds={}", tagIds);
+    }
+
+    @Override
+    public void batchDecreaseUsageCountByAmount(Map<Long, Integer> tagCountMap) {
+        if (tagCountMap == null || tagCountMap.isEmpty()) {
+            return;
+        }
+
+        // 逐个更新每个标签的使用计数
+        for (Map.Entry<Long, Integer> entry : tagCountMap.entrySet()) {
+            Long tagId = entry.getKey();
+            Integer count = entry.getValue();
+            if (count <= 0) {
+                continue;
+            }
+
+            // 直接减去对应的数量
+            LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Tag::getId, tagId)
+                    .setSql("usage_count = usage_count - " + count);
+
+            update(updateWrapper);
+        }
+        
+        log.info("批量减少标签使用计数（按数量）: tagCountMap={}", tagCountMap);
     }
     
     @Override

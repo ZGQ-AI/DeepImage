@@ -8,6 +8,7 @@ import org.tech.ai.deepimage.model.dto.request.UpdateTagRequest;
 import org.tech.ai.deepimage.model.dto.response.TagResponse;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 标签Service接口
@@ -55,11 +56,18 @@ public interface TagService extends IService<Tag> {
     void batchIncreaseUsageCount(java.util.Set<Long> tagIds);
     
     /**
-     * 批量减少标签使用计数
+     * 批量减少标签使用计数（每个标签-1）
      * 
      * @param tagIds 标签ID集合
      */
     void batchDecreaseUsageCount(java.util.Set<Long> tagIds);
+
+    /**
+     * 批量减少标签使用计数（按指定数量）
+     * 
+     * @param tagCountMap 标签ID -> 减少数量的映射
+     */
+    void batchDecreaseUsageCountByAmount(Map<Long, Integer> tagCountMap);
     
     /**
      * 批量查询标签（验证权限）

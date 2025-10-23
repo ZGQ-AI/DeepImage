@@ -20,6 +20,7 @@ import org.tech.ai.deepimage.entity.*;
 import org.tech.ai.deepimage.enums.*;
 import org.tech.ai.deepimage.exception.BusinessException;
 import org.tech.ai.deepimage.mapper.FileRecordMapper;
+import org.tech.ai.deepimage.mapper.FileTagMapper;
 import org.tech.ai.deepimage.model.dto.request.*;
 import org.tech.ai.deepimage.model.dto.response.*;
 import org.tech.ai.deepimage.service.*;
@@ -49,6 +50,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     private final MinioProperties minioProperties;
 
     private final FileTagService fileTagService;
+    private final FileTagMapper fileTagMapper;
     private final TagService tagService;
     private final FileShareService fileShareService;
     private final FileAccessLogService fileAccessLogService;
@@ -382,7 +384,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .total(fileIds.size())
                 .success(updatedCount)
                 .failed(failedCount)
-                .results(null)
                 .build();
     }
 
@@ -969,6 +970,177 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         } catch (Exception e) {
             log.warn("记录访问日志失败", e);
         }
+    }
+
+    // ========== 回收站管理 ==========
+
+    @Override
+    public Page<FileInfoResponse> queryTrash(RecycleBinQueryRequest request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        log.info("查询回收站: userId={}, page={}, size={}",
+                userId, request.getPage(), request.getSize());
+
+        // 创建分页对象
+        Page<FileRecord> page = new Page<>(request.getPage(), request.getSize());
+
+        // 使用自定义 Mapper 方法查询（绕过 @TableLogic）
+        Page<FileRecord> recordPage = baseMapper.selectTrashFiles(page, userId);
+
+        // 转换为响应对象
+        Page<FileInfoResponse> responsePage = new Page<>();
+        responsePage.setCurrent(recordPage.getCurrent());
+        responsePage.setSize(recordPage.getSize());
+        responsePage.setTotal(recordPage.getTotal());
+        responsePage.setRecords(
+                recordPage.getRecords().stream()
+                        .map(this::buildFileInfoResponse)
+                        .toList()
+        );
+
+        return responsePage;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BatchOperationResponse batchRestoreFiles(BatchOperationRequest request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        List<Long> fileIds = request.getFileIds();
+
+        log.info("批量恢复文件: userId={}, fileIds={}", userId, fileIds);
+
+        // 查询回收站中的合法文件（使用自定义 Mapper 绕过 @TableLogic）
+        List<FileRecord> validFileRecords = baseMapper.selectTrashFilesByIds(fileIds, userId);
+        List<Long> validFileIds = validFileRecords.stream()
+                .map(FileRecord::getId)
+                .toList();
+
+        // 批量更新有效的文件（恢复）
+        int updatedCount = 0;
+        if (!validFileIds.isEmpty()) {
+            updatedCount = baseMapper.batchUpdateDeleteFlag(
+                    validFileIds,
+                    userId,
+                    DeleteStatusEnum.NOT_DELETED.getValue()
+            );
+        }
+
+        int successCount = updatedCount;
+        int failedCount = fileIds.size() - successCount;
+
+        log.info("批量恢复完成: total={}, success={}, failed={}",
+                fileIds.size(), successCount, failedCount);
+
+        return BatchOperationResponse.builder()
+                .total(fileIds.size())
+                .success(successCount)
+                .failed(failedCount)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public BatchOperationResponse batchPermanentDeleteFiles(BatchOperationRequest request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        List<Long> fileIds = request.getFileIds();
+
+        log.info("批量彻底删除文件: userId={}, fileIds={}", userId, fileIds);
+
+        // 查询回收站中的合法文件（使用自定义 Mapper 绕过 @TableLogic）
+        List<FileRecord> filesToDelete = baseMapper.selectTrashFilesByIds(fileIds, userId);
+
+        if (filesToDelete.isEmpty()) {
+            return BatchOperationResponse.builder().total(0).success(0).failed(0).build();
+        }
+
+        // 收集合法的文件ID和对象名
+        List<Long> validFileIds = filesToDelete.stream().map(FileRecord::getId).collect(Collectors.toList());
+        List<String> objectNames = filesToDelete.stream().map(FileRecord::getObjectName).collect(Collectors.toList());
+
+        // 1. 从 MinIO 批量删除文件（失败不影响数据库操作）
+        try {
+            minioService.deleteFiles(objectNames);
+            log.info("批量删除 MinIO 文件成功: count={}", objectNames.size());
+        } catch (Exception e) {
+            log.warn("批量删除 MinIO 文件失败（继续删除数据库记录）: error={}", e.getMessage());
+        }
+
+        // 2. 查询并统计所有文件的标签使用次数
+        LambdaQueryWrapper<FileTag> fileTagQuery = new LambdaQueryWrapper<>();
+        fileTagQuery.in(FileTag::getFileId, validFileIds);
+        List<FileTag> fileTags = fileTagService.list(fileTagQuery);
+
+        // 统计每个标签出现的次数（一个标签在多个文件中使用，需要减去对应的次数）
+        Map<Long, Integer> tagCountMap = fileTags.stream()
+                .collect(Collectors.groupingBy(
+                        FileTag::getTagId,
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
+
+        // 3. 批量删除文件标签关联
+        fileTagMapper.deleteBatchByFileIds(validFileIds);
+
+        // 4. 批量物理删除文件记录
+        int deletedCount = baseMapper.permanentDeleteBatch(validFileIds, userId);
+
+        // 5. 批量减少标签使用计数（按实际出现次数）
+        if (!tagCountMap.isEmpty()) {
+            tagService.batchDecreaseUsageCountByAmount(tagCountMap);
+        }
+
+        int failedCount = fileIds.size() - deletedCount;
+
+        log.info("批量彻底删除完成: total={}, success={}, failed={}",
+                fileIds.size(), deletedCount, failedCount);
+
+        return BatchOperationResponse.builder()
+                .total(fileIds.size())
+                .success(deletedCount)
+                .failed(failedCount)
+                .build();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BatchOperationResponse emptyRecycleBin() {
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        log.info("清空回收站: userId={}", userId);
+
+        // 查询用户回收站所有文件ID
+        List<Long> fileIds = baseMapper.selectTrashFileIds(userId);
+
+        if (fileIds.isEmpty()) {
+            return BatchOperationResponse.builder()
+                    .total(0)
+                    .success(0)
+                    .failed(0)
+                    .build();
+        }
+
+        // 批量彻底删除
+        BatchOperationRequest request = new BatchOperationRequest();
+        request.setFileIds(fileIds);
+
+        return batchPermanentDeleteFiles(request);
+    }
+
+    @Override
+    public TrashStatsResponse getTrashStats() {
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        log.info("查询回收站统计: userId={}", userId);
+
+        TrashStatsResponse stats = baseMapper.selectTrashStats(userId);
+
+        if (stats == null) {
+            return TrashStatsResponse.builder()
+                    .count(0L)
+                    .totalSize(0L)
+                    .build();
+        }
+
+        return stats;
     }
 
 }

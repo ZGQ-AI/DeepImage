@@ -20,7 +20,7 @@ public class BatchOperationRequest {
      * 文件ID列表
      */
     @NotEmpty(message = "文件ID列表不能为空")
-    @Size(max = 10, message = "单次最多操作10个文件")
+    @Size(max = 100, message = "单次最多操作100个文件")
     private List<Long> fileIds;
 }
 

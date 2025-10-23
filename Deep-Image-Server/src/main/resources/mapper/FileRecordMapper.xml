@@ -2,4 +2,66 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.tech.ai.deepimage.mapper.FileRecordMapper">
 
+    <!-- 批量更新 delete_flag -->
+    <update id="batchUpdateDeleteFlag">
+        UPDATE di_file_records
+        SET delete_flag = #{deleteFlag},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId}
+          AND id IN
+        <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
+            #{fileId}
+        </foreach>
+    </update>
+
+    <!-- 查询回收站文件（忽略 @TableLogic，支持分页） -->
+    <select id="selectTrashFiles" resultType="org.tech.ai.deepimage.entity.FileRecord">
+        SELECT *
+        FROM di_file_records
+        WHERE user_id = #{userId}
+          AND delete_flag = 1
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 批量彻底删除文件 -->
+    <delete id="permanentDeleteBatch">
+        DELETE FROM di_file_records
+        WHERE user_id = #{userId}
+          AND delete_flag = 1
+          AND id IN
+        <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
+            #{fileId}
+        </foreach>
+    </delete>
+
+    <!-- 查询回收站统计信息 -->
+    <select id="selectTrashStats" resultType="org.tech.ai.deepimage.model.dto.response.TrashStatsResponse">
+        SELECT
+            COUNT(*) as count,
+            COALESCE(SUM(file_size), 0) as totalSize
+        FROM di_file_records
+        WHERE user_id = #{userId}
+          AND delete_flag = 1
+    </select>
+
+    <!-- 查询用户回收站所有文件ID -->
+    <select id="selectTrashFileIds" resultType="java.lang.Long">
+        SELECT id
+        FROM di_file_records
+        WHERE user_id = #{userId}
+          AND delete_flag = 1
+    </select>
+
+    <!-- 查询回收站中的指定文件（绕过 @TableLogic） -->
+    <select id="selectTrashFilesByIds" resultType="org.tech.ai.deepimage.entity.FileRecord">
+        SELECT *
+        FROM di_file_records
+        WHERE user_id = #{userId}
+          AND delete_flag = 1
+          AND id IN
+        <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
+            #{fileId}
+        </foreach>
+    </select>
+
 </mapper>

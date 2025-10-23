@@ -192,4 +192,44 @@ public interface FileService {
      * @return 统计信息
      */
     FileStatisticsResponse getFileStatistics();
+    
+    // ========== 回收站管理 ==========
+    
+    /**
+     * 查询回收站文件列表（支持分页和排序）
+     * 
+     * @param request 分页查询请求
+     * @return 回收站文件分页列表
+     */
+    Page<FileInfoResponse> queryTrash(RecycleBinQueryRequest request);
+    
+    /**
+     * 批量恢复文件
+     * 
+     * @param request 批量操作请求
+     * @return 操作结果
+     */
+    BatchOperationResponse batchRestoreFiles(BatchOperationRequest request);
+    
+    /**
+     * 批量彻底删除文件
+     * 
+     * @param request 批量操作请求
+     * @return 操作结果
+     */
+    BatchOperationResponse batchPermanentDeleteFiles(BatchOperationRequest request);
+    
+    /**
+     * 清空回收站
+     * 
+     * @return 操作结果
+     */
+    BatchOperationResponse emptyRecycleBin();
+    
+    /**
+     * 获取回收站统计信息
+     * 
+     * @return 统计信息
+     */
+    TrashStatsResponse getTrashStats();
 }

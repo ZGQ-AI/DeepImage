@@ -11,7 +11,7 @@ spring:
     password: postgres
 
 mybatis-plus:
-  mapper-locations: classpath:/mappers/**/*.xml
+  mapper-locations: classpath:/mapper/**/*.xml
   global-config:
     db-config:
       logic-delete-field: delete_flag

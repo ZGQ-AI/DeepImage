@@ -110,3 +110,45 @@ export function getFileTags(fileId: number) {
   })
 }
 
+/**
+ * 查询回收站文件列表（支持分页和排序）
+ * @param params 分页查询参数
+ */
+export function getTrash(params?: import('../types/file').RecycleBinQueryRequest) {
+  return request.get<ApiResponse<import('../types/file').PageResponse<import('../types/file').FileInfoResponse>>>('/api/files/trash', { params })
+}
+
+/**
+ * 批量恢复文件
+ * @param fileIds 文件ID列表
+ */
+export function batchRestoreFiles(fileIds: number[]) {
+  return request.post<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files/restore', {
+    fileIds
+  })
+}
+
+/**
+ * 批量彻底删除文件
+ * @param fileIds 文件ID列表
+ */
+export function batchPermanentDeleteFiles(fileIds: number[]) {
+  return request.delete<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files/permanent', {
+    data: { fileIds }
+  })
+}
+
+/**
+ * 清空回收站
+ */
+export function emptyRecycleBin() {
+  return request.delete<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files/trash/empty')
+}
+
+/**
+ * 获取回收站统计信息
+ */
+export function getTrashStats() {
+  return request.get<ApiResponse<import('../types/file').TrashStatsResponse>>('/api/files/trash/stats')
+}
+

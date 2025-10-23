@@ -67,6 +67,7 @@ import {
   TagsOutlined,
   PictureOutlined,
   SearchOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
@@ -94,6 +95,12 @@ const items = ref<MenuProps['items']>([
     icon: () => h(SearchOutlined),
     label: '图片搜索',
     title: '图片搜索',
+  },
+  {
+    key: '/recycle-bin',
+    icon: () => h(DeleteOutlined),
+    label: '回收站',
+    title: '回收站',
   },
 ])
 

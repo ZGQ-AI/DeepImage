@@ -150,16 +150,6 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    /**
-     * 彻底删除文件（从MinIO删除）
-     * DELETE /api/files/permanent-delete
-     */
-    @DeleteMapping("/permanent-delete")
-    public ApiResponse<Boolean> permanentDeleteFile(@RequestParam Long fileId) {
-        Boolean result = fileService.permanentDeleteFile(fileId);
-        return ApiResponse.success(result);
-    }
-    
     // ========== 文件标签 ==========
     
     /**
@@ -269,6 +259,58 @@ public class FileController {
     @GetMapping("/statistics")
     public ApiResponse<FileStatisticsResponse> getFileStatistics() {
         FileStatisticsResponse response = fileService.getFileStatistics();
+        return ApiResponse.success(response);
+    }
+    
+    // ========== 回收站管理 ==========
+    
+    /**
+     * 查询回收站文件列表（支持分页和排序）
+     * GET /api/files/trash
+     */
+    @GetMapping("/trash")
+    public ApiResponse<Page<FileInfoResponse>> queryTrash(@Valid RecycleBinQueryRequest request) {
+        Page<FileInfoResponse> response = fileService.queryTrash(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 批量恢复文件
+     * POST /api/files/restore
+     */
+    @PostMapping("/restore")
+    public ApiResponse<BatchOperationResponse> batchRestoreFiles(@Valid @RequestBody BatchOperationRequest request) {
+        BatchOperationResponse response = fileService.batchRestoreFiles(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 批量彻底删除文件
+     * DELETE /api/files/permanent
+     */
+    @DeleteMapping("/permanent")
+    public ApiResponse<BatchOperationResponse> batchPermanentDeleteFiles(@Valid @RequestBody BatchOperationRequest request) {
+        BatchOperationResponse response = fileService.batchPermanentDeleteFiles(request);
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 清空回收站
+     * DELETE /api/files/trash/empty
+     */
+    @DeleteMapping("/trash/empty")
+    public ApiResponse<BatchOperationResponse> emptyRecycleBin() {
+        BatchOperationResponse response = fileService.emptyRecycleBin();
+        return ApiResponse.success(response);
+    }
+    
+    /**
+     * 获取回收站统计信息
+     * GET /api/files/trash/stats
+     */
+    @GetMapping("/trash/stats")
+    public ApiResponse<TrashStatsResponse> getTrashStats() {
+        TrashStatsResponse response = fileService.getTrashStats();
         return ApiResponse.success(response);
     }
 }

@@ -67,6 +67,15 @@ const router = createRouter({
         title: '图片搜索',
       },
     },
+    {
+      path: '/recycle-bin',
+      name: 'recycle-bin',
+      component: () => import('../pages/RecycleBin.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '回收站',
+      },
+    },
   ],
 })
 

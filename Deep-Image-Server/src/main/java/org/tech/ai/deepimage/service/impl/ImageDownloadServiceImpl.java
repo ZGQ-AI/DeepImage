@@ -105,7 +105,7 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
 
                 String objectName = FileUtil.generateObjectName(
                         userId,
-                        downloadProperties.getBusinessType(),
+                        downloadProperties.getBusinessType()+"/search/"+keyword,
                         extension
                 );
 

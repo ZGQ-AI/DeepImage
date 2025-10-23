@@ -265,3 +265,24 @@ export interface FileExistsResponse {
   /** 如果存在，返回文件信息 */
   fileInfo?: FileInfoResponse
 }
+
+
+/**
+ * 回收站查询请求
+ */
+export interface RecycleBinQueryRequest {
+  /** 页码 */
+  page?: number
+  /** 每页数量 */
+  size?: number
+}
+
+/**
+ * 回收站统计响应
+ */
+export interface TrashStatsResponse {
+  /** 回收站文件数量 */
+  count: number
+  /** 回收站总大小（字节） */
+  totalSize: number
+}
