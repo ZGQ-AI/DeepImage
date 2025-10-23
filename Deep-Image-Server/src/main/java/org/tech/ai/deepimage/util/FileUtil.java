@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -16,6 +18,22 @@ import java.util.UUID;
 public class FileUtil {
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    
+    /**
+     * 文件扩展名到MIME类型的映射
+     */
+    private static final Map<String, String> EXTENSION_TO_MIME = new HashMap<>();
+    
+    static {
+        EXTENSION_TO_MIME.put("jpg", "image/jpeg");
+        EXTENSION_TO_MIME.put("jpeg", "image/jpeg");
+        EXTENSION_TO_MIME.put("png", "image/png");
+        EXTENSION_TO_MIME.put("gif", "image/gif");
+        EXTENSION_TO_MIME.put("webp", "image/webp");
+        EXTENSION_TO_MIME.put("bmp", "image/bmp");
+        EXTENSION_TO_MIME.put("svg", "image/svg+xml");
+        EXTENSION_TO_MIME.put("ico", "image/x-icon");
+    }
     
     /**
      * 生成MinIO对象名称
@@ -115,47 +133,26 @@ public class FileUtil {
     }
     
     /**
-     * 根据Content-Type判断是否为图片
+     * 根据文件扩展名获取MIME类型
      * 
-     * @param contentType MIME类型
+     * @param extension 文件扩展名（不区分大小写）
+     * @return MIME类型，如果未找到则返回默认类型（image/jpeg）
+     */
+    public static String getMimeType(String extension) {
+        if (extension == null || extension.isEmpty()) {
+            return "image/jpeg";
+        }
+        return EXTENSION_TO_MIME.getOrDefault(extension.toLowerCase(), "image/jpeg");
+    }
+    
+    /**
+     * 判断Content-Type是否为图片类型
+     * 
+     * @param contentType Content-Type头
      * @return 是否为图片
      */
-    public static boolean isImage(String contentType) {
-        if (contentType == null || contentType.isEmpty()) {
-            return false;
-        }
-        return contentType.toLowerCase().startsWith("image/");
-    }
-    
-    /**
-     * 根据Content-Type判断是否为视频
-     * 
-     * @param contentType MIME类型
-     * @return 是否为视频
-     */
-    public static boolean isVideo(String contentType) {
-        if (contentType == null || contentType.isEmpty()) {
-            return false;
-        }
-        return contentType.toLowerCase().startsWith("video/");
-    }
-    
-    /**
-     * 根据Content-Type判断是否为文档
-     * 
-     * @param contentType MIME类型
-     * @return 是否为文档
-     */
-    public static boolean isDocument(String contentType) {
-        if (contentType == null || contentType.isEmpty()) {
-            return false;
-        }
-        String lowerContentType = contentType.toLowerCase();
-        return lowerContentType.contains("pdf") 
-                || lowerContentType.contains("word") 
-                || lowerContentType.contains("excel") 
-                || lowerContentType.contains("powerpoint")
-                || lowerContentType.contains("text");
+    public static boolean isImageType(String contentType) {
+        return contentType != null && contentType.startsWith("image/");
     }
 }
 

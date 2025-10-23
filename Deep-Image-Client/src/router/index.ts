@@ -58,6 +58,15 @@ const router = createRouter({
         title: '我的图库',
       },
     },
+    {
+      path: '/search',
+      name: 'image-search',
+      component: () => import('../pages/ImageSearch.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '图片搜索',
+      },
+    },
   ],
 })
 

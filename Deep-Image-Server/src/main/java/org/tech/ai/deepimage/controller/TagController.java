@@ -3,6 +3,7 @@ package org.tech.ai.deepimage.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.tech.ai.deepimage.annotation.LogParams;
 import org.tech.ai.deepimage.model.dto.request.CreateTagRequest;
 import org.tech.ai.deepimage.model.dto.request.DeleteTagRequest;
 import org.tech.ai.deepimage.model.dto.request.UpdateTagRequest;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tags")
 @RequiredArgsConstructor
+@LogParams
 public class TagController {
     
     private final TagService tagService;

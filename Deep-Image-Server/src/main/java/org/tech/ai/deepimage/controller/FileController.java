@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.tech.ai.deepimage.annotation.LogParams;
 import org.tech.ai.deepimage.model.dto.request.*;
 import org.tech.ai.deepimage.model.dto.response.*;
 import org.tech.ai.deepimage.service.FileService;
@@ -28,6 +29,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
+@LogParams
 public class FileController {
     
     private final FileService fileService;

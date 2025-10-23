@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.tech.ai.deepimage.annotation.LogParams;
 import org.tech.ai.deepimage.constant.JwtClaimConstant;
 import org.tech.ai.deepimage.constant.ResponseConstant;
 import org.tech.ai.deepimage.entity.User;
@@ -30,6 +31,7 @@ import java.util.Map;
 @RestController
 @Validated
 @RequestMapping("/api/auth")
+@LogParams
 public class AuthController {
 
     @Autowired

@@ -66,6 +66,7 @@ import {
   LogoutOutlined,
   TagsOutlined,
   PictureOutlined,
+  SearchOutlined,
 } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
@@ -87,6 +88,12 @@ const items = ref<MenuProps['items']>([
     icon: () => h(PictureOutlined),
     label: '我的图库',
     title: '我的图库',
+  },
+  {
+    key: '/search',
+    icon: () => h(SearchOutlined),
+    label: '图片搜索',
+    title: '图片搜索',
   },
 ])
 

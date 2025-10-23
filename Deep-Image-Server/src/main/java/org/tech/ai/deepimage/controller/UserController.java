@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.tech.ai.deepimage.annotation.LogParams;
 import org.tech.ai.deepimage.model.dto.request.UpdateUserProfileRequest;
 import org.tech.ai.deepimage.model.dto.response.ApiResponse;
 import org.tech.ai.deepimage.model.dto.response.DeleteOtherSessionsResponse;
@@ -21,6 +22,7 @@ import org.tech.ai.deepimage.service.UserService;
 @RestController
 @Validated
 @RequestMapping("/api/user")
+@LogParams
 public class UserController {
 
     @Autowired
