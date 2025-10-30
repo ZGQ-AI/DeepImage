@@ -112,7 +112,7 @@
       <!-- 图片列表 - 根据视图模式显示 -->
       <div v-if="images.length > 0" class="images-container">
         <!-- 网格视图 -->
-        <ImageGridView
+        <ImageMasonryView
           v-if="viewMode === 'grid'"
           :images="images"
           :loading="loading"
@@ -174,7 +174,7 @@ import { ref, computed, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { PictureOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import ImageUploader from '../components/file/ImageUploader.vue'
-import ImageGridView from '../components/file/ImageGridView.vue'
+import ImageMasonryView from '../components/file/ImageMasonryView.vue'
 import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
 import FileTagManager from '../components/file/FileTagManager.vue'

@@ -78,7 +78,7 @@
 
       <!-- 图片列表 -->
       <div v-else-if="images.length > 0" class="images-container">
-        <ImageGridView
+        <ImageMasonryView
           v-if="viewMode === 'grid'"
           :images="images"
           :loading="loading"
@@ -137,7 +137,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { DeleteOutlined } from '@ant-design/icons-vue'
-import ImageGridView from '../components/file/ImageGridView.vue'
+import ImageMasonryView from '../components/file/ImageMasonryView.vue'
 import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
 import { 
