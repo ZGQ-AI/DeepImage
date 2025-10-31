@@ -116,6 +116,7 @@ import {
   CloseCircleOutlined,
   LoadingOutlined
 } from '@ant-design/icons-vue'
+import { formatFileSize } from '@/utils/file'
 import type { CommonFileUploaderProps, CommonFileUploaderEmits, UploadFile } from '@/types/uploader'
 
 // Props
@@ -355,14 +356,7 @@ const handleRemoveFile = (file: UploadFile) => {
   }
 }
 
-// 格式化文件大小
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
-}
+// formatFileSize 已从 utils/file.ts 导入
 
 // 暴露方法给父组件
 defineExpose({

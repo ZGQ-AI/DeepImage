@@ -1,8 +1,8 @@
 <template>
   <div class="image-gallery">
     <div class="gallery-header">
-      <h1>我的图库</h1>
-      <p class="gallery-description">管理您的图片收藏</p>
+      <h1>{{ PAGE_TITLES.GALLERY }}</h1>
+      <p class="gallery-description">{{ PAGE_DESCRIPTIONS.GALLERY }}</p>
     </div>
 
     <!-- 当有图片时显示工具栏 -->
@@ -10,11 +10,11 @@
       <div class="toolbar-left">
         <a-button type="primary" @click="showUploader = !showUploader">
           <UploadOutlined />
-          {{ showUploader ? '收起上传' : '上传更多' }}
+          {{ showUploader ? BUTTON_TEXTS.UPLOAD_COLLAPSE : BUTTON_TEXTS.UPLOAD }}
         </a-button>
         <a-divider type="vertical" />
         <a-button @click="toggleSelectionMode">
-          {{ selectionMode ? '退出选择' : '批量操作' }}
+          {{ selectionMode ? BUTTON_TEXTS.EXIT_SELECTION : BUTTON_TEXTS.BATCH_OPERATE }}
         </a-button>
         <a-divider type="vertical" />
         <span class="toolbar-label">
@@ -28,7 +28,7 @@
         <!-- 文件名搜索 -->
         <a-input-search
           v-model:value="searchKeyword"
-          placeholder="搜索文件名"
+          :placeholder="PLACEHOLDERS.SEARCH_FILE_NAME"
           style="width: 200px; margin-right: 16px;"
           allowClear
           @search="handleSearch"
@@ -41,23 +41,23 @@
           style="width: 160px; margin-right: 16px;"
           @change="handleSortChange"
         >
-          <a-select-option value="createdAt-desc">上传时间 (新→旧)</a-select-option>
-          <a-select-option value="createdAt-asc">上传时间 (旧→新)</a-select-option>
-          <a-select-option value="fileSize-desc">文件大小 (大→小)</a-select-option>
-          <a-select-option value="fileSize-asc">文件大小 (小→大)</a-select-option>
-          <a-select-option value="originalFilename-asc">文件名 (A→Z)</a-select-option>
-          <a-select-option value="originalFilename-desc">文件名 (Z→A)</a-select-option>
+          <a-select-option :value="SORT_OPTIONS.CREATED_AT_DESC.value">{{ SORT_OPTIONS.CREATED_AT_DESC.label }}</a-select-option>
+          <a-select-option :value="SORT_OPTIONS.CREATED_AT_ASC.value">{{ SORT_OPTIONS.CREATED_AT_ASC.label }}</a-select-option>
+          <a-select-option :value="SORT_OPTIONS.FILE_SIZE_DESC.value">{{ SORT_OPTIONS.FILE_SIZE_DESC.label }}</a-select-option>
+          <a-select-option :value="SORT_OPTIONS.FILE_SIZE_ASC.value">{{ SORT_OPTIONS.FILE_SIZE_ASC.label }}</a-select-option>
+          <a-select-option :value="SORT_OPTIONS.FILENAME_ASC.value">{{ SORT_OPTIONS.FILENAME_ASC.label }}</a-select-option>
+          <a-select-option :value="SORT_OPTIONS.FILENAME_DESC.value">{{ SORT_OPTIONS.FILENAME_DESC.label }}</a-select-option>
         </a-select>
         
         <!-- 标签筛选 -->
         <a-select
           v-model:value="selectedTagId"
-          placeholder="按标签筛选"
+          :placeholder="PLACEHOLDERS.FILTER_BY_TAG"
           style="width: 150px; margin-right: 16px;"
           allowClear
           @change="handleTagFilterChange"
         >
-          <a-select-option :value="null">全部标签</a-select-option>
+          <a-select-option :value="null">{{ PLACEHOLDERS.ALL_TAGS }}</a-select-option>
           <a-select-option 
             v-for="tag in availableTags" 
             :key="tag.id" 
@@ -77,35 +77,34 @@
     <!-- 上传区域 -->
     <div v-if="shouldShowUploader" class="upload-section">
       <ImageUploader 
-        :max-size="10" 
-        :max-count="20"
+        :max-size="UPLOAD_CONFIG.MAX_SIZE" 
+        :max-count="UPLOAD_CONFIG.MAX_COUNT"
         @success="handleUploadSuccess"
         @error="handleUploadError"
       />
     </div>
 
     <!-- 批量操作工具栏 -->
-    <div v-if="selectionMode" class="batch-toolbar">
-      <div class="batch-toolbar-left">
-        <a-checkbox 
-          :checked="isAllSelected"
-          :indeterminate="selectedFileIds.size > 0 && !isAllSelected"
-          @change="handleSelectAll"
-        >
-          全选
-        </a-checkbox>
-      </div>
-      <div class="batch-toolbar-right">
+    <BatchToolbar
+      v-if="selectionMode"
+      :is-all-selected="isAllSelected"
+      :selected-count="selectedFileIds.size"
+      :total-count="images.length"
+      total-text-template="共 {count} 张图片"
+      selected-text-template="已选 {count} 张"
+      @select-all="handleSelectAll"
+    >
+      <template #actions>
         <a-button 
           type="primary" 
           danger 
           :disabled="selectedFileIds.size === 0"
           @click="handleBatchDelete"
         >
-          删除 ({{ selectedFileIds.size }})
+          {{ BUTTON_TEXTS.DELETE }} ({{ selectedFileIds.size }})
         </a-button>
-      </div>
-    </div>
+      </template>
+    </BatchToolbar>
 
     <!-- 图片展示区域 -->
     <div class="gallery-content">
@@ -166,21 +165,32 @@
       :file-info="currentImageForTag"
       @tags-updated="handleTagsUpdated"
     />
+
+    <!-- 重命名弹窗 -->
+    <RenameModal
+      v-model:open="renameModalVisible"
+      :current-filename="currentImageForRename?.originalFilename || ''"
+      :loading="renaming"
+      @confirm="handleRenameConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
-import { PictureOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import { UploadOutlined } from '@ant-design/icons-vue'
 import ImageUploader from '../components/file/ImageUploader.vue'
 import ImageMasonryView from '../components/file/ImageMasonryView.vue'
 import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
 import FileTagManager from '../components/file/FileTagManager.vue'
+import BatchToolbar from '../components/common/BatchToolbar.vue'
+import RenameModal from '../components/common/RenameModal.vue'
 import { listFiles, downloadFile, batchDeleteFiles, renameFile } from '../api/file'
 import { listTags } from '../api/tag'
 import { BusinessType } from '../types/file'
+import { PAGE_TITLES, PAGE_DESCRIPTIONS, BUTTON_TEXTS, MESSAGES, UPLOAD_CONFIG, PAGINATION_CONFIG, SORT_OPTIONS, PLACEHOLDERS, STYLE_CONFIG } from '../config/constants'
 import type { FileInfoResponse } from '../types/file'
 import type { ViewMode } from '../components/file/ViewModeToggle.vue'
 import type { TagResponse } from '../types/tag'
@@ -195,6 +205,9 @@ const previewImage = ref<FileInfoResponse | null>(null)
 const currentImageIndex = ref(0)
 const tagManagerVisible = ref(false)
 const currentImageForTag = ref<FileInfoResponse | null>(null)
+const renameModalVisible = ref(false)
+const currentImageForRename = ref<FileInfoResponse | null>(null)
+const renaming = ref(false)
 const availableTags = ref<TagResponse[]>([])
 const selectedTagId = ref<number | null>(null)
 
@@ -220,14 +233,7 @@ const isAllSelected = computed(() => {
   return images.value.length > 0 && selectedFileIds.value.size === images.value.length
 })
 
-// 格式化文件大小
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+// formatFileSize 已从 utils/file.ts 导入
 
 // 加载可用标签
 const loadTags = async () => {
@@ -257,14 +263,14 @@ const loadImages = async () => {
       sortBy,  // 排序字段
       sortOrder,  // 排序方向
       page: 1,
-      pageSize: 100
+      pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE
     })
 
     // API 返回的数据结构：{ code, message, data: { records, total, ... } }
     images.value = response.data.data?.records || []
   } catch (error: any) {
     console.error('加载图片失败:', error)
-    message.error('加载图片失败')
+    message.error(MESSAGES.LOADING_IMAGES)
   } finally {
     loading.value = false
   }
@@ -274,7 +280,7 @@ const loadImages = async () => {
 const handleUploadSuccess = (newImages: any[]) => {
   // 将新上传的图片添加到列表前面
   images.value.unshift(...newImages)
-  message.success(`成功上传 ${newImages.length} 张图片`)
+  message.success(MESSAGES.UPLOAD_SUCCESS(newImages.length))
   
   // 如果之前没有图片，现在有了图片，可以隐藏上传器
   // 如果之前就有图片，则按用户意愿控制
@@ -305,10 +311,10 @@ const handleSearchChange = () => {
     clearTimeout(searchTimer)
   }
   
-  // 设置新的定时器（500ms 后执行搜索）
-  searchTimer = setTimeout(() => {
-    loadImages()
-  }, 500)
+    // 设置新的定时器（500ms 后执行搜索）
+    searchTimer = setTimeout(() => {
+      loadImages()
+    }, STYLE_CONFIG.DEBOUNCE_TIMEOUT)
 }
 
 // 立即搜索（按下回车或点击搜索按钮时）
@@ -341,7 +347,7 @@ const handleImagePreview = (image: FileInfoResponse) => {
 const handleImageDownload = async (image: FileInfoResponse) => {
   try {
     message.loading({
-      content: '正在下载图片...',
+      content: MESSAGES.DOWNLOAD_START,
       key: `download-${image.fileId}`,
       duration: 0
     })
@@ -383,124 +389,75 @@ const handleImageDownload = async (image: FileInfoResponse) => {
     URL.revokeObjectURL(url)
     
     message.success({
-      content: `图片 "${filename}" 下载完成`,
+      content: MESSAGES.DOWNLOAD_SUCCESS(filename),
       key: `download-${image.fileId}`
     })
 
   } catch (error) {
     console.error('下载图片失败:', error)
     message.error({
-      content: `下载失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      content: MESSAGES.DOWNLOAD_ERROR(error instanceof Error ? error.message : '未知错误'),
       key: `download-${image.fileId}`
     })
   }
 }
 
-const handleImageRename = async (image: FileInfoResponse) => {
-  // 获取文件名和扩展名
-  const lastDotIndex = image.originalFilename.lastIndexOf('.')
-  const extension = lastDotIndex !== -1 ? image.originalFilename.substring(lastDotIndex) : ''
-  const nameWithoutExt = lastDotIndex !== -1 ? image.originalFilename.substring(0, lastDotIndex) : image.originalFilename
-  
-  // 使用 Modal.confirm 的简化方式
-  let inputValue = nameWithoutExt
-  
-  Modal.confirm({
-    title: '重命名图片',
-    content: `请输入新的文件名（扩展名: ${extension || '无'}）`,
-    okText: '确认',
-    cancelText: '取消',
-    onOk: async () => {
-      // 从DOM获取输入值
-      const input = document.querySelector('.ant-modal input') as HTMLInputElement
-      if (input) {
-        inputValue = input.value
-      }
-      
-      const finalName = (inputValue.trim() + extension).trim()
-      
-      // 验证文件名
-      if (!finalName || finalName === extension) {
-        message.error('文件名不能为空')
-        return Promise.reject()
-      }
-      
-      if (finalName === image.originalFilename) {
-        message.info('文件名未改变')
-        return
-      }
-      
-      try {
-        message.loading({
-          content: '正在重命名...',
-          key: `rename-${image.fileId}`,
-          duration: 0
-        })
+const handleImageRename = (image: FileInfoResponse) => {
+  currentImageForRename.value = image
+  renameModalVisible.value = true
+}
 
-        // 调用重命名接口
-        const response = await renameFile(image.fileId, finalName)
-        
-        if (response.data.code === 200 && response.data.data) {
-          // 更新列表中的图片信息
-          const index = images.value.findIndex(img => img.fileId === image.fileId)
-          if (index !== -1) {
-            images.value[index] = response.data.data
-          }
-          
-          message.success({
-            content: `重命名成功：${finalName}`,
-            key: `rename-${image.fileId}`
-          })
-        } else {
-          throw new Error(response.data.message || '重命名失败')
-        }
-      } catch (error) {
-        console.error('重命名图片失败:', error)
-        message.error({
-          content: `重命名失败: ${error instanceof Error ? error.message : '未知错误'}`,
-          key: `rename-${image.fileId}`
-        })
-        return Promise.reject()
-      }
-    }
-  })
+const handleRenameConfirm = async (newFilename: string) => {
+  if (!currentImageForRename.value) return
   
-  // 等待DOM更新后添加输入框并聚焦
-  setTimeout(() => {
-    const modalContent = document.querySelector('.ant-modal-confirm-body .ant-modal-confirm-content')
-    if (modalContent) {
-      // 清空原内容并添加自定义输入框
-      modalContent.innerHTML = `
-        <div>
-          <p style="margin-bottom: 8px;">请输入新的文件名：</p>
-          <input 
-            type="text" 
-            class="ant-input rename-input" 
-            value="${nameWithoutExt}"
-            placeholder="请输入文件名"
-            style="width: 100%;"
-          />
-          <p style="margin-top: 8px; color: #999; font-size: 12px;">
-            文件扩展名: ${extension || '无'}
-          </p>
-        </div>
-      `
-      
-      const input = modalContent.querySelector('input') as HTMLInputElement
-      if (input) {
-        input.focus()
-        input.select()
-        
-        // 支持回车键确认
-        input.addEventListener('keyup', (e) => {
-          if (e.key === 'Enter') {
-            const okButton = document.querySelector('.ant-modal-confirm-btns .ant-btn-primary') as HTMLButtonElement
-            okButton?.click()
-          }
-        })
-      }
+  const image = currentImageForRename.value
+  
+  // 验证文件名
+  if (!newFilename || newFilename === image.originalFilename) {
+    if (newFilename === image.originalFilename) {
+      message.info(MESSAGES.RENAME_NO_CHANGE)
+      renameModalVisible.value = false
+    } else {
+      message.error(MESSAGES.RENAME_EMPTY_ERROR)
     }
-  }, 100)
+    return
+  }
+  
+  try {
+    renaming.value = true
+    message.loading({
+      content: '正在重命名...',
+      key: `rename-${image.fileId}`,
+      duration: 0
+    })
+
+    // 调用重命名接口
+    const response = await renameFile(image.fileId, newFilename)
+    
+    if (response.data.code === 200 && response.data.data) {
+      // 更新列表中的图片信息
+      const index = images.value.findIndex(img => img.fileId === image.fileId)
+      if (index !== -1) {
+        images.value[index] = response.data.data
+      }
+      
+      renameModalVisible.value = false
+      message.success({
+        content: MESSAGES.RENAME_SUCCESS(newFilename),
+        key: `rename-${image.fileId}`
+      })
+    } else {
+      throw new Error(response.data.message || '重命名失败')
+    }
+  } catch (error) {
+    console.error('重命名图片失败:', error)
+    message.error({
+      content: `重命名失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      key: `rename-${image.fileId}`
+    })
+  } finally {
+    renaming.value = false
+  }
 }
 
 // 标签筛选变化
@@ -536,10 +493,10 @@ const handleImageDelete = async (image: FileInfoResponse) => {
   // 使用 Modal 确认删除
   Modal.confirm({
     title: '确认删除',
-    content: `确定要删除图片 "${image.originalFilename}" 吗？此操作可以恢复。`,
-    okText: '确认删除',
+    content: MESSAGES.DELETE_CONFIRM(1).replace('选中的', `图片 "${image.originalFilename}"`).replace('张图片', ''),
+    okText: BUTTON_TEXTS.CONFIRM_DELETE,
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: BUTTON_TEXTS.CANCEL,
     onOk: async () => {
       try {
         message.loading({
@@ -558,7 +515,7 @@ const handleImageDelete = async (image: FileInfoResponse) => {
             images.value = images.value.filter(img => img.fileId !== image.fileId)
             
             message.success({
-              content: `图片 "${image.originalFilename}" 删除成功`,
+              content: MESSAGES.DELETE_SUCCESS(image.originalFilename),
               key: `delete-${image.fileId}`
             })
           } else {
@@ -596,8 +553,8 @@ const handleToggleSelect = (fileId: number) => {
 }
 
 // 全选/取消全选
-const handleSelectAll = (e: any) => {
-  if (e.target.checked) {
+const handleSelectAll = (checked: boolean) => {
+  if (checked) {
     images.value.forEach(img => selectedFileIds.value.add(img.fileId))
   } else {
     selectedFileIds.value.clear()
@@ -608,16 +565,16 @@ const handleSelectAll = (e: any) => {
 const handleBatchDelete = async () => {
   const count = selectedFileIds.value.size
   if (count === 0) {
-    message.warning('请先选择要删除的图片')
+    message.warning(MESSAGES.NO_SELECTION)
     return
   }
 
   Modal.confirm({
     title: '批量删除确认',
-    content: `确定要删除选中的 ${count} 张图片吗？删除后可在回收站中恢复。`,
-    okText: '确认删除',
+    content: MESSAGES.DELETE_CONFIRM(count),
+    okText: BUTTON_TEXTS.CONFIRM_DELETE,
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: BUTTON_TEXTS.CANCEL,
     onOk: async () => {
       try {
         message.loading({
@@ -641,12 +598,12 @@ const handleBatchDelete = async () => {
           
           if (result.failed > 0) {
             message.warning({
-              content: `删除完成：成功 ${result.success} 张，失败 ${result.failed} 张`,
+              content: MESSAGES.BATCH_DELETE_PARTIAL(result.success, result.failed),
               key: 'batch-delete'
             })
           } else {
             message.success({
-              content: `成功删除 ${result.success} 张图片`,
+              content: MESSAGES.BATCH_DELETE_SUCCESS(result.success),
               key: 'batch-delete'
             })
           }

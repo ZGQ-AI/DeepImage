@@ -153,6 +153,8 @@ import {
   TagOutlined,
   DeleteOutlined 
 } from '@ant-design/icons-vue'
+import { formatFileSize } from '../../utils/file'
+import { formatDateTime } from '../../utils/time'
 import type { FileInfoResponse } from '../../types/file'
 
 // Props
@@ -226,16 +228,8 @@ const handleSort = (field: 'name' | 'size' | 'date') => {
   }
 }
 
-// 格式化文件大小
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-// 格式化日期
+// 格式化日期（相对时间，如"今天"、"昨天"等）
+// 注意：这个函数与utils/time.ts中的formatDate不同，保留本地实现
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
@@ -250,17 +244,8 @@ const formatDate = (dateString: string): string => {
   return `${Math.floor(days / 365)}年前`
 }
 
-// 格式化详细时间
-const formatDateTime = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+// formatDateTime 已从 utils/time.ts 导入
+// formatFileSize 已从 utils/file.ts 导入
 
 // 获取文件扩展名
 const getFileExtension = (filename: string): string => {

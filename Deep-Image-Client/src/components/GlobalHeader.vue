@@ -73,6 +73,7 @@ import type { MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
+import { PAGE_TITLES } from '../config/constants'
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -81,26 +82,26 @@ const items = ref<MenuProps['items']>([
   {
     key: '/',
     icon: () => h(HomeOutlined),
-    label: '首页',
-    title: '首页',
+    label: PAGE_TITLES.HOME,
+    title: PAGE_TITLES.HOME,
   },
   {
     key: '/gallery',
     icon: () => h(PictureOutlined),
-    label: '我的图库',
-    title: '我的图库',
+    label: PAGE_TITLES.GALLERY,
+    title: PAGE_TITLES.GALLERY,
   },
   {
     key: '/search',
     icon: () => h(SearchOutlined),
-    label: '图片搜索',
-    title: '图片搜索',
+    label: PAGE_TITLES.SEARCH,
+    title: PAGE_TITLES.SEARCH,
   },
   {
     key: '/recycle-bin',
     icon: () => h(DeleteOutlined),
-    label: '回收站',
-    title: '回收站',
+    label: PAGE_TITLES.RECYCLE_BIN,
+    title: PAGE_TITLES.RECYCLE_BIN,
   },
 ])
 

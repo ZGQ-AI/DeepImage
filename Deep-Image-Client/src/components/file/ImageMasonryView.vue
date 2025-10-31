@@ -124,6 +124,7 @@ import {
   TagOutlined,
   DeleteOutlined 
 } from '@ant-design/icons-vue'
+import { formatFileSize } from '../../utils/file'
 import type { FileInfoResponse } from '../../types/file'
 
 // Props
@@ -157,15 +158,6 @@ const isImageSelected = (fileId: number) => {
 // 切换选择
 const handleToggleSelect = (fileId: number) => {
   emit('toggleSelect', fileId)
-}
-
-// 格式化文件大小
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // 图片加载错误处理

@@ -1,8 +1,8 @@
 <template>
   <div class="recycle-bin">
     <div class="bin-header">
-      <h1>回收站</h1>
-      <p class="bin-description">已删除的文件将在此保存，可以恢复或彻底删除</p>
+      <h1>{{ PAGE_TITLES.RECYCLE_BIN }}</h1>
+      <p class="bin-description">{{ PAGE_DESCRIPTIONS.RECYCLE_BIN }}</p>
     </div>
 
     <!-- 统计信息 -->
@@ -16,35 +16,27 @@
         <span class="stat-value">{{ formatFileSize(stats.totalSize) }}</span>
       </div>
       <div class="stat-actions">
-        <a-button 
+          <a-button 
           danger 
           :disabled="stats.count === 0"
           @click="handleEmptyBin"
         >
-          清空回收站
+          {{ BUTTON_TEXTS.EMPTY_RECYCLE_BIN }}
         </a-button>
       </div>
     </div>
 
     <!-- 批量操作工具栏 -->
-    <div v-if="images.length > 0 || pagination.total > 0" class="batch-toolbar">
-      <div class="batch-toolbar-left">
-        <a-checkbox 
-          :checked="isAllSelected"
-          :indeterminate="selectedFileIds.size > 0 && !isAllSelected"
-          @change="handleSelectAll"
-        >
-          全选
-        </a-checkbox>
-        <a-divider type="vertical" />
-        <span class="toolbar-label">
-          共 {{ pagination.total }} 个文件
-          <template v-if="selectedFileIds.size > 0">
-            (已选 {{ selectedFileIds.size }} 个)
-          </template>
-        </span>
-      </div>
-      <div class="batch-toolbar-right">
+    <BatchToolbar
+      v-if="images.length > 0 || pagination.total > 0"
+      :is-all-selected="isAllSelected"
+      :selected-count="selectedFileIds.size"
+      :total-count="pagination.total"
+      total-text-template="共 {count} 个文件"
+      selected-text-template="已选 {count} 个"
+      @select-all="handleSelectAll"
+    >
+      <template #actions>
         <ViewModeToggle v-model="viewMode" @change="handleViewModeChange" />
         
         <a-divider type="vertical" />
@@ -54,7 +46,7 @@
           :disabled="selectedFileIds.size === 0"
           @click="handleBatchRestore"
         >
-          恢复 ({{ selectedFileIds.size }})
+          {{ BUTTON_TEXTS.RESTORE }} ({{ selectedFileIds.size }})
         </a-button>
         <a-button 
           type="primary" 
@@ -62,10 +54,10 @@
           :disabled="selectedFileIds.size === 0"
           @click="handleBatchPermanentDelete"
         >
-          彻底删除 ({{ selectedFileIds.size }})
+          {{ BUTTON_TEXTS.PERMANENT_DELETE }} ({{ selectedFileIds.size }})
         </a-button>
-      </div>
-    </div>
+      </template>
+    </BatchToolbar>
 
     <!-- 图片展示区域 -->
     <div class="bin-content">
@@ -106,8 +98,8 @@
           v-model:page-size="pagination.pageSize"
           :total="pagination.total"
           :show-size-changer="true"
-          :page-size-options="['10', '20', '50', '100']"
-          :show-total="(total: number) => `共 ${total} 条`"
+          :page-size-options="PAGINATION_CONFIG.PAGE_SIZE_OPTIONS"
+          :show-total="PAGINATION_CONFIG.SHOW_TOTAL"
           @change="handlePageChange"
           @show-size-change="handlePageSizeChange"
         />
@@ -140,6 +132,7 @@ import { DeleteOutlined } from '@ant-design/icons-vue'
 import ImageMasonryView from '../components/file/ImageMasonryView.vue'
 import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
+import BatchToolbar from '../components/common/BatchToolbar.vue'
 import { 
   getTrash, 
   batchRestoreFiles, 
@@ -147,6 +140,8 @@ import {
   emptyRecycleBin,
   getTrashStats 
 } from '../api/file'
+import { formatFileSize } from '../utils/file'
+import { PAGE_TITLES, PAGE_DESCRIPTIONS, BUTTON_TEXTS, MESSAGES, PAGINATION_CONFIG } from '../config/constants'
 import type { FileInfoResponse, TrashStatsResponse } from '../types/file'
 import type { ViewMode } from '../components/file/ViewModeToggle.vue'
 
@@ -159,9 +154,13 @@ const currentImageIndex = ref(0)
 const stats = ref<TrashStatsResponse | null>(null)
 
 // 分页状态
-const pagination = ref({
+const pagination = ref<{
+  current: number
+  pageSize: number
+  total: number
+}>({
   current: 1,
-  pageSize: 10,
+  pageSize: PAGINATION_CONFIG.SMALL_PAGE_SIZE,
   total: 0
 })
 
@@ -173,14 +172,7 @@ const isAllSelected = computed(() => {
   return images.value.length > 0 && selectedFileIds.value.size === images.value.length
 })
 
-// 格式化文件大小
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+// formatFileSize 已从 utils/file.ts 导入
 
 // 加载统计信息
 const loadStats = async () => {
@@ -209,11 +201,11 @@ const loadTrash = async () => {
       images.value = pageData.records || []
       pagination.value.total = pageData.total || 0
       pagination.value.current = pageData.current || 1
-      pagination.value.pageSize = pageData.size || 10
+      pagination.value.pageSize = (pageData.size || PAGINATION_CONFIG.SMALL_PAGE_SIZE) as typeof pagination.value.pageSize
     }
   } catch (error: any) {
     console.error('加载回收站失败:', error)
-    message.error('加载回收站失败')
+    message.error(MESSAGES.LOADING_RECYCLE_BIN)
   } finally {
     loading.value = false
   }
@@ -227,7 +219,7 @@ const handleViewModeChange = (mode: ViewMode) => {
 // 处理分页变化
 const handlePageChange = (page: number, pageSize: number) => {
   pagination.value.current = page
-  pagination.value.pageSize = pageSize
+  pagination.value.pageSize = pageSize as typeof pagination.value.pageSize
   selectedFileIds.value.clear() // 切换页面时清空选择
   loadTrash()
 }
@@ -235,7 +227,7 @@ const handlePageChange = (page: number, pageSize: number) => {
 // 处理每页大小变化
 const handlePageSizeChange = (current: number, size: number) => {
   pagination.value.current = 1 // 改变每页大小时重置到第一页
-  pagination.value.pageSize = size
+  pagination.value.pageSize = size as typeof pagination.value.pageSize
   selectedFileIds.value.clear() // 切换页面时清空选择
   loadTrash()
 }
@@ -259,8 +251,8 @@ const handleToggleSelect = (fileId: number) => {
 }
 
 // 全选/取消全选
-const handleSelectAll = (e: any) => {
-  if (e.target.checked) {
+const handleSelectAll = (checked: boolean) => {
+  if (checked) {
     images.value.forEach(img => selectedFileIds.value.add(img.fileId))
   } else {
     selectedFileIds.value.clear()
@@ -271,15 +263,15 @@ const handleSelectAll = (e: any) => {
 const handleBatchRestore = async () => {
   const count = selectedFileIds.value.size
   if (count === 0) {
-    message.warning('请先选择要恢复的文件')
+    message.warning(MESSAGES.NO_SELECTION_RESTORE)
     return
   }
 
   Modal.confirm({
     title: '批量恢复确认',
-    content: `确定要恢复选中的 ${count} 个文件吗？`,
-    okText: '确认恢复',
-    cancelText: '取消',
+    content: MESSAGES.RESTORE_CONFIRM(count),
+    okText: BUTTON_TEXTS.CONFIRM_RESTORE,
+    cancelText: BUTTON_TEXTS.CANCEL,
     onOk: async () => {
       try {
         message.loading({
@@ -301,12 +293,12 @@ const handleBatchRestore = async () => {
           
           if (result.failed > 0) {
             message.warning({
-              content: `恢复完成：成功 ${result.success} 个，失败 ${result.failed} 个`,
+              content: MESSAGES.RESTORE_PARTIAL(result.success, result.failed),
               key: 'batch-restore'
             })
           } else {
             message.success({
-              content: `成功恢复 ${result.success} 个文件`,
+              content: MESSAGES.RESTORE_SUCCESS(result.success),
               key: 'batch-restore'
             })
           }
@@ -328,16 +320,16 @@ const handleBatchRestore = async () => {
 const handleBatchPermanentDelete = async () => {
   const count = selectedFileIds.value.size
   if (count === 0) {
-    message.warning('请先选择要删除的文件')
+    message.warning(MESSAGES.NO_SELECTION_DELETE)
     return
   }
 
   Modal.confirm({
     title: '批量删除确认',
-    content: `确定要彻底删除选中的 ${count} 个文件吗？此操作不可恢复！`,
-    okText: '确认删除',
+    content: MESSAGES.PERMANENT_DELETE_CONFIRM(count),
+    okText: BUTTON_TEXTS.CONFIRM_DELETE,
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: BUTTON_TEXTS.CANCEL,
     onOk: async () => {
       try {
         message.loading({
@@ -359,12 +351,12 @@ const handleBatchPermanentDelete = async () => {
           
           if (result.failed > 0) {
             message.warning({
-              content: `删除完成：成功 ${result.success} 个，失败 ${result.failed} 个`,
+              content: MESSAGES.BATCH_DELETE_PARTIAL(result.success, result.failed),
               key: 'batch-delete'
             })
           } else {
             message.success({
-              content: `成功删除 ${result.success} 个文件`,
+              content: MESSAGES.PERMANENT_DELETE_SUCCESS(result.success),
               key: 'batch-delete'
             })
           }
@@ -386,10 +378,10 @@ const handleBatchPermanentDelete = async () => {
 const handleEmptyBin = async () => {
   Modal.confirm({
     title: '清空回收站',
-    content: '确定要清空回收站吗？所有文件将被彻底删除，此操作不可恢复！',
-    okText: '确认清空',
+    content: MESSAGES.EMPTY_BIN_CONFIRM,
+    okText: BUTTON_TEXTS.CONFIRM_EMPTY,
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: BUTTON_TEXTS.CANCEL,
     onOk: async () => {
       try {
         message.loading({
@@ -410,7 +402,7 @@ const handleEmptyBin = async () => {
           await Promise.all([loadTrash(), loadStats()])
           
           message.success({
-            content: `已清空回收站，删除了 ${result.success} 个文件`,
+            content: MESSAGES.EMPTY_BIN_SUCCESS(result.success),
             key: 'empty-bin'
           })
         } else {

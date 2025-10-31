@@ -1,16 +1,16 @@
 <template>
   <div class="image-search">
     <div class="search-header">
-      <h1>图片搜索</h1>
-      <p class="search-description">通过关键词搜索网络图片，选择后下载到图库</p>
+      <h1>{{ PAGE_TITLES.SEARCH }}</h1>
+      <p class="search-description">{{ PAGE_DESCRIPTIONS.SEARCH }}</p>
     </div>
 
     <!-- 步骤指示器 -->
     <div class="steps-container">
       <a-steps :current="currentStep" size="small">
-        <a-step title="搜索图片" description="输入关键词搜索" />
-        <a-step title="选择图片" description="预览并选择图片" />
-        <a-step title="下载完成" description="保存到图库" />
+        <a-step :title="STEP_DESCRIPTIONS.SEARCH.title" :description="STEP_DESCRIPTIONS.SEARCH.description" />
+        <a-step :title="STEP_DESCRIPTIONS.SELECT.title" :description="STEP_DESCRIPTIONS.SELECT.description" />
+        <a-step :title="STEP_DESCRIPTIONS.DOWNLOAD.title" :description="STEP_DESCRIPTIONS.DOWNLOAD.description" />
       </a-steps>
     </div>
 
@@ -23,10 +23,10 @@
               <label class="form-label">搜索关键词 *</label>
               <a-input
                 v-model:value="searchForm.keyword"
-                placeholder="输入要搜索的关键词，如：樱花、风景、动物"
+                :placeholder="PLACEHOLDERS.SEARCH_KEYWORD"
                 size="large"
                 style="width: 100%"
-                :maxlength="50"
+                :maxlength="UPLOAD_CONFIG.SEARCH_KEYWORD_MAX_LENGTH"
                 @pressEnter="handleSearch"
               />
             </div>
@@ -37,8 +37,8 @@
               <label class="form-label">搜索数量</label>
               <a-slider
                 v-model:value="searchForm.count"
-                :min="1"
-                :max="30"
+                :min="UPLOAD_CONFIG.SEARCH_COUNT_RANGE.MIN"
+                :max="UPLOAD_CONFIG.SEARCH_COUNT_RANGE.MAX"
                 :marks="{ 1: '1', 10: '10', 20: '20', 30: '30' }"
                 style="width: 100%; margin-top: 8px"
               />
@@ -57,7 +57,7 @@
               @click="handleSearch"
             >
               <SearchOutlined />
-              搜索图片
+              {{ BUTTON_TEXTS.SEARCH }}
             </a-button>
           </div>
         </div>
@@ -72,22 +72,22 @@
             <span>找到 {{ searchResults?.images?.length || 0 }} 张图片</span>
             <div class="selection-stats">
               <span>已选择 {{ selectedImages.length }} 张</span>
-              <a-button 
-                v-if="selectedImages.length < (searchResults?.images?.length || 0)"
-                type="link" 
-                size="small"
-                @click="selectAll"
-              >
-                全选
-              </a-button>
-              <a-button 
-                v-if="selectedImages.length > 0"
-                type="link" 
-                size="small"
-                @click="clearSelection"
-              >
-                清空
-              </a-button>
+          <a-button 
+            v-if="selectedImages.length < (searchResults?.images?.length || 0)"
+            type="link" 
+            size="small"
+            @click="selectAll"
+          >
+            {{ BUTTON_TEXTS.SELECT_ALL }}
+          </a-button>
+          <a-button 
+            v-if="selectedImages.length > 0"
+            type="link" 
+            size="small"
+            @click="clearSelection"
+          >
+            {{ BUTTON_TEXTS.CLEAR_SELECTION }}
+          </a-button>
             </div>
           </div>
         </template>
@@ -98,7 +98,7 @@
           <a-select
             v-model:value="downloadForm.tagIds"
             mode="multiple"
-            placeholder="选择要添加的标签"
+            :placeholder="PLACEHOLDERS.SELECT_TAGS"
             style="width: 100%; margin-bottom: 16px"
             allowClear
             :options="tagOptions"
@@ -137,14 +137,14 @@
 
         <div class="selection-actions">
           <a-button @click="goBack">
-            返回搜索
+            {{ BUTTON_TEXTS.CANCEL }}
           </a-button>
           <a-button 
             type="primary"
             :disabled="selectedImages.length === 0"
             @click="handleDownload"
           >
-            下载选中图片 ({{ selectedImages.length }})
+            {{ BUTTON_TEXTS.DOWNLOAD }} ({{ selectedImages.length }})
           </a-button>
         </div>
       </a-card>
@@ -170,9 +170,7 @@
           <div class="result-summary">
             <a-descriptions :column="2" bordered>
               <a-descriptions-item label="下载状态">
-                <a-tag :color="getStatusColor(downloadResult.status)">
-                  {{ getStatusText(downloadResult.status) }}
-                </a-tag>
+                <StatusDisplay :status="downloadResult.status" />
               </a-descriptions-item>
               <a-descriptions-item label="成功下载">
                 <a-tag color="green">{{ downloadResult.successCount }} 张</a-tag>
@@ -195,11 +193,11 @@
           <div class="result-actions">
             <a-button type="primary" @click="goToGallery">
               <PictureOutlined />
-              查看图库
+              {{ BUTTON_TEXTS.VIEW_GALLERY }}
             </a-button>
             <a-button @click="startNewSearch">
               <ReloadOutlined />
-              开始新搜索
+              {{ BUTTON_TEXTS.START_NEW_SEARCH }}
             </a-button>
           </div>
 
@@ -228,7 +226,7 @@
     <a-alert
       type="warning"
       style="margin-top: 24px"
-      message="请注意图片版权，仅用于学习和研究目的"
+      :message="MESSAGES.COPYRIGHT_NOTICE"
       show-icon
     />
   </div>
@@ -244,7 +242,9 @@ import {
   ReloadOutlined 
 } from '@ant-design/icons-vue'
 import { useTagStore } from '@/stores/useTagStore'
+import StatusDisplay from '@/components/common/StatusDisplay.vue'
 import ImageSearchApi from '@/api/imageSearch'
+import { PAGE_TITLES, PAGE_DESCRIPTIONS, BUTTON_TEXTS, MESSAGES, UPLOAD_CONFIG, STEP_DESCRIPTIONS, PLACEHOLDERS } from '@/config/constants'
 import type { 
   SearchImageRequest, 
   SearchImageResponse,
@@ -260,7 +260,7 @@ const tagStore = useTagStore()
 const currentStep = ref(0) // 0:搜索 1:选择 2:下载
 const searchForm = ref<SearchImageRequest>({
   keyword: '',
-  count: 10
+  count: UPLOAD_CONFIG.SEARCH_COUNT
 })
 
 const downloadForm = ref<ImageDownloadRequest>({
@@ -284,12 +284,10 @@ const tagOptions = computed(() =>
   }))
 )
 
-const isTaskRunning = computed(() => isDownloading.value)
-
 // 方法
 const handleSearch = async () => {
   if (!searchForm.value.keyword.trim()) {
-    message.warning('请输入搜索关键词')
+    message.warning(MESSAGES.SEARCH_KEYWORD_REQUIRED)
     return
   }
 
@@ -301,7 +299,7 @@ const handleSearch = async () => {
     searchResults.value = response
     
     if (response.images && response.images.length > 0) {
-      message.success(`搜索到 ${response.images.length} 张图片`)
+      message.success(MESSAGES.SEARCH_SUCCESS(response.images.length))
       currentStep.value = 1 // 进入选择阶段
       
       // 准备下载表单
@@ -310,7 +308,7 @@ const handleSearch = async () => {
       downloadForm.value.tagIds = []
       selectedImages.value = []
     } else {
-      message.warning('未找到相关图片，请尝试其他关键词')
+      message.warning(MESSAGES.SEARCH_NO_RESULTS)
     }
   } catch (error: any) {
     message.error('搜索失败: ' + (error.message || '未知错误'))
@@ -349,7 +347,7 @@ const goBack = () => {
 
 const handleDownload = async () => {
   if (selectedImages.value.length === 0) {
-    message.warning('请选择要下载的图片')
+    message.warning(MESSAGES.NO_SELECTION)
     return
   }
 
@@ -387,23 +385,7 @@ const handleImageError = (event: Event) => {
   img.style.display = 'none'
 }
 
-const getStatusColor = (status: string) => {
-  const colorMap: Record<string, string> = {
-    'completed': 'success',
-    'partial': 'warning', 
-    'failed': 'error'
-  }
-  return colorMap[status] || 'default'
-}
-
-const getStatusText = (status: string) => {
-  const textMap: Record<string, string> = {
-    'completed': '全部成功',
-    'partial': '部分成功',
-    'failed': '全部失败'
-  }
-  return textMap[status] || status
-}
+// getStatusColor 和 getStatusText 已由 StatusDisplay 组件替代
 
 const goToGallery = () => {
   router.push('/gallery')
