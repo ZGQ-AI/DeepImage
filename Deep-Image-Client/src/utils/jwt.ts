@@ -11,6 +11,18 @@ export interface DecodedJwtPayload {
   [key: string]: any
 }
 
+// Cache for token expiration time to avoid repeated JWT decoding
+// Key: token value (first 20 chars as identifier), Value: expiration timestamp in milliseconds
+let tokenExpirationCache: { token: string; expirationTime: number } | null = null
+
+/**
+ * Clear the token expiration cache
+ * Call this when token is refreshed or cleared
+ */
+export function clearTokenExpirationCache(): void {
+  tokenExpirationCache = null
+}
+
 export function decodeJwt(token: string): DecodedJwtPayload | null {
   try {
     const parts = token.split('.')
@@ -25,23 +37,44 @@ export function decodeJwt(token: string): DecodedJwtPayload | null {
 
 /**
  * 检查 token 是否已过期
+ * 
+ * **Optimized with caching:** Caches expiration time to avoid repeated JWT decoding.
+ * Cache is cleared when token changes or when clearTokenExpirationCache() is called.
+ * 
  * @param token - JWT token
  * @param bufferSeconds - 提前多少秒判定为过期（默认 60 秒，即提前 1 分钟）
  * @returns true 表示已过期或即将过期，false 表示仍然有效
  */
 export function isTokenExpired(token: string | null, bufferSeconds: number = 60): boolean {
-  if (!token) return true
+  if (!token) {
+    tokenExpirationCache = null
+    return true
+  }
 
+  // Check cache: if token matches and cache exists, use cached expiration time
+  if (tokenExpirationCache && tokenExpirationCache.token === token) {
+    const currentTime = Date.now()
+    const bufferTime = bufferSeconds * 1000
+    return currentTime + bufferTime >= tokenExpirationCache.expirationTime
+  }
+
+  // Cache miss: decode JWT and cache the expiration time
   const payload = decodeJwt(token)
-  if (!payload || !payload.eff) return true
+  if (!payload || !payload.eff) {
+    tokenExpirationCache = null
+    return true
+  }
 
-  // eff 是毫秒级时间戳，直接使用
-  const expirationTime = payload.eff
+  // Cache the expiration time for this token
+  tokenExpirationCache = {
+    token,
+    expirationTime: payload.eff,
+  }
+
+  // Check expiration
   const currentTime = Date.now()
   const bufferTime = bufferSeconds * 1000
-
-  // 如果当前时间 + 缓冲时间 >= 过期时间，则认为已过期
-  return currentTime + bufferTime >= expirationTime
+  return currentTime + bufferTime >= payload.eff
 }
 
 function decodeBase64Url(input: string): string {

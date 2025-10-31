@@ -64,18 +64,24 @@ onMounted(async () => {
       return
     }
 
-    // 保存token到store（使用localStorage持久化）
+    // 保存token到store（使用localStorage作为默认存储模式）
     authStore.applyTokenPair(
       {
         accessToken,
         refreshToken,
         expiresIn: 3600,
       },
-      'local',
+      'local', // Google OAuth always uses localStorage
     )
 
     // 获取用户信息（带重试机制）
-    await fetchProfileWithRetry()
+    try {
+      await fetchProfileWithRetry()
+    } catch (profileError) {
+      // 即使获取用户信息失败，token已保存，允许用户继续使用
+      console.warn('[AuthCallback] Failed to fetch user profile:', profileError)
+      // 不抛出错误，允许继续跳转
+    }
 
     message.success('登录成功！')
 

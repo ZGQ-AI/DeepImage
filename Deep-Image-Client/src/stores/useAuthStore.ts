@@ -7,7 +7,7 @@
  */
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { login as loginApi, refreshToken as refreshApi, logout as logoutApi } from '../api/auth'
+import { login as loginApi, logout as logoutApi } from '../api/auth'
 import type { LoginRequest, TokenPairResponse } from '../types/auth'
 import {
   getAccessToken,
@@ -16,8 +16,10 @@ import {
   setTokens,
   getTokenStorageMode,
 } from '../utils/token'
-import { decodeJwt } from '../utils/jwt'
+import { decodeJwt, clearTokenExpirationCache } from '../utils/jwt'
 import { useUserStore } from './useUserStore'
+import { tokenRefreshManager } from '../utils/tokenRefreshManager'
+import { checkAuth } from '../utils/authUtils'
 
 export const useAuthStore = defineStore('auth', () => {
   // Optional: Track token expiration time for UI display only
@@ -48,6 +50,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Store tokens in browser storage (no memory cache)
     setTokens(tokenPair.accessToken, tokenPair.refreshToken, storageMode)
+
+    // Clear token expiration cache since we have a new token
+    clearTokenExpirationCache()
 
     // Update expiration time (UI display only)
     expiresIn.value = tokenPair.expiresIn ?? null
@@ -98,41 +103,20 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Refresh the access token using the refresh token
    *
-   * **Storage-Based:** Reads refresh token from storage on each call.
+   * **Delegated to TokenRefreshManager:** Uses centralized refresh manager
+   * to prevent race conditions and duplicate refresh attempts.
+   *
+   * @returns Promise<true> on success
+   * @throws Error if refresh fails
    */
   async function refresh() {
-    // Read refresh token from storage
-    const rt = getRefreshToken()
-
-    // If no refresh token, user is not authenticated
-    if (!rt) {
-      throw new Error('No refresh token available')
-    }
-
     try {
-      // Call backend refresh API
-      const { data } = await refreshApi({ refreshToken: rt })
-
-      // Check response
-      if (data.code !== 200) {
-        throw new Error(data.message || 'Failed to refresh token')
-      }
-
-      // Apply new token pair (preserve current storage mode)
-      applyTokenPair(data.data)
-
+      await tokenRefreshManager.refresh()
       return true
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      // Refresh failed - clear all tokens
-      clearTokens()
-
-      // Clear user state
-      const userStore = useUserStore()
-      userStore.clearUserState()
-
-      // Propagate error to caller (will trigger redirect to login)
-      throw new Error(error.response?.data?.message || error.message || 'Token refresh failed')
+    } catch (error) {
+      // Error is already handled by TokenRefreshManager (tokens cleared, user state cleared)
+      // Just propagate the error
+      throw error
     }
   }
 
@@ -150,6 +134,9 @@ export const useAuthStore = defineStore('auth', () => {
     // Clear all tokens from storage
     clearTokens()
 
+    // Clear token expiration cache
+    clearTokenExpirationCache()
+
     // Clear UI state
     expiresIn.value = null
 
@@ -161,19 +148,20 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Bootstrap authentication on app initialization
    *
-   * **Storage-Based:** Checks storage for refresh token and attempts to restore session.
+   * **Uses authUtils:** Checks authentication state using centralized utilities.
    *
    * @returns Promise<true> if session restored, false otherwise
    */
   async function bootstrap() {
-    // Check if we have an access token in storage
-    if (getAccessToken()) {
+    const authState = checkAuth()
+
+    // If already authenticated, return true
+    if (authState.isAuthenticated && !authState.needsRefresh) {
       return true
     }
 
-    // Try to restore session using refresh token
-    const rt = getRefreshToken()
-    if (rt) {
+    // If needs refresh, try to refresh token
+    if (authState.needsRefresh) {
       try {
         await refresh()
         return true

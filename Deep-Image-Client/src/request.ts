@@ -1,19 +1,16 @@
 import axios from 'axios'
-import { getAccessToken, getRefreshToken } from './utils/token'
+import { getAccessToken } from './utils/token'
 import { useAuthStore } from './stores/useAuthStore'
 import router from './router'
 import { API_BASE_URL, REQUEST_TIMEOUT, isPublicEndpoint } from './config/api'
-import { isTokenExpired } from './utils/jwt'
+import { isTokenValid, checkAuth } from './utils/authUtils'
+import { tokenRefreshManager } from './utils/tokenRefreshManager'
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: REQUEST_TIMEOUT,
   withCredentials: true,
 })
-
-// 防止请求拦截器中的并发刷新
-let isRefreshingInInterceptor = false
-let refreshPromiseInInterceptor: Promise<boolean> | null = null
 
 axiosInstance.interceptors.request.use(
   async function (config) {
@@ -27,44 +24,28 @@ axiosInstance.interceptors.request.use(
     // Get current access token
     let token = getAccessToken()
 
-    // 主动检查 token 是否过期（提前 60 秒判定为过期）
-    if (token && isTokenExpired(token, 60)) {
-      console.log('[Request Interceptor] Access token expired or expiring soon, attempting refresh...')
+    // Check authentication state
+    const authState = checkAuth()
 
-      // 检查是否有 refresh token
-      const refreshToken = getRefreshToken()
-      if (refreshToken) {
+    // If token is invalid or expired, try to refresh before sending request
+    if (!isTokenValid(token)) {
+      // If refresh token exists, refresh the access token first
+      if (authState.needsRefresh) {
         try {
-          // 如果已经有刷新操作在进行，等待它完成
-          if (isRefreshingInInterceptor && refreshPromiseInInterceptor) {
-            console.log('[Request Interceptor] Another refresh is in progress, waiting...')
-            await refreshPromiseInInterceptor
-            token = getAccessToken()
-            console.log('[Request Interceptor] Using refreshed token from another request')
-          } else {
-            // 开始新的刷新操作
-            isRefreshingInInterceptor = true
-            const authStore = useAuthStore()
-            
-            // 创建刷新 Promise 供其他请求等待
-            refreshPromiseInInterceptor = authStore.refresh().finally(() => {
-              isRefreshingInInterceptor = false
-              refreshPromiseInInterceptor = null
-            })
-            
-            await refreshPromiseInInterceptor
-            
-            // 刷新成功，重新获取新的 access token
-            token = getAccessToken()
-            console.log('[Request Interceptor] Token refreshed successfully')
+          // Wait for refresh to complete (TokenRefreshManager handles concurrency)
+          await tokenRefreshManager.refresh()
+          // Get the new token from storage
+          token = getAccessToken()
+          
+          if (!token) {
+            throw new Error('Token refresh succeeded but no token found')
           }
-        } catch (error) {
-          console.error('[Request Interceptor] Token refresh failed:', error)
-          // 刷新失败，清除 token 并显示登录框
-          const authStore = useAuthStore()
-          await authStore.logout()
-
+        } catch (refreshError) {
+          // Refresh failed - clear tokens and show login modal
+          console.error('[Request Interceptor] Token refresh failed:', refreshError)
+          
           setTimeout(() => {
+            const authStore = useAuthStore()
             const currentPath = window.location.pathname
             authStore.showLoginModal(currentPath !== '/auth' ? currentPath : undefined)
           }, 0)
@@ -74,51 +55,38 @@ axiosInstance.interceptors.request.use(
           ;(cancelError as any).__CANCEL__ = true
           return Promise.reject(cancelError)
         }
-      } else {
-        // 没有 refresh token，显示登录框
-        console.warn('[Request Interceptor] No refresh token available')
-        
+      } else if (!authState.isAuthenticated) {
+        // No refresh token available, show login modal and cancel request
+        console.warn('[Request Interceptor] No valid token and no refresh token, showing login modal')
+
         setTimeout(() => {
           const authStore = useAuthStore()
           const currentPath = window.location.pathname
           authStore.showLoginModal(currentPath !== '/auth' ? currentPath : undefined)
         }, 0)
 
-        const cancelError = new Error('No refresh token available')
+        const cancelError = new Error('No authentication token available')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(cancelError as any).__CANCEL__ = true
         return Promise.reject(cancelError)
       }
     }
 
-    // 添加 token 到请求头
+    // Add token to headers (either valid token or newly refreshed token)
     if (token) {
       config.headers = config.headers || {}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(config.headers as any).Authorization = `Bearer ${token}`
-      return config
     }
 
-    // 没有 token，显示登录框
-    console.warn('[Request Interceptor] No token found for private endpoint, showing login modal')
-
-    setTimeout(() => {
-      const authStore = useAuthStore()
-      const currentPath = window.location.pathname
-      authStore.showLoginModal(currentPath !== '/auth' ? currentPath : undefined)
-    }, 0)
-
-    const cancelError = new Error('No authentication token available')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(cancelError as any).__CANCEL__ = true
-    return Promise.reject(cancelError)
+    return config
   },
   function (error) {
     return Promise.reject(error)
   },
 )
 
-let isRefreshing = false
+// Request queue for concurrent 401 responses
 let pendingQueue: Array<(token?: string) => void> = []
 
 axiosInstance.interceptors.response.use(
@@ -128,58 +96,72 @@ axiosInstance.interceptors.response.use(
   async function onRejected(error) {
     const { response, config } = error || {}
 
-    // 只处理 401 且未重试过的请求
+    // Only handle 401 errors that haven't been retried
     if (response && response.status === 401 && !config._retry) {
       config._retry = true
-      const auth = useAuthStore()
 
-      // 如果正在刷新，将请求加入队列
-      if (isRefreshing) {
+      // If refresh is already in progress, queue this request
+      if (tokenRefreshManager.isRefreshingInProgress()) {
         return new Promise((resolve, reject) => {
           pendingQueue.push((token) => {
             if (token) {
+              // Ensure headers object exists
+              config.headers = config.headers || {}
               config.headers.Authorization = `Bearer ${token}`
+              // Keep _retry flag to prevent infinite retry loops
               axiosInstance(config).then(resolve).catch(reject)
             } else {
-              reject(new Error('Token refresh failed'))
+              // Mark as cancelled to prevent error messages
+              const cancelledError = new Error('Token refresh failed')
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ;(cancelledError as any).__CANCEL__ = true
+              reject(cancelledError)
             }
           })
         })
       }
 
-      // 开始刷新流程
-      isRefreshing = true
-
+      // Start refresh operation using TokenRefreshManager
       try {
-        // Attempt to refresh tokens (reads refresh token from storage)
-        await auth.refresh()
+        // TokenRefreshManager handles concurrency protection
+        const newToken = await tokenRefreshManager.refresh()
 
-        // Refresh succeeded - get new token from storage and retry queued requests
-        const newToken = getAccessToken()
-        pendingQueue.forEach((fn) => fn(newToken ?? undefined))
-        pendingQueue = []
+        // Refresh succeeded - get new token from storage (in case it was updated)
+        const refreshedToken = getAccessToken()
+        
+        if (refreshedToken) {
+          // Process queued requests first
+          pendingQueue.forEach((fn) => fn(refreshedToken))
+          pendingQueue = []
 
-        // 重试当前请求
-        if (newToken) {
-          config.headers.Authorization = `Bearer ${newToken}`
+          // Retry current request with new token
+          config.headers = config.headers || {}
+          config.headers.Authorization = `Bearer ${refreshedToken}`
+          // Keep _retry flag to prevent infinite retry loops
+          // If retry fails again, let error propagate
           return axiosInstance(config)
+        } else {
+          throw new Error('Token refresh succeeded but no token found in storage')
         }
       } catch (refreshError) {
-        // 刷新失败，清空队列并弹出登录框
+        // Refresh failed - TokenRefreshManager already cleared tokens and user state
         console.error('[Response Interceptor] Token refresh failed:', refreshError)
-        
+
+        // Fail all queued requests silently
         pendingQueue.forEach((fn) => fn(undefined))
         pendingQueue = []
 
-        await auth.logout()
+        const authStore = useAuthStore()
 
-        // 弹出登录框而不是跳转
+        // Show login modal silently (no error message to user)
         const currentPath = router.currentRoute.value.fullPath
-        auth.showLoginModal(currentPath !== '/auth' ? currentPath : undefined)
+        authStore.showLoginModal(currentPath !== '/auth' ? currentPath : undefined)
 
-        return Promise.reject(error)
-      } finally {
-        isRefreshing = false
+        // Mark error as cancelled to prevent error messages from being shown
+        const cancelledError = new Error('Authentication required')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(cancelledError as any).__CANCEL__ = true
+        return Promise.reject(cancelledError)
       }
     }
 

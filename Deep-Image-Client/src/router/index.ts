@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
-import { getAccessToken, getRefreshToken } from '../utils/token'
-import { isTokenExpired } from '../utils/jwt'
+import { checkAuth } from '../utils/authUtils'
+import { tokenRefreshManager } from '../utils/tokenRefreshManager'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -91,15 +91,14 @@ router.beforeEach(async (to) => {
   if (isPublic) return true
 
   if (to.meta?.requiresAuth) {
-    // 主动检查 access token 是否有效
-    const accessToken = getAccessToken()
-    const refreshToken = getRefreshToken()
+    // Use centralized auth utilities to check authentication state
+    const authState = checkAuth()
 
-    // 情况 1: 有 accessToken 且未过期
-    if (accessToken && !isTokenExpired(accessToken, 60)) {
+    // Case 1: User is authenticated and token is valid
+    if (authState.isAuthenticated && !authState.needsRefresh) {
       console.log('[Router Guard] Access token is valid')
-      
-      // 如果用户信息未加载，尝试加载
+
+      // Load user profile if not already loaded
       if (!user.profile) {
         try {
           await user.fetchProfile()
@@ -110,15 +109,16 @@ router.beforeEach(async (to) => {
       return true
     }
 
-    // 情况 2: accessToken 过期或不存在，但有 refreshToken
-    if (refreshToken) {
-      console.log('[Router Guard] Access token expired, attempting refresh with refresh token...')
-      
+    // Case 2: Access token expired but refresh token exists
+    if (authState.needsRefresh) {
+      console.log('[Router Guard] Access token expired, attempting refresh...')
+
       try {
-        await auth.refresh()
+        // Use TokenRefreshManager for centralized refresh handling
+        await tokenRefreshManager.refresh()
         console.log('[Router Guard] Token refreshed successfully')
-        
-        // 刷新成功后，加载用户信息
+
+        // Load user profile after successful refresh
         try {
           await user.fetchProfile()
         } catch (err) {
@@ -127,15 +127,15 @@ router.beforeEach(async (to) => {
         return true
       } catch (err) {
         console.error('[Router Guard] Token refresh failed:', err)
-        // 刷新失败，继续走下面的登录流程
+        // Refresh failed, continue to login flow
       }
     }
 
-    // 情况 3: 没有有效的 token，弹出登录框
+    // Case 3: No valid tokens, show login modal
     console.log('[Router Guard] No valid token, showing login modal')
     auth.showLoginModal(to.fullPath)
-    
-    // 取消当前导航，保持在当前页面
+
+    // Cancel navigation, stay on current page
     return false
   }
 

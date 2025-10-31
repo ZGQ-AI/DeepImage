@@ -52,13 +52,15 @@ export const useUserStore = defineStore('user', () => {
       // User will be redirected to login page automatically
       const isAuthError =
         error?.__CANCEL__ || // Request cancelled by interceptor
-        error?.message?.includes('No authentication token') ||
-        error?.message?.includes('Token refresh failed') ||
-        error?.message?.includes('not login') ||
-        error?.response?.status === 401
+        error?.response?.status === 401 // 401 indicates authentication failure
 
       if (!isAuthError) {
         message.error(error?.message || '获取用户信息失败')
+      }
+      // Don't throw error if it's an auth error - just fail silently
+      // The login modal will be shown by interceptors
+      if (isAuthError) {
+        return // Silent failure
       }
       throw error
     } finally {
@@ -106,13 +108,15 @@ export const useUserStore = defineStore('user', () => {
       // Don't show error message for authentication errors or cancelled requests
       const isAuthError =
         error?.__CANCEL__ ||
-        error?.message?.includes('No authentication token') ||
-        error?.message?.includes('Token refresh failed') ||
-        error?.message?.includes('not login') ||
-        error?.response?.status === 401
+        error?.response?.status === 401 // 401 indicates authentication failure
 
       if (!isAuthError) {
         message.error(error?.message || '获取会话列表失败')
+      }
+      // Don't throw error if it's an auth error - just fail silently
+      // The login modal will be shown by interceptors
+      if (isAuthError) {
+        return // Silent failure
       }
       throw error
     } finally {
@@ -136,7 +140,20 @@ export const useUserStore = defineStore('user', () => {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '移除失败')
+      // Don't show error message for authentication errors
+      // User will be redirected to login page automatically
+      const isAuthError =
+        error?.__CANCEL__ ||
+        error?.response?.status === 401 // 401 indicates authentication failure
+
+      if (!isAuthError) {
+        message.error(error?.message || '移除失败')
+      }
+      // Don't throw error if it's an auth error - just fail silently
+      // The login modal will be shown by interceptors
+      if (isAuthError) {
+        return false // Silent failure
+      }
       throw error
     }
   }
@@ -158,7 +175,20 @@ export const useUserStore = defineStore('user', () => {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      message.error(error?.message || '移除失败')
+      // Don't show error message for authentication errors
+      // User will be redirected to login page automatically
+      const isAuthError =
+        error?.__CANCEL__ ||
+        error?.response?.status === 401 // 401 indicates authentication failure
+
+      if (!isAuthError) {
+        message.error(error?.message || '移除失败')
+      }
+      // Don't throw error if it's an auth error - just fail silently
+      // The login modal will be shown by interceptors
+      if (isAuthError) {
+        return false // Silent failure
+      }
       throw error
     }
   }
