@@ -65,6 +65,11 @@ public class FileConstant {
     public static final String SORT_BY_CREATED_AT = "createdAt";
     
     /**
+     * Sort field: update time
+     */
+    public static final String SORT_BY_UPDATED_AT = "updatedAt";
+    
+    /**
      * Sort field: file size
      */
     public static final String SORT_BY_FILE_SIZE = "fileSize";

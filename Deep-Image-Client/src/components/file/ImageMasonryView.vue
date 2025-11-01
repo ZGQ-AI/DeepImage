@@ -78,7 +78,7 @@
           
           <!-- Image info area (always visible) -->
           <div class="image-card-info">
-            <p class="image-card-title">{{ image.originalFilename }}</p>
+            <p class="image-card-title">{{ getFileNameWithoutExtension(image.originalFilename, image.fileExtension) }}</p>
             <div class="image-card-meta">
               <span class="image-card-size">{{ formatFileSize(image.fileSize) }}</span>
               <!-- Tag display -->
@@ -126,6 +126,32 @@ import {
 } from '@ant-design/icons-vue'
 import { formatFileSize } from '../../utils/file'
 import type { FileInfoResponse } from '../../types/file'
+
+// Get filename without extension
+const getFileNameWithoutExtension = (filename: string, fileExtension?: string): string => {
+  if (!filename) return ''
+  
+  // If filename has extension with dot, remove it
+  const lastDotIndex = filename.lastIndexOf('.')
+  if (lastDotIndex !== -1 && lastDotIndex > 0 && lastDotIndex < filename.length - 1) {
+    const ext = filename.substring(lastDotIndex + 1).toLowerCase()
+    const fileExt = fileExtension?.replace(/^\./, '').toLowerCase()
+    // If the extension matches fileExtension or looks like a valid extension
+    if (fileExt === ext || (ext.length >= 1 && ext.length <= 5 && /^[a-zA-Z0-9]+$/.test(ext))) {
+      return filename.substring(0, lastDotIndex)
+    }
+  }
+  
+  // If filename ends with fileExtension without dot, remove it
+  if (fileExtension) {
+    const extClean = fileExtension.replace(/^\./, '').toLowerCase()
+    if (filename.toLowerCase().endsWith(extClean.toLowerCase())) {
+      return filename.substring(0, filename.length - extClean.length)
+    }
+  }
+  
+  return filename
+}
 
 // Props
 interface Props {

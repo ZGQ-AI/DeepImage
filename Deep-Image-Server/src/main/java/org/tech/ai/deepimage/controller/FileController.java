@@ -94,8 +94,10 @@ public class FileController {
      * GET /api/files/detail
      */
     @GetMapping("/detail")
-    public ApiResponse<FileDetailResponse> getFileDetail(@RequestParam Long fileId) {
-        FileDetailResponse response = fileService.getFileDetail(fileId);
+    public ApiResponse<FileDetailResponse> getFileDetail(
+            @RequestParam Long fileId,
+            @RequestParam(required = false) Boolean filterSensitive) {
+        FileDetailResponse response = fileService.getFileDetail(fileId, filterSensitive);
         return ApiResponse.success(response);
     }
 
@@ -142,14 +144,15 @@ public class FileController {
     // ========== File Management ==========
     
     /**
-     * Rename file
-     * POST /api/files/rename
+     * Update file properties (name, visibility, etc.)
+     * PUT /api/files/update-properties
      */
-    @PostMapping("/rename")
-    public ApiResponse<FileInfoResponse> renameFile(@Valid @RequestBody RenameFileRequest request) {
-        FileInfoResponse response = fileService.renameFile(request);
+    @PutMapping("/update-properties")
+    public ApiResponse<FileInfoResponse> updateFileProperties(@Valid @RequestBody UpdateFilePropertiesRequest request) {
+        FileInfoResponse response = fileService.updateFileProperties(request);
         return ApiResponse.success(response);
     }
+    
     
     /**
      * Batch delete files

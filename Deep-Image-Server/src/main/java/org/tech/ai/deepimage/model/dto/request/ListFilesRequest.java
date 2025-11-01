@@ -32,9 +32,10 @@ public class ListFilesRequest extends PageRequest {
     
     /**
      * Sort field (optional)
-     * Optional values: createdAt, fileSize, originalFilename
+     * Optional values: createdAt, updatedAt, fileSize, originalFilename
+     * Default: updatedAt (latest updated first)
      */
-    private String sortBy = FileConstant.SORT_BY_CREATED_AT;
+    private String sortBy = FileConstant.SORT_BY_UPDATED_AT;
     
     /**
      * Sort direction (optional)

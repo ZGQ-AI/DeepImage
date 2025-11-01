@@ -199,9 +199,14 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             wrapper.orderBy(true, FileConstant.SORT_ORDER_ASC.equals(request.getSortOrder()), FileRecord::getFileSize);
         } else if (FileConstant.SORT_BY_FILENAME.equals(request.getSortBy())) {
             wrapper.orderBy(true, FileConstant.SORT_ORDER_ASC.equals(request.getSortOrder()), FileRecord::getOriginalFilename);
+        } else if (FileConstant.SORT_BY_UPDATED_AT.equals(request.getSortBy())) {
+            wrapper.orderBy(true, FileConstant.SORT_ORDER_ASC.equals(request.getSortOrder()), FileRecord::getUpdatedAt);
         } else {
             wrapper.orderBy(true, FileConstant.SORT_ORDER_ASC.equals(request.getSortOrder()), FileRecord::getCreatedAt);
         }
+        
+        // Always add secondary sort by updatedAt DESC (latest updated first)
+        wrapper.orderByDesc(FileRecord::getUpdatedAt);
 
         Page<FileRecord> recordPage = page(page, wrapper);
 
@@ -246,6 +251,11 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
     @Override
     public FileDetailResponse getFileDetail(Long fileId) {
+        return getFileDetail(fileId, false);
+    }
+    
+    @Override
+    public FileDetailResponse getFileDetail(Long fileId, Boolean filterSensitive) {
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Query file record
@@ -256,7 +266,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         checkFilePermission(fileRecord, userId);
 
         // Build detail response
-        return buildFileDetailResponse(fileRecord);
+        return buildFileDetailResponse(fileRecord, filterSensitive != null && filterSensitive);
     }
 
     // ========== File Download ==========
@@ -343,9 +353,13 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     // ========== File Management ==========
 
     @Override
-    public FileInfoResponse renameFile(RenameFileRequest request) {
+    public FileInfoResponse updateFileProperties(UpdateFilePropertiesRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
         Long fileId = request.getFileId();
+
+        // Validate at least one property is provided
+        BusinessException.assertTrue(request.hasAnyPropertyToUpdate(),
+                ResponseConstant.PARAM_ERROR, "至少需要提供一个要更新的字段");
 
         // Query file record
         FileRecord fileRecord = getById(fileId);
@@ -355,12 +369,33 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-        // Update filename
-        fileRecord.setOriginalFilename(request.getNewFilename());
-        fileRecord.setUpdatedAt(LocalDateTime.now());
-        updateById(fileRecord);
+        // Validate visibility value if provided
+        if (request.getVisibility() != null && !request.getVisibility().trim().isEmpty()) {
+            BusinessException.assertTrue(
+                    request.getVisibility().equals(FileVisibilityEnum.PRIVATE.name()) ||
+                    request.getVisibility().equals(FileVisibilityEnum.PUBLIC.name()),
+                    ResponseConstant.PARAM_ERROR, "可见性值必须是 PRIVATE 或 PUBLIC");
+        }
 
-        log.info("File rename successful: fileId={}, newFilename={}", fileId, request.getNewFilename());
+        // Update properties
+        boolean hasChanges = false;
+        if (request.getOriginalFilename() != null && !request.getOriginalFilename().trim().isEmpty()) {
+            fileRecord.setOriginalFilename(request.getOriginalFilename().trim());
+            hasChanges = true;
+        }
+        
+        if (request.getVisibility() != null && !request.getVisibility().trim().isEmpty()) {
+            fileRecord.setVisibility(request.getVisibility());
+            hasChanges = true;
+        }
+
+        if (hasChanges) {
+            fileRecord.setUpdatedAt(LocalDateTime.now());
+            updateById(fileRecord);
+            log.info("File properties updated: fileId={}, filename={}, visibility={}", 
+                    fileId, request.getOriginalFilename(), request.getVisibility());
+        }
+
         return buildFileInfoResponse(fileRecord);
     }
 
@@ -847,6 +882,10 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
      * Build file detail response
      */
     private FileDetailResponse buildFileDetailResponse(FileRecord fileRecord) {
+        return buildFileDetailResponse(fileRecord, false);
+    }
+    
+    private FileDetailResponse buildFileDetailResponse(FileRecord fileRecord, boolean filterSensitive) {
         // Query file tags
         List<TagResponse> tags = getFileTagsInternal(fileRecord.getId());
 
@@ -884,7 +923,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 })
                 .collect(Collectors.toList());
 
-        return FileDetailResponse.builder()
+        FileDetailResponse.FileDetailResponseBuilder builder = FileDetailResponse.builder()
                 .fileId(fileRecord.getId())
                 .originalFilename(fileRecord.getOriginalFilename())
                 .fileUrl(fileRecord.getFileUrl())
@@ -895,8 +934,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .businessType(fileRecord.getBusinessType())
                 .status(fileRecord.getStatus())
                 .visibility(fileRecord.getVisibility())
-                .fileHash(fileRecord.getFileHash())
-                .metadata(fileRecord.getMetadata())
                 .viewCount(viewCount)
                 .downloadCount(downloadCount)
                 .lastAccessedAt(lastAccessedAt)
@@ -904,8 +941,18 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .referenceCount(fileRecord.getReferenceCount())
                 .shares(shareInfos)
                 .createdAt(fileRecord.getCreatedAt())
-                .updatedAt(fileRecord.getUpdatedAt())
-                .build();
+                .updatedAt(fileRecord.getUpdatedAt());
+        
+        // Filter sensitive information if requested
+        if (filterSensitive) {
+            builder.fileHash(null)
+                   .metadata(null);
+        } else {
+            builder.fileHash(fileRecord.getFileHash())
+                   .metadata(fileRecord.getMetadata());
+        }
+        
+        return builder.build();
     }
 
     /**

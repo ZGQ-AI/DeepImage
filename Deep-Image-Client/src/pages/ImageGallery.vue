@@ -166,12 +166,12 @@
       @tags-updated="handleTagsUpdated"
     />
 
-    <!-- Rename modal -->
-    <RenameModal
-      v-model:open="renameModalVisible"
-      :current-filename="currentImageForRename?.originalFilename || ''"
-      :loading="renaming"
-      @confirm="handleRenameConfirm"
+    <!-- Image properties modal -->
+    <ImagePropertiesModal
+      v-model:open="propertiesModalVisible"
+      :file-detail="currentFileDetail"
+      :loading="updatingProperties"
+      @confirm="handlePropertiesConfirm"
     />
   </div>
 </template>
@@ -186,8 +186,8 @@ import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
 import FileTagManager from '../components/file/FileTagManager.vue'
 import BatchToolbar from '../components/common/BatchToolbar.vue'
-import RenameModal from '../components/common/RenameModal.vue'
-import { listFiles, downloadFile, batchDeleteFiles, renameFile } from '../api/file'
+import ImagePropertiesModal from '../components/common/ImagePropertiesModal.vue'
+import { listFiles, downloadFile, batchDeleteFiles, updateFileProperties, getFileDetail } from '../api/file'
 import { listTags } from '../api/tag'
 import { BusinessType } from '../types/file'
 import { PAGE_TITLES, PAGE_DESCRIPTIONS, BUTTON_TEXTS, MESSAGES, UPLOAD_CONFIG, PAGINATION_CONFIG, SORT_OPTIONS, PLACEHOLDERS, STYLE_CONFIG } from '../config/constants'
@@ -205,9 +205,10 @@ const previewImage = ref<FileInfoResponse | null>(null)
 const currentImageIndex = ref(0)
 const tagManagerVisible = ref(false)
 const currentImageForTag = ref<FileInfoResponse | null>(null)
-const renameModalVisible = ref(false)
+const propertiesModalVisible = ref(false)
 const currentImageForRename = ref<FileInfoResponse | null>(null)
-const renaming = ref(false)
+const currentFileDetail = ref<import('../types/file').FileDetailResponse | null>(null)
+const updatingProperties = ref(false)
 const availableTags = ref<TagResponse[]>([])
 const selectedTagId = ref<number | null>(null)
 
@@ -402,61 +403,63 @@ const handleImageDownload = async (image: FileInfoResponse) => {
   }
 }
 
-const handleImageRename = (image: FileInfoResponse) => {
+const handleImageRename = async (image: FileInfoResponse) => {
   currentImageForRename.value = image
-  renameModalVisible.value = true
+  try {
+    // Get file detail with sensitive information filtered
+    const response = await getFileDetail(image.fileId, true)
+    if (response.data.code === 200 && response.data.data) {
+      currentFileDetail.value = response.data.data
+      propertiesModalVisible.value = true
+    } else {
+      message.error('获取文件详情失败')
+    }
+  } catch (error) {
+    console.error('Failed to get file detail:', error)
+    message.error('获取文件详情失败')
+  }
 }
 
-const handleRenameConfirm = async (newFilename: string) => {
+const handlePropertiesConfirm = async (updateData: { originalFilename?: string; visibility?: string }) => {
   if (!currentImageForRename.value) return
   
   const image = currentImageForRename.value
   
-  // Validate filename
-  if (!newFilename || newFilename === image.originalFilename) {
-    if (newFilename === image.originalFilename) {
-      message.info(MESSAGES.RENAME_NO_CHANGE)
-      renameModalVisible.value = false
-    } else {
-      message.error(MESSAGES.RENAME_EMPTY_ERROR)
-    }
-    return
-  }
-  
   try {
-    renaming.value = true
+    updatingProperties.value = true
     message.loading({
-      content: '正在重命名...',
-      key: `rename-${image.fileId}`,
+      content: '正在更新文件属性...',
+      key: `update-props-${image.fileId}`,
       duration: 0
     })
 
-    // Call rename API
-    const response = await renameFile(image.fileId, newFilename)
+    // Call update properties API
+    const response = await updateFileProperties(image.fileId, {
+      originalFilename: updateData.originalFilename,
+      visibility: updateData.visibility as 'PRIVATE' | 'PUBLIC' | undefined
+    })
     
     if (response.data.code === 200 && response.data.data) {
-      // Update image info in list
-      const index = images.value.findIndex(img => img.fileId === image.fileId)
-      if (index !== -1) {
-        images.value[index] = response.data.data
-      }
+      propertiesModalVisible.value = false
       
-      renameModalVisible.value = false
+      // Reload image list to reflect changes (especially for visibility changes that might affect filtering/sorting)
+      await loadImages()
+      
       message.success({
-        content: MESSAGES.RENAME_SUCCESS(newFilename),
-        key: `rename-${image.fileId}`
+        content: '文件属性更新成功',
+        key: `update-props-${image.fileId}`
       })
     } else {
-      throw new Error(response.data.message || '重命名失败')
+      throw new Error(response.data.message || '更新失败')
     }
   } catch (error) {
-    console.error('Failed to rename image:', error)
+    console.error('Failed to update file properties:', error)
     message.error({
-      content: `重命名失败: ${error instanceof Error ? error.message : '未知错误'}`,
-      key: `rename-${image.fileId}`
+      content: `更新失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      key: `update-props-${image.fileId}`
     })
   } finally {
-    renaming.value = false
+    updatingProperties.value = false
   }
 }
 

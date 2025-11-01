@@ -51,9 +51,9 @@
           </div>
           
           <div class="list-cell name-col">
-            <div class="file-name">{{ image.originalFilename }}</div>
+            <div class="file-name">{{ getFileNameWithoutExtension(image.originalFilename, image.fileExtension) }}</div>
             <div class="file-type">
-              <span>{{ getFileExtension(image.originalFilename) }}</span>
+              <span>{{ getFileExtension(image.originalFilename, image.fileExtension) }}</span>
               <!-- Tag display -->
               <div v-if="image.tags && image.tags.length > 0" class="image-tags">
                 <a-tag 
@@ -247,8 +247,40 @@ const formatDate = (dateString: string): string => {
 // formatDateTime imported from utils/time.ts
 // formatFileSize imported from utils/file.ts
 
+// Get filename without extension
+const getFileNameWithoutExtension = (filename: string, fileExtension?: string): string => {
+  if (!filename) return ''
+  
+  // If filename has extension with dot, remove it
+  const lastDotIndex = filename.lastIndexOf('.')
+  if (lastDotIndex !== -1 && lastDotIndex > 0 && lastDotIndex < filename.length - 1) {
+    const ext = filename.substring(lastDotIndex + 1).toLowerCase()
+    const fileExt = fileExtension?.replace(/^\./, '').toLowerCase()
+    // If the extension matches fileExtension or looks like a valid extension
+    if (fileExt === ext || (ext.length >= 1 && ext.length <= 5 && /^[a-zA-Z0-9]+$/.test(ext))) {
+      return filename.substring(0, lastDotIndex)
+    }
+  }
+  
+  // If filename ends with fileExtension without dot, remove it
+  if (fileExtension) {
+    const extClean = fileExtension.replace(/^\./, '').toLowerCase()
+    if (filename.toLowerCase().endsWith(extClean.toLowerCase())) {
+      return filename.substring(0, filename.length - extClean.length)
+    }
+  }
+  
+  return filename
+}
+
 // Get file extension
-const getFileExtension = (filename: string): string => {
+const getFileExtension = (filename: string, fileExtension?: string): string => {
+  // Prefer fileExtension from API if available
+  if (fileExtension) {
+    return fileExtension.replace(/^\./, '').toUpperCase()
+  }
+  
+  // Fallback to extracting from filename
   const extension = filename.split('.').pop()?.toUpperCase()
   return extension || ''
 }

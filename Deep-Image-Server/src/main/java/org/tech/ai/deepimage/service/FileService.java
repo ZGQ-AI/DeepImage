@@ -61,6 +61,15 @@ public interface FileService {
      */
     FileDetailResponse getFileDetail(Long fileId);
     
+    /**
+     * Query file details with optional sensitive information filtering
+     * 
+     * @param fileId File ID
+     * @param filterSensitive Whether to filter sensitive information (fileHash, metadata)
+     * @return File details
+     */
+    FileDetailResponse getFileDetail(Long fileId, Boolean filterSensitive);
+    
     // ========== File Download ==========
     
     /**
@@ -83,12 +92,12 @@ public interface FileService {
     // ========== File Management ==========
     
     /**
-     * Rename file
+     * Update file properties (name, visibility, etc.)
      * 
-     * @param request Rename request
+     * @param request Update properties request
      * @return File information
      */
-    FileInfoResponse renameFile(RenameFileRequest request);
+    FileInfoResponse updateFileProperties(UpdateFilePropertiesRequest request);
     
     /**
      * Delete file (soft delete)

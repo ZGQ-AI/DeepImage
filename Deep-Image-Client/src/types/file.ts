@@ -68,6 +68,8 @@ export interface FileInfoResponse {
   fileSize: number
   /** Content type */
   contentType: string
+  /** File extension */
+  fileExtension?: string
   /** Business type */
   businessType: string
   /** Creation time */
@@ -131,12 +133,16 @@ export interface FileDetailResponse {
   fileSize: number
   /** Content type */
   contentType: string
+  /** File extension */
+  fileExtension?: string
   /** Business type */
   businessType: string
-  /** File hash value */
-  fileHash: string
-  /** Metadata (JSON) */
-  metadata?: Record<string, any>
+  /** File visibility: PRIVATE, PUBLIC, SHARED */
+  visibility?: string
+  /** File hash value (may be null when filterSensitive=true) */
+  fileHash?: string | null
+  /** Metadata (JSON, may be null when filterSensitive=true) */
+  metadata?: Record<string, any> | null
   /** Creation time */
   createdAt: string
   /** Update time */
@@ -155,16 +161,6 @@ export interface TagInfo {
   tagName: string
   /** Tag color */
   color?: string
-}
-
-/**
- * Rename file request
- */
-export interface RenameFileRequest {
-  /** File ID */
-  fileId: number
-  /** New filename */
-  newFilename: string
 }
 
 /**
