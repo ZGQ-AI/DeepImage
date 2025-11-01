@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue'
-import type { FileDetailResponse } from '../../types/file'
+import type { FileInfoResponse } from '../../types/file'
 import { formatFileSize } from '../../utils/file'
 import { formatDateTime } from '../../utils/time'
 
@@ -73,7 +73,7 @@ interface Props {
   /** Whether to show */
   open: boolean
   /** File detail information */
-  fileDetail: FileDetailResponse | null
+  fileDetail: FileInfoResponse | null
   /** Loading state */
   loading?: boolean
 }

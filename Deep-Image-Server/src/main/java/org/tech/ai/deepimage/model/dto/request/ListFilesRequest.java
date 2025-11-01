@@ -10,7 +10,8 @@ import org.tech.ai.deepimage.constant.FileConstant;
  * @since 2025-10-02
  */
 @Data
-public class ListFilesRequest extends PageRequest {
+@lombok.EqualsAndHashCode(callSuper = false)
+public class ListFilesRequest extends PageRequest implements CacheableRequest, BusinessRequest {
     
     /**
      * Business type (optional)

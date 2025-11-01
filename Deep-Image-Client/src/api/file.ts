@@ -85,20 +85,6 @@ export function batchDeleteFiles(fileIds: number[]) {
 }
 
 /**
- * Get file detail
- * @param fileId File ID
- * @param filterSensitive Whether to filter sensitive information (optional)
- */
-export function getFileDetail(fileId: number, filterSensitive?: boolean) {
-  return request.get<ApiResponse<import('../types/file').FileDetailResponse>>('/api/files/detail', {
-    params: {
-      fileId,
-      ...(filterSensitive !== undefined && { filterSensitive }),
-    },
-  })
-}
-
-/**
  * Update file properties (name, visibility, etc.)
  * @param fileId File ID
  * @param data Update properties data (originalFilename and/or visibility)

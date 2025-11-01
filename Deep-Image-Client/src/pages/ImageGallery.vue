@@ -361,8 +361,9 @@ const handleImageDownload = async (image: FileInfoResponse) => {
       }
     }
 
-    // Create Blob and download link
-    const blob = new Blob([response.data])
+    // response.data is already a Blob with correct MIME type from Content-Type header
+    // Use it directly instead of recreating (which would lose the MIME type)
+    const blob = response.data
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

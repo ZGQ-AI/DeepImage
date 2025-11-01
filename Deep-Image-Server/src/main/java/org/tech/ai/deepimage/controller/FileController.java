@@ -14,7 +14,6 @@ import org.tech.ai.deepimage.model.dto.request.*;
 import org.tech.ai.deepimage.model.dto.response.*;
 import org.tech.ai.deepimage.service.FileService;
 
-import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -55,16 +54,6 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    /**
-     * Check if file exists
-     * POST /api/files/check-exists
-     */
-    @PostMapping("/check-exists")
-    public ApiResponse<FileExistsResponse> checkFileExists(@Valid @RequestBody FileExistsCheckRequest request) {
-        FileExistsResponse response = fileService.checkFileExists(request);
-        return ApiResponse.success(response);
-    }
-    
     // ========== File Query ==========
     
     /**
@@ -89,18 +78,6 @@ public class FileController {
         return ApiResponse.success(response);
     }
 
-    /**
-     * Query file details
-     * GET /api/files/detail
-     */
-    @GetMapping("/detail")
-    public ApiResponse<FileDetailResponse> getFileDetail(
-            @RequestParam Long fileId,
-            @RequestParam(required = false) Boolean filterSensitive) {
-        FileDetailResponse response = fileService.getFileDetail(fileId, filterSensitive);
-        return ApiResponse.success(response);
-    }
-
     // ========== File Download ==========
     
     /**
@@ -109,24 +86,21 @@ public class FileController {
      */
     @GetMapping("/download")
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam Long fileId) {
-        // Get file details
-        FileDetailResponse fileDetail = fileService.getFileDetail(fileId);
-        
-        // Download file stream
-        InputStream inputStream = fileService.downloadFile(fileId);
+        // Download file (service method will do permission check and validation)
+        FileDownloadResponse downloadResponse = fileService.downloadFile(fileId);
         
         // Set response headers
-        String encodedFilename = URLEncoder.encode(fileDetail.getOriginalFilename(), StandardCharsets.UTF_8)
+        String encodedFilename = URLEncoder.encode(downloadResponse.getOriginalFilename(), StandardCharsets.UTF_8)
                 .replace("+", "%20");
         
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, 
                 "attachment; filename*=UTF-8''" + encodedFilename);
-        headers.add(HttpHeaders.CONTENT_TYPE, fileDetail.getContentType());
+        headers.add(HttpHeaders.CONTENT_TYPE, downloadResponse.getContentType());
         
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(new InputStreamResource(inputStream));
+                .body(new InputStreamResource(downloadResponse.getInputStream()));
     }
     
     /**
@@ -195,62 +169,6 @@ public class FileController {
     @GetMapping("/tags")
     public ApiResponse<List<TagResponse>> getFileTags(@RequestParam Long fileId) {
         List<TagResponse> response = fileService.getFileTags(fileId);
-        return ApiResponse.success(response);
-    }
-    
-    // ========== File Sharing ==========
-    
-    /**
-     * Create file share
-     * POST /api/files/create-share
-     */
-    @PostMapping("/create-share")
-    public ApiResponse<FileShareResponse> createFileShare(@Valid @RequestBody CreateFileShareRequest request) {
-        FileShareResponse response = fileService.createFileShare(request);
-        return ApiResponse.success(response);
-    }
-    
-    /**
-     * Cancel share
-     * DELETE /api/files/cancel-share
-     */
-    @DeleteMapping("/cancel-share")
-    public ApiResponse<Boolean> cancelFileShare(@RequestParam Long shareId) {
-        Boolean result = fileService.cancelFileShare(shareId);
-        return ApiResponse.success(result);
-    }
-    
-    /**
-     * Query my outgoing shares list (shared files)
-     * GET /api/files/shares/outgoing
-     */
-    @GetMapping("/shares/outgoing")
-    public ApiResponse<Page<FileShareResponse>> listOutgoingShares(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
-        Page<FileShareResponse> response = fileService.listOutgoingShares(page, size);
-        return ApiResponse.success(response);
-    }
-    
-    /**
-     * Query incoming shares list
-     * GET /api/files/shares/incoming
-     */
-    @GetMapping("/shares/incoming")
-    public ApiResponse<Page<FileShareResponse>> listIncomingShares(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
-        Page<FileShareResponse> response = fileService.listIncomingShares(page, size);
-        return ApiResponse.success(response);
-    }
-    
-    /**
-     * Query share details
-     * GET /api/files/share-detail
-     */
-    @GetMapping("/share-detail")
-    public ApiResponse<FileShareResponse> getShareDetail(@RequestParam Long shareId) {
-        FileShareResponse response = fileService.getShareDetail(shareId);
         return ApiResponse.success(response);
     }
     

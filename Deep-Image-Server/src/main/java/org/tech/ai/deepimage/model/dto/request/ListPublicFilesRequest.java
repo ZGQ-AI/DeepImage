@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class ListPublicFilesRequest extends PageRequest {
+public class ListPublicFilesRequest extends PageRequest implements CacheableRequest {
     // Simple pagination only, no additional filters or sort options
     // Default sort: created_at DESC (newest first)
 }

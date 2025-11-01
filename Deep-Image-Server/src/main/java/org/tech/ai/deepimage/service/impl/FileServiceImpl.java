@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * @since 2025-10-02
  */
 @Slf4j
-@Service
+@Service("fileServiceImpl")
 @RequiredArgsConstructor
 public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> implements FileService {
 
@@ -126,29 +126,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             log.error("File upload failed: userId={}, filename={}", userId, file.getOriginalFilename(), e);
             throw BusinessException.badRequest(ResponseConstant.FILE_UPLOAD_FAILED_MESSAGE + ": " + e.getMessage());
         }
-    }
-
-    @Override
-    public FileExistsResponse checkFileExists(FileExistsCheckRequest request) {
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Query globally for files with the same hash
-        FileRecord existingFile = checkExistingFile(request.getFileHash());
-
-        if (existingFile != null) {
-            log.info("File already exists: fileHash={}, userId={}", request.getFileHash(), userId);
-            return FileExistsResponse.builder()
-                    .exists(true)
-                    .fileId(existingFile.getId())
-                    .fileUrl(existingFile.getFileUrl())
-                    .message(ResponseConstant.FILE_ALREADY_EXISTS_MESSAGE)
-                    .build();
-        }
-
-        return FileExistsResponse.builder()
-                .exists(false)
-                .message(ResponseConstant.FILE_NOT_EXISTS_MESSAGE)
-                .build();
     }
 
     // ========== File Query ==========
@@ -254,30 +231,10 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         return responsePage;
     }
 
-    @Override
-    public FileDetailResponse getFileDetail(Long fileId) {
-        return getFileDetail(fileId, false);
-    }
-    
-    @Override
-    public FileDetailResponse getFileDetail(Long fileId, Boolean filterSensitive) {
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Query file record
-        FileRecord fileRecord = getById(fileId);
-        BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
-
-        // Permission check
-        checkFilePermission(fileRecord, userId);
-
-        // Build detail response
-        return buildFileDetailResponse(fileRecord, filterSensitive != null && filterSensitive);
-    }
-
     // ========== File Download ==========
 
     @Override
-    public InputStream downloadFile(Long fileId) {
+    public FileDownloadResponse downloadFile(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Query file record
@@ -291,7 +248,14 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         logFileAccess(fileId, userId, AccessTypeEnum.DOWNLOAD.name());
 
         // Download from MinIO
-        return minioService.downloadFile(fileRecord.getObjectName());
+        InputStream inputStream = minioService.downloadFile(fileRecord.getObjectName());
+        
+        // Return download response with stream and file metadata
+        return FileDownloadResponse.builder()
+                .inputStream(inputStream)
+                .originalFilename(fileRecord.getOriginalFilename())
+                .contentType(fileRecord.getContentType())
+                .build();
     }
 
     @Override
@@ -551,155 +515,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         return fileTagService.getFileTagsResponse(fileId);
     }
 
-    // ========== File Sharing ==========
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public FileShareResponse createFileShare(CreateFileShareRequest request) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        Long fileId = request.getFileId();
-
-        // Validate file permissions
-        FileRecord fileRecord = getById(fileId);
-        BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
-        BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
-                ResponseConstant.FORBIDDEN, ResponseConstant.SHARE_PERMISSION_DENIED_MESSAGE);
-
-        // Validate target user
-        User targetUser = userService.getById(request.getShareToUserId());
-        BusinessException.assertNotNull(targetUser, ResponseConstant.TARGET_USER_NOT_FOUND_MESSAGE);
-
-        // Validate share type and expiry time
-        BusinessException.assertFalse(ShareTypeEnum.TEMPORARY.name().equals(request.getShareType())
-                        && request.getExpiresAt() == null,
-                ResponseConstant.TEMPORARY_SHARE_REQUIRES_EXPIRY_MESSAGE);
-
-        // Check if share already exists
-        LambdaQueryWrapper<FileShare> checkWrapper = new LambdaQueryWrapper<>();
-        checkWrapper.eq(FileShare::getFileId, fileId)
-                .eq(FileShare::getShareToUserId, request.getShareToUserId())
-                .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue());
-        BusinessException.throwIf(fileShareService.count(checkWrapper) > 0,
-                ResponseConstant.PARAM_ERROR, ResponseConstant.SHARE_ALREADY_EXISTS_MESSAGE);
-
-        // Create share record
-        FileShare fileShare = new FileShare();
-        fileShare.setFileId(fileId);
-        fileShare.setShareFromUserId(userId);
-        fileShare.setShareToUserId(request.getShareToUserId());
-        fileShare.setShareType(request.getShareType());
-        fileShare.setExpiresAt(request.getExpiresAt());
-        fileShare.setPermissionLevel(request.getPermissionLevel());
-        fileShare.setMessage(request.getMessage());
-        // Database default values: revoked=0, view_count=0, download_count=0, created_at=now, updated_at=now
-        fileShareService.save(fileShare);
-
-        // Update file visibility
-        if (FileVisibilityEnum.PRIVATE.name().equals(fileRecord.getVisibility())) {
-            fileRecord.setVisibility(FileVisibilityEnum.SHARED.name());
-            updateById(fileRecord);
-        }
-
-        log.info("File share created successfully: shareId={}, fileId={}, toUserId={}",
-                fileShare.getId(), fileId, request.getShareToUserId());
-
-        return buildFileShareResponse(fileShare);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Boolean cancelFileShare(Long shareId) {
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Query share record
-        FileShare fileShare = fileShareService.getById(shareId);
-        BusinessException.assertNotNull(fileShare, ResponseConstant.SHARE_NOT_FOUND_MESSAGE);
-
-        // Permission check
-        BusinessException.assertTrue(fileShare.getShareFromUserId().equals(userId),
-                ResponseConstant.FORBIDDEN, ResponseConstant.CANCEL_SHARE_PERMISSION_DENIED_MESSAGE);
-
-        // Revoke share
-        fileShare.setRevoked(RevokedStatusEnum.REVOKED.getValue());
-        fileShareService.updateById(fileShare);
-
-        // Check if file has other valid shares
-        LambdaQueryWrapper<FileShare> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FileShare::getFileId, fileShare.getFileId())
-                .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue());
-        if (fileShareService.count(wrapper) == 0) {
-            // No other shares, update file visibility to private
-            FileRecord fileRecord = getById(fileShare.getFileId());
-            if (fileRecord != null) {
-                fileRecord.setVisibility(FileVisibilityEnum.PRIVATE.name());
-                updateById(fileRecord);
-            }
-        }
-
-        log.info("File share cancelled successfully: shareId={}", shareId);
-        return true;
-    }
-
-    @Override
-    public Page<FileShareResponse> listOutgoingShares(Integer page, Integer size) {
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        Page<FileShare> sharePage = new Page<>(page, size);
-        LambdaQueryWrapper<FileShare> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FileShare::getShareFromUserId, userId)
-                .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue())
-                .orderByDesc(FileShare::getCreatedAt);
-
-        fileShareService.page(sharePage, wrapper);
-
-        Page<FileShareResponse> responsePage = new Page<>(sharePage.getCurrent(), sharePage.getSize(),
-                sharePage.getTotal());
-        responsePage.setRecords(sharePage.getRecords().stream()
-                .map(this::buildFileShareResponse)
-                .collect(Collectors.toList()));
-
-        return responsePage;
-    }
-
-    @Override
-    public Page<FileShareResponse> listIncomingShares(Integer page, Integer size) {
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        Page<FileShare> sharePage = new Page<>(page, size);
-        LambdaQueryWrapper<FileShare> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FileShare::getShareToUserId, userId)
-                .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue())
-                .and(w -> w.isNull(FileShare::getExpiresAt)
-                        .or()
-                        .gt(FileShare::getExpiresAt, LocalDateTime.now()))
-                .orderByDesc(FileShare::getCreatedAt);
-
-        fileShareService.page(sharePage, wrapper);
-
-        Page<FileShareResponse> responsePage = new Page<>(sharePage.getCurrent(), sharePage.getSize(),
-                sharePage.getTotal());
-        responsePage.setRecords(sharePage.getRecords().stream()
-                .map(this::buildFileShareResponse)
-                .collect(Collectors.toList()));
-
-        return responsePage;
-    }
-
-    @Override
-    public FileShareResponse getShareDetail(Long shareId) {
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        FileShare fileShare = fileShareService.getById(shareId);
-        BusinessException.assertNotNull(fileShare, ResponseConstant.SHARE_NOT_FOUND_MESSAGE);
-
-        // Permission check (must be sharer or recipient)
-        BusinessException.assertTrue(
-                fileShare.getShareFromUserId().equals(userId) || fileShare.getShareToUserId().equals(userId),
-                ResponseConstant.FORBIDDEN, ResponseConstant.VIEW_SHARE_PERMISSION_DENIED_MESSAGE);
-
-        return buildFileShareResponse(fileShare);
-    }
-
     // ========== Access Logs ==========
 
     @Override
@@ -883,113 +698,6 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .createdAt(fileRecord.getCreatedAt())
                 .updatedAt(fileRecord.getUpdatedAt())
                 .metadata(fileRecord.getMetadata())
-                .build();
-    }
-
-    /**
-     * Build file detail response
-     */
-    private FileDetailResponse buildFileDetailResponse(FileRecord fileRecord) {
-        return buildFileDetailResponse(fileRecord, false);
-    }
-    
-    private FileDetailResponse buildFileDetailResponse(FileRecord fileRecord, boolean filterSensitive) {
-        // Query file tags
-        List<TagResponse> tags = getFileTagsInternal(fileRecord.getId());
-
-        // Query access statistics
-        LambdaQueryWrapper<FileAccessLog> logWrapper = new LambdaQueryWrapper<>();
-        logWrapper.eq(FileAccessLog::getFileId, fileRecord.getId());
-        List<FileAccessLog> logs = fileAccessLogService.list(logWrapper);
-
-        Map<String, Long> accessTypeCount = logs.stream()
-                .collect(Collectors.groupingBy(FileAccessLog::getAccessType, Collectors.counting()));
-
-        int viewCount = accessTypeCount.getOrDefault(AccessTypeEnum.PREVIEW.name(), 0L).intValue();
-        int downloadCount = accessTypeCount.getOrDefault(AccessTypeEnum.DOWNLOAD.name(), 0L).intValue();
-
-        LocalDateTime lastAccessedAt = logs.stream()
-                .map(FileAccessLog::getCreatedAt)
-                .max(LocalDateTime::compareTo)
-                .orElse(null);
-
-        // Query share information
-        LambdaQueryWrapper<FileShare> shareWrapper = new LambdaQueryWrapper<>();
-        shareWrapper.eq(FileShare::getFileId, fileRecord.getId())
-                .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue());
-        List<FileShare> shares = fileShareService.list(shareWrapper);
-
-        List<FileDetailResponse.FileShareInfo> shareInfos = shares.stream()
-                .map(share -> {
-                    User user = userService.getById(share.getShareToUserId());
-                    return FileDetailResponse.FileShareInfo.builder()
-                            .shareId(share.getId())
-                            .shareToUsername(user != null ? user.getUsername() : "Unknown")
-                            .permissionLevel(share.getPermissionLevel())
-                            .createdAt(share.getCreatedAt())
-                            .build();
-                })
-                .collect(Collectors.toList());
-
-        FileDetailResponse.FileDetailResponseBuilder builder = FileDetailResponse.builder()
-                .fileId(fileRecord.getId())
-                .originalFilename(fileRecord.getOriginalFilename())
-                .fileUrl(fileRecord.getFileUrl())
-                .thumbnailUrl(fileRecord.getThumbnailUrl())
-                .fileSize(fileRecord.getFileSize())
-                .contentType(fileRecord.getContentType())
-                .fileExtension(fileRecord.getFileExtension())
-                .businessType(fileRecord.getBusinessType())
-                .status(fileRecord.getStatus())
-                .visibility(fileRecord.getVisibility())
-                .viewCount(viewCount)
-                .downloadCount(downloadCount)
-                .lastAccessedAt(lastAccessedAt)
-                .tags(tags)
-                .referenceCount(fileRecord.getReferenceCount())
-                .shares(shareInfos)
-                .createdAt(fileRecord.getCreatedAt())
-                .updatedAt(fileRecord.getUpdatedAt());
-        
-        // Filter sensitive information if requested
-        if (filterSensitive) {
-            builder.fileHash(null)
-                   .metadata(null);
-        } else {
-            builder.fileHash(fileRecord.getFileHash())
-                   .metadata(fileRecord.getMetadata());
-        }
-        
-        return builder.build();
-    }
-
-    /**
-     * Build file share response
-     */
-    private FileShareResponse buildFileShareResponse(FileShare fileShare) {
-        FileRecord fileRecord = getById(fileShare.getFileId());
-        User fromUser = userService.getById(fileShare.getShareFromUserId());
-        User toUser = userService.getById(fileShare.getShareToUserId());
-
-        return FileShareResponse.builder()
-                .shareId(fileShare.getId())
-                .fileId(fileShare.getFileId())
-                .originalFilename(fileRecord != null ? fileRecord.getOriginalFilename() : "Unknown")
-                .fileUrl(fileRecord != null ? fileRecord.getFileUrl() : null)
-                .thumbnailUrl(fileRecord != null ? fileRecord.getThumbnailUrl() : null)
-                .shareFromUserId(fileShare.getShareFromUserId())
-                .shareFromUsername(fromUser != null ? fromUser.getUsername() : "Unknown")
-                .shareToUserId(fileShare.getShareToUserId())
-                .shareToUsername(toUser != null ? toUser.getUsername() : "Unknown")
-                .shareType(fileShare.getShareType())
-                .expiresAt(fileShare.getExpiresAt())
-                .permissionLevel(fileShare.getPermissionLevel())
-                .message(fileShare.getMessage())
-                .revoked(fileShare.getRevoked() == 1)
-                .viewCount(fileShare.getViewCount())
-                .downloadCount(fileShare.getDownloadCount())
-                .createdAt(fileShare.getCreatedAt())
-                .updatedAt(fileShare.getUpdatedAt())
                 .build();
     }
 

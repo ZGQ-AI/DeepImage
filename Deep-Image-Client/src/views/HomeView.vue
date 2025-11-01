@@ -81,10 +81,9 @@ import { PictureOutlined } from '@ant-design/icons-vue'
 import ImageMasonryView from '../components/file/ImageMasonryView.vue'
 import ImagePropertiesModal from '../components/common/ImagePropertiesModal.vue'
 import FileTagManager from '../components/file/FileTagManager.vue'
-import { listPublicFiles, downloadFile, batchDeleteFiles, updateFileProperties, getFileDetail } from '../api/file'
+import { listPublicFiles, downloadFile, batchDeleteFiles, updateFileProperties } from '../api/file'
 import type { FileInfoResponse } from '../types/file'
 import type { PageResponse } from '../types/file'
-import type { FileDetailResponse } from '../types/file'
 import type { TagResponse } from '../types/tag'
 
 // State management
@@ -98,7 +97,7 @@ const hasMore = ref(true)
 
 // Properties modal state
 const propertiesModalVisible = ref(false)
-const currentFileDetail = ref<FileDetailResponse | null>(null)
+const currentFileDetail = ref<FileInfoResponse | null>(null)
 const currentImageForRename = ref<FileInfoResponse | null>(null)
 const updatingProperties = ref(false)
 
@@ -227,8 +226,9 @@ const handleImageDownload = async (image: FileInfoResponse) => {
       }
     }
 
-    // Create Blob and download link
-    const blob = new Blob([response.data])
+    // response.data is already a Blob with correct MIME type from Content-Type header
+    // Use it directly instead of recreating (which would lose the MIME type)
+    const blob = response.data
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -257,18 +257,9 @@ const handleImageDownload = async (image: FileInfoResponse) => {
 // Handle image rename
 const handleImageRename = async (image: FileInfoResponse) => {
   currentImageForRename.value = image
-  try {
-    const response = await getFileDetail(image.fileId, true)
-    if (response.data.code === 200 && response.data.data) {
-      currentFileDetail.value = response.data.data
-      propertiesModalVisible.value = true
-    } else {
-      message.error('获取文件详情失败')
-    }
-  } catch (error) {
-    console.error('Failed to get file detail:', error)
-    message.error('获取文件详情失败')
-  }
+  // Use the image data directly from the list (no need to fetch detail)
+  currentFileDetail.value = image
+  propertiesModalVisible.value = true
 }
 
 // Handle properties confirm

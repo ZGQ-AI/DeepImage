@@ -15,7 +15,7 @@ import java.util.List;
  * @since 2025-10-02
  */
 @Data
-public class UploadFileRequest {
+public class UploadFileRequest implements BusinessRequest {
     
     /**
      * File to upload (required)

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.tech.ai.deepimage.model.dto.request.*;
 import org.tech.ai.deepimage.model.dto.response.*;
 
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -24,14 +23,6 @@ public interface FileService {
      * @return Upload response
      */
     FileUploadResponse uploadFile(UploadFileRequest request);
-    
-    /**
-     * Check if file exists
-     * 
-     * @param request File existence check request
-     * @return Check result
-     */
-    FileExistsResponse checkFileExists(FileExistsCheckRequest request);
     
     // ========== File Query ==========
     
@@ -53,22 +44,6 @@ public interface FileService {
      */
     Page<FileInfoResponse> listPublicFiles(ListPublicFilesRequest request);
     
-    /**
-     * Query file details
-     * 
-     * @param fileId File ID
-     * @return File details
-     */
-    FileDetailResponse getFileDetail(Long fileId);
-    
-    /**
-     * Query file details with optional sensitive information filtering
-     * 
-     * @param fileId File ID
-     * @param filterSensitive Whether to filter sensitive information (fileHash, metadata)
-     * @return File details
-     */
-    FileDetailResponse getFileDetail(Long fileId, Boolean filterSensitive);
     
     // ========== File Download ==========
     
@@ -76,9 +51,9 @@ public interface FileService {
      * Download file
      * 
      * @param fileId File ID
-     * @return File input stream
+     * @return File download response (contains stream and file metadata)
      */
-    InputStream downloadFile(Long fileId);
+    FileDownloadResponse downloadFile(Long fileId);
     
     /**
      * Get file preview URL
@@ -149,50 +124,6 @@ public interface FileService {
      * @return Tag list
      */
     List<TagResponse> getFileTags(Long fileId);
-    
-    // ========== File Sharing ==========
-    
-    /**
-     * Create file share
-     * 
-     * @param request Create share request
-     * @return Share information
-     */
-    FileShareResponse createFileShare(CreateFileShareRequest request);
-    
-    /**
-     * Cancel share
-     * 
-     * @param shareId Share ID
-     * @return Whether successful
-     */
-    Boolean cancelFileShare(Long shareId);
-    
-    /**
-     * Query my outgoing shares list (shared files)
-     * 
-     * @param page Page number
-     * @param size Page size
-     * @return Share list pagination result
-     */
-    Page<FileShareResponse> listOutgoingShares(Integer page, Integer size);
-    
-    /**
-     * Query incoming shares list
-     * 
-     * @param page Page number
-     * @param size Page size
-     * @return Share list pagination result
-     */
-    Page<FileShareResponse> listIncomingShares(Integer page, Integer size);
-    
-    /**
-     * Query share details
-     * 
-     * @param shareId Share ID
-     * @return Share information
-     */
-    FileShareResponse getShareDetail(Long shareId);
     
     // ========== Access Logs ==========
     
