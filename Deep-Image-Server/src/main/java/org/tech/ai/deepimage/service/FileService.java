@@ -45,6 +45,15 @@ public interface FileService {
     Page<FileInfoResponse> listFiles(ListFilesRequest request);
     
     /**
+     * Query public files (no authentication required)
+     * Returns all files with visibility = PUBLIC
+     * 
+     * @param request Query request
+     * @return Public file list pagination result
+     */
+    Page<FileInfoResponse> listPublicFiles(ListPublicFilesRequest request);
+    
+    /**
      * Query file details
      * 
      * @param fileId File ID

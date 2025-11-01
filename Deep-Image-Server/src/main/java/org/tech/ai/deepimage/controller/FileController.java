@@ -79,6 +79,17 @@ public class FileController {
     }
 
     /**
+     * Query public files (no authentication required)
+     * GET /api/files/public?page=1&pageSize=20
+     * Returns all files with visibility = PUBLIC, sorted by creation time descending (newest first)
+     */
+    @GetMapping("/public")
+    public ApiResponse<Page<FileInfoResponse>> listPublicFiles(@Valid @ModelAttribute ListPublicFilesRequest request) {
+        Page<FileInfoResponse> response = fileService.listPublicFiles(request);
+        return ApiResponse.success(response);
+    }
+
+    /**
      * Query file details
      * GET /api/files/detail
      */

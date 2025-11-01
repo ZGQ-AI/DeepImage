@@ -49,6 +49,21 @@ export function listFiles(requestData: ListFilesRequest) {
 }
 
 /**
+ * Query public files (no authentication required)
+ * Returns all files with visibility = PUBLIC, sorted by creation time descending (newest first)
+ * @param page Page number (default: 1)
+ * @param pageSize Page size (default: 20)
+ */
+export function listPublicFiles(page = 1, pageSize = 20) {
+  return request.get<ApiResponse<PageResponse<FileInfoResponse>>>('/api/files/public', {
+    params: {
+      page,
+      pageSize,
+    },
+  })
+}
+
+/**
  * Download file
  * @param fileId File ID
  */

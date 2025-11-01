@@ -216,6 +216,35 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     @Override
+    public Page<FileInfoResponse> listPublicFiles(ListPublicFilesRequest request) {
+        // Build query conditions
+        Page<FileRecord> pageObj = new Page<>(request.getPage(), request.getPageSize());
+        LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
+        
+        // Only query PUBLIC visibility files
+        wrapper.eq(FileRecord::getVisibility, FileVisibilityEnum.PUBLIC.name());
+        
+        // Only query image type files (business_type = 'image')
+        wrapper.eq(FileRecord::getBusinessType, BusinessTypeEnum.IMAGE.name());
+        
+        // Note: @TableLogic will automatically filter out deleted files (deleteFlag = 1)
+
+        // Default sort: created_at DESC (newest first)
+        wrapper.orderByDesc(FileRecord::getCreatedAt);
+
+        Page<FileRecord> recordPage = page(pageObj, wrapper);
+
+        // Convert to response objects
+        Page<FileInfoResponse> responsePage = new Page<>(recordPage.getCurrent(), recordPage.getSize(),
+                recordPage.getTotal());
+        responsePage.setRecords(recordPage.getRecords().stream()
+                .map(this::buildFileInfoResponse)
+                .collect(Collectors.toList()));
+
+        return responsePage;
+    }
+
+    @Override
     public FileDetailResponse getFileDetail(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
