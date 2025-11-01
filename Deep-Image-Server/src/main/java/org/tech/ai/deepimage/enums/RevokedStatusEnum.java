@@ -1,7 +1,7 @@
 package org.tech.ai.deepimage.enums;
 
 /**
- * Token状态枚举
+ * Token status enum
  * 
  * @author zgq
  * @since 2025-10-01

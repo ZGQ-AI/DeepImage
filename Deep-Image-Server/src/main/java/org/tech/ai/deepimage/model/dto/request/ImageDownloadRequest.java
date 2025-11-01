@@ -8,25 +8,25 @@ import org.tech.ai.deepimage.model.dto.ImageInfo;
 import java.util.List;
 
 /**
- * 图片下载请求 DTO
+ * Image download request DTO
  */
 @Data
 public class ImageDownloadRequest {
 
     /**
-     * 选中要下载的图片列表
+     * Selected images to download
      */
     @NotEmpty(message = "请选择要下载的图片")
     @Valid
     private List<ImageInfo> selectedImages;
 
     /**
-     * 搜索关键词（用于记录来源）
+     * Search keyword (for recording source)
      */
     private String keyword;
 
     /**
-     * 标签ID列表（可选）
+     * Tag ID list (optional)
      */
     private List<Long> tagIds;
 }

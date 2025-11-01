@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * 文件重命名请求
+ * File rename request
  * 
  * @author zgq
  * @since 2025-10-02
@@ -15,13 +15,13 @@ import lombok.Data;
 public class RenameFileRequest {
     
     /**
-     * 文件ID
+     * File ID
      */
     @NotNull(message = "文件ID不能为空")
     private Long fileId;
     
     /**
-     * 新文件名
+     * New file name
      */
     @NotBlank(message = "文件名不能为空")
     @Size(max = 255, message = "文件名不能超过255字符")

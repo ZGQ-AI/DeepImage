@@ -9,9 +9,9 @@
         @click="handleImageClick(image)"
       >
         <div class="image-wrapper">
-          <!-- 图片容器 -->
+          <!-- Image container -->
           <div class="image-container">
-            <!-- 选择模式下的复选框 -->
+            <!-- Checkbox in selection mode -->
             <div v-if="selectionMode" class="selection-checkbox" @click.stop="handleToggleSelect(image.fileId)">
               <a-checkbox :checked="isImageSelected(image.fileId)" />
             </div>
@@ -23,7 +23,7 @@
               @error="handleImageError"
               loading="lazy"
             />
-            <!-- 悬停时显示的操作覆盖层 -->
+            <!-- Action overlay shown on hover -->
             <div v-if="!selectionMode" class="image-overlay">
               <div class="image-actions">
                 <a-button 
@@ -76,12 +76,12 @@
             </div>
           </div>
           
-          <!-- 图片信息区域（始终显示）-->
+          <!-- Image info area (always visible) -->
           <div class="image-card-info">
             <p class="image-card-title">{{ image.originalFilename }}</p>
             <div class="image-card-meta">
               <span class="image-card-size">{{ formatFileSize(image.fileSize) }}</span>
-              <!-- 标签显示 -->
+              <!-- Tag display -->
               <div v-if="image.tags && image.tags.length > 0" class="image-card-tags">
                 <a-tag 
                   v-for="tag in image.tags.slice(0, 3)" 
@@ -101,13 +101,13 @@
       </div>
     </div>
 
-    <!-- 加载更多指示器 -->
+    <!-- Load more indicator -->
     <div v-if="loading" class="loading-indicator">
       <a-spin size="large" />
       <p>加载中...</p>
     </div>
 
-    <!-- 空状态 -->
+    <!-- Empty state -->
     <div v-if="!loading && images.length === 0" class="empty-grid">
       <PictureOutlined :style="{ fontSize: '48px', color: '#d9d9d9' }" />
       <p>暂无图片</p>
@@ -150,34 +150,34 @@ const emit = defineEmits<{
   toggleSelect: [fileId: number]
 }>()
 
-// 判断图片是否被选中
+// Check if image is selected
 const isImageSelected = (fileId: number) => {
   return props.selectedFileIds?.has(fileId) || false
 }
 
-// 切换选择
+// Toggle selection
 const handleToggleSelect = (fileId: number) => {
   emit('toggleSelect', fileId)
 }
 
-// 图片加载错误处理
+// Image load error handling
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
-  // 防止无限循环：如果已经是 placeholder，不再重试
+  // Prevent infinite loop: if already placeholder, don't retry
   if (img.src.includes('placeholder-image.png') || img.src.includes('data:image')) {
     return
   }
-  // 使用 base64 内联灰色占位图，避免额外请求
+  // Use base64 inline gray placeholder image to avoid additional requests
   img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYfmlqDovb3lpLHotKU8L3RleHQ+PC9zdmc+'
 }
 
-// 事件处理
+// Event handlers
 const handleImageClick = (image: FileInfoResponse) => {
-  // 如果是选择模式，点击切换选择
+  // If in selection mode, click toggles selection
   if (props.selectionMode) {
     handleToggleSelect(image.fileId)
   } else {
-    // 否则预览
+    // Otherwise preview
     handlePreview(image)
   }
 }
@@ -303,7 +303,7 @@ const handleDelete = (image: FileInfoResponse) => {
   width: 100%;
 }
 
-/* 图片卡片信息区域（始终显示）*/
+/* Image card info area (always visible) */
 .image-card-info {
   padding: 12px;
   background: white;
@@ -390,7 +390,7 @@ const handleDelete = (image: FileInfoResponse) => {
   font-size: 16px;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (min-width: 1600px) {
   .grid-container {
     column-count: 5;

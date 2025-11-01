@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 /**
- * 文件上传请求
+ * File upload request
  * 
  * @author zgq
  * @since 2025-10-02
@@ -18,27 +18,27 @@ import java.util.List;
 public class UploadFileRequest {
     
     /**
-     * 上传的文件（必填）
+     * File to upload (required)
      */
     @NotNull(message = "文件不能为空")
     private MultipartFile file;
     
     /**
-     * 业务类型（必填）
-     * 可选值：AVATAR, DOCUMENT, IMAGE, VIDEO, TEMP
+     * Business type (required)
+     * Optional values: AVATAR, DOCUMENT, IMAGE, VIDEO, TEMP
      */
     @NotBlank(message = "业务类型不能为空")
     private String businessType;
     
     /**
-     * 文件描述（可选）
+     * File description (optional)
      */
     @Size(max = 500, message = "文件描述不能超过500字符")
     private String description;
     
     /**
-     * 标签ID列表（可选）
-     * 上传时直接关联标签
+     * Tag ID list (optional)
+     * Associate tags directly when uploading
      */
     private List<Long> tagIds;
 }

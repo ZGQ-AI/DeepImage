@@ -1,5 +1,5 @@
 /**
- * 用户Store - 管理用户信息和会话
+ * User Store - Manages user information and sessions
  */
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
@@ -18,24 +18,24 @@ import type {
 } from '../types/user'
 
 export const useUserStore = defineStore('user', () => {
-  // 用户信息
+  // User information
   const profile = ref<UserProfileResponse | null>(null)
 
-  // 会话列表
+  // Session list
   const sessions = ref<SessionItemResponse[]>([])
 
-  // 加载状态
+  // Loading states
   const profileLoading = ref(false)
   const sessionsLoading = ref(false)
 
-  // 计算属性：登录用户信息（用于GlobalHeader等组件）
+  // Computed property: logged-in user information (for GlobalHeader and other components)
   const loginUser = computed(() => ({
     id: profile.value?.id || null,
     userName: profile.value?.username || 'unLogin',
   }))
 
   /**
-   * 获取用户信息
+   * Fetch user profile
    */
   async function fetchProfile() {
     profileLoading.value = true
@@ -69,7 +69,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 更新用户信息
+   * Update user profile
    */
   async function updateProfile(request: UpdateUserProfileRequest) {
     profileLoading.value = true
@@ -92,7 +92,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 获取会话列表
+   * Fetch session list
    */
   async function fetchSessions() {
     sessionsLoading.value = true
@@ -125,14 +125,14 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 删除指定会话
+   * Delete a specific session
    */
   async function deleteSession(sessionId: number) {
     try {
       const { data } = await deleteSessionApi(sessionId)
       if (data.code === 200) {
         message.success('设备已移除')
-        // 刷新会话列表
+        // Refresh session list
         await fetchSessions()
         return true
       } else {
@@ -159,7 +159,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 删除其他所有会话
+   * Delete all other sessions
    */
   async function deleteOtherSessions() {
     try {
@@ -167,7 +167,7 @@ export const useUserStore = defineStore('user', () => {
       if (data.code === 200) {
         const count = data.data.deletedCount
         message.success(`已移除 ${count} 个设备`)
-        // 刷新会话列表
+        // Refresh session list
         await fetchSessions()
         return true
       } else {
@@ -194,7 +194,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
-   * 清空用户状态（用于退出登录）
+   * Clear user state (used for logout)
    */
   function clearUserState() {
     profile.value = null

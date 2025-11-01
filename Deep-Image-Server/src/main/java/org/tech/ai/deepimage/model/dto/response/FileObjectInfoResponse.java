@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * MinIO文件对象信息
- * 用于封装MinIO中对象的详细信息
- * 注意：这是MinIO层的DTO，与业务无关
+ * MinIO file object information
+ * Used to encapsulate detailed information of objects in MinIO
+ * Note: This is a MinIO layer DTO, not related to business logic
  * 
  * @author zgq
  * @since 2025-10-02
@@ -21,45 +21,45 @@ import java.time.ZoneId;
 public class FileObjectInfoResponse {
 
     /**
-     * 对象名称(存储路径)
+     * Object name (storage path)
      */
     private String objectName;
 
     /**
-     * 文件大小(字节)
+     * File size (bytes)
      */
     private Long size;
 
     /**
-     * ETag (实体标签,用于标识对象版本)
+     * ETag (entity tag, used to identify object version)
      */
     private String etag;
 
     /**
-     * 内容类型 (MIME类型)
+     * Content type (MIME type)
      */
     private String contentType;
 
     /**
-     * 最后修改时间
+     * Last modified time
      */
     private LocalDateTime lastModified;
 
     /**
-     * 文件访问URL
+     * File access URL
      */
     private String url;
 
     /**
-     * 是否为目录
+     * Whether it is a directory
      */
     private Boolean isDirectory;
 
     /**
-     * 从MinIO Item构建FileObjectInfo
-     * Item是listObjects返回的对象信息
+     * Build FileObjectInfo from MinIO Item
+     * Item is the object information returned by listObjects
      * 
-     * @param item MinIO Item对象
+     * @param item MinIO Item object
      * @return FileObjectInfo
      */
     public static FileObjectInfoResponse from(Item item) {
@@ -75,10 +75,10 @@ public class FileObjectInfoResponse {
     }
 
     /**
-     * 从MinIO StatObjectResponse构建FileObjectInfo
-     * StatObjectResponse是statObject返回的对象详细信息
+     * Build FileObjectInfo from MinIO StatObjectResponse
+     * StatObjectResponse is the detailed object information returned by statObject
      * 
-     * @param stat MinIO StatObjectResponse对象
+     * @param stat MinIO StatObjectResponse object
      * @return FileObjectInfo
      */
     public static FileObjectInfoResponse from(StatObjectResponse stat) {

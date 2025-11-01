@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件访问日志响应
+ * File access log response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,22 +16,22 @@ import java.time.LocalDateTime;
 public class FileAccessLogResponse {
     
     /**
-     * 日志ID
+     * Log ID
      */
     private Long logId;
     
     /**
-     * 访问类型（DOWNLOAD, PREVIEW, UPLOAD）
+     * Access type (DOWNLOAD, PREVIEW, UPLOAD)
      */
     private String accessType;
     
     /**
-     * 用户名
+     * Username
      */
     private String username;
     
     /**
-     * IP地址
+     * IP address
      */
     private String ipAddress;
     
@@ -41,7 +41,7 @@ public class FileAccessLogResponse {
     private String userAgent;
     
     /**
-     * 访问时间
+     * Access time
      */
     private LocalDateTime accessedAt;
 }

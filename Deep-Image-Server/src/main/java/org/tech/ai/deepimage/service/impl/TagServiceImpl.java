@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 标签Service实现类
+ * Tag Service implementation
  * 
  * @author zgq
  * @since 2025-10-01
@@ -45,11 +45,11 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TagResponse createTag(CreateTagRequest request) {
-        // 从Sa-Token获取当前登录用户ID
+        // Get current logged-in user ID from Sa-Token
         Long userId = StpUtil.getLoginIdAsLong();
-        log.info("创建标签: userId={}, tagName={}", userId, request.getTagName());
+        log.info("Creating tag: userId={}, tagName={}", userId, request.getTagName());
         
-        // 构建标签实体
+        // Build tag entity
         Tag tag = new Tag();
         tag.setUserId(userId);
         tag.setTagName(request.getTagName().trim());
@@ -59,30 +59,30 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         tag.setUpdatedAt(LocalDateTime.now());
         
         try {
-            // 保存标签
+            // Save tag
             save(tag);
-            log.info("标签创建成功: tagId={}, tagName={}", tag.getId(), tag.getTagName());
+            log.info("Tag created successfully: tagId={}, tagName={}", tag.getId(), tag.getTagName());
             return TagResponse.from(tag);
         } catch (DuplicateKeyException e) {
-            log.warn("标签名已存在: userId={}, tagName={}", userId, request.getTagName());
-            throw BusinessException.badRequest("标签名已存在");
+            log.warn("Tag name already exists: userId={}, tagName={}", userId, request.getTagName());
+            throw BusinessException.badRequest("Tag name already exists");
         }
     }
 
     @Override
     public List<TagResponse> listUserTags() {
-        // 从Sa-Token获取当前登录用户ID
+        // Get current logged-in user ID from Sa-Token
         Long userId = StpUtil.getLoginIdAsLong();
-        log.info("查询用户所有标签: userId={}", userId);
+        log.info("Query all user tags: userId={}", userId);
         
-        // 查询用户的所有标签，按使用次数降序
+        // Query all tags of the user, sorted by usage count descending
         LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Tag::getUserId, userId)
                 .orderByDesc(Tag::getUsageCount)
                 .orderByDesc(Tag::getCreatedAt);
         
         List<Tag> tags = list(wrapper);
-        log.info("查询到用户标签数量: userId={}, count={}", userId, tags.size());
+        log.info("Found user tags count: userId={}, count={}", userId, tags.size());
         
         return tags.stream()
                 .map(TagResponse::from)
@@ -92,30 +92,30 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TagResponse updateTag(UpdateTagRequest request) {
-        // 从Sa-Token获取当前登录用户ID
+        // Get current logged-in user ID from Sa-Token
         Long userId = StpUtil.getLoginIdAsLong();
         Long tagId = request.getTagId();
-        log.info("更新标签: userId={}, tagId={}", userId, tagId);
+        log.info("Updating tag: userId={}, tagId={}", userId, tagId);
         
-        // 查询标签并校验权限
+        // Query tag and validate permissions
         Tag tag = getById(tagId);
         if (tag == null) {
-            log.warn("标签不存在: tagId={}", tagId);
-            throw BusinessException.notFound("标签不存在");
+            log.warn("Tag not found: tagId={}", tagId);
+            throw BusinessException.notFound("Tag not found");
         }
         
         if (!tag.getUserId().equals(userId)) {
-            log.warn("无权操作该标签: userId={}, tagId={}, tagOwnerId={}", userId, tagId, tag.getUserId());
-            throw BusinessException.forbidden("无权操作该标签");
+            log.warn("No permission to operate this tag: userId={}, tagId={}, tagOwnerId={}", userId, tagId, tag.getUserId());
+            throw BusinessException.forbidden("No permission to operate this tag");
         }
         
-        // 构建更新条件
+        // Build update conditions
         LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Tag::getId, tagId);
         
         boolean needUpdate = false;
         
-        // 更新标签名
+        // Update tag name
         if (StringUtils.hasText(request.getTagName())) {
             String newTagName = request.getTagName().trim();
             if (!newTagName.equals(tag.getTagName())) {
@@ -124,7 +124,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             }
         }
         
-        // 更新颜色
+        // Update color
         if (StringUtils.hasText(request.getColor())) {
             if (!request.getColor().equals(tag.getColor())) {
                 updateWrapper.set(Tag::getColor, request.getColor());
@@ -133,55 +133,55 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         }
         
         if (!needUpdate) {
-            log.info("标签无需更新: tagId={}", tagId);
+            log.info("Tag does not need update: tagId={}", tagId);
             return TagResponse.from(tag);
         }
         
-        // 更新时间
+        // Update time
         updateWrapper.set(Tag::getUpdatedAt, LocalDateTime.now());
         
         try {
             update(updateWrapper);
-            log.info("标签更新成功: tagId={}", tagId);
+            log.info("Tag updated successfully: tagId={}", tagId);
             
-            // 查询更新后的标签
+            // Query updated tag
             Tag updatedTag = getById(tagId);
             return TagResponse.from(updatedTag);
         } catch (DuplicateKeyException e) {
-            log.warn("标签名已存在: userId={}, tagName={}", userId, request.getTagName());
-            throw BusinessException.badRequest("标签名已存在");
+            log.warn("Tag name already exists: userId={}, tagName={}", userId, request.getTagName());
+            throw BusinessException.badRequest("Tag name already exists");
         }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteTag(DeleteTagRequest request) {
-        // 从Sa-Token获取当前登录用户ID
+        // Get current logged-in user ID from Sa-Token
         Long userId = StpUtil.getLoginIdAsLong();
         Long tagId = request.getTagId();
-        log.info("删除标签: userId={}, tagId={}", userId, tagId);
+        log.info("Deleting tag: userId={}, tagId={}", userId, tagId);
         
-        // 查询标签并校验权限
+        // Query tag and validate permissions
         Tag tag = getById(tagId);
         if (tag == null) {
-            log.warn("标签不存在: tagId={}", tagId);
-            throw BusinessException.notFound("标签不存在");
+            log.warn("Tag not found: tagId={}", tagId);
+            throw BusinessException.notFound("Tag not found");
         }
         
         if (!tag.getUserId().equals(userId)) {
-            log.warn("无权操作该标签: userId={}, tagId={}, tagOwnerId={}", userId, tagId, tag.getUserId());
-            throw BusinessException.forbidden("无权操作该标签");
+            log.warn("No permission to operate this tag: userId={}, tagId={}, tagOwnerId={}", userId, tagId, tag.getUserId());
+            throw BusinessException.forbidden("No permission to operate this tag");
         }
         
-        // 删除标签（级联删除文件-标签关联）
+        // Delete tag (cascade delete file-tag associations)
         removeById(tagId);
         
-        // 删除该标签的所有文件关联
+        // Delete all file associations of this tag
         LambdaQueryWrapper<org.tech.ai.deepimage.entity.FileTag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(org.tech.ai.deepimage.entity.FileTag::getTagId, tagId);
         fileTagMapper.delete(wrapper);
         
-        log.info("标签删除成功: tagId={}, 删除了 {} 个文件关联", tagId, tag.getUsageCount());
+        log.info("Tag deleted successfully: tagId={}, deleted {} file associations", tagId, tag.getUsageCount());
     }
     
     @Override
@@ -190,14 +190,14 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             return;
         }
         
-        // 使用 LambdaUpdateWrapper 执行 SQL：
+        // Use LambdaUpdateWrapper to execute SQL:
         // UPDATE di_tags SET usage_count = usage_count + 1 WHERE id IN (...)
         LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(Tag::getId, tagIds)
                 .setSql("usage_count = usage_count + 1");
         
         update(updateWrapper);
-        log.info("批量增加标签使用计数: tagIds={}", tagIds);
+        log.info("Batch increase tag usage count: tagIds={}", tagIds);
     }
     
     @Override
@@ -206,7 +206,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             return;
         }
         
-        // 使用 LambdaUpdateWrapper 执行 SQL：
+        // Use LambdaUpdateWrapper to execute SQL:
         // UPDATE di_tags SET usage_count = usage_count - 1 WHERE id IN (...) AND usage_count > 0
         LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(Tag::getId, tagIds)
@@ -214,7 +214,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                 .setSql("usage_count = usage_count - 1");
         
         update(updateWrapper);
-        log.info("批量减少标签使用计数: tagIds={}", tagIds);
+        log.info("Batch decrease tag usage count: tagIds={}", tagIds);
     }
 
     @Override
@@ -223,7 +223,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             return;
         }
 
-        // 逐个更新每个标签的使用计数
+        // Update usage count for each tag one by one
         for (Map.Entry<Long, Integer> entry : tagCountMap.entrySet()) {
             Long tagId = entry.getKey();
             Integer count = entry.getValue();
@@ -231,7 +231,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                 continue;
             }
 
-            // 直接减去对应的数量
+            // Directly subtract the corresponding amount
             LambdaUpdateWrapper<Tag> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.eq(Tag::getId, tagId)
                     .setSql("usage_count = usage_count - " + count);
@@ -239,7 +239,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             update(updateWrapper);
         }
         
-        log.info("批量减少标签使用计数（按数量）: tagCountMap={}", tagCountMap);
+        log.info("Batch decrease tag usage count (by amount): tagCountMap={}", tagCountMap);
     }
     
     @Override
@@ -248,7 +248,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             return List.of();
         }
         
-        // 批量查询标签并验证权限
+        // Batch query tags and validate permissions
         LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Tag::getId, tagIds)
                 .eq(Tag::getUserId, userId);
@@ -258,7 +258,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     
     @Override
     public Tag getUserTag(Long tagId, Long userId) {
-        // 带 userId 查询，确保标签属于该用户
+        // Query with userId to ensure tag belongs to this user
         LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Tag::getId, tagId)
                 .eq(Tag::getUserId, userId);

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.tech.ai.deepimage.entity.FileShare;
 
 /**
- * 文件分享表 Mapper 接口
+ * File share table Mapper interface
  * 
  * @author zgq
  * @since 2025-10-01

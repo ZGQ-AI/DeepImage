@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 用户会话表
+ * User session table
  * 
  * @author zgq
  * @since 2025-09-29
@@ -16,68 +16,68 @@ import java.time.LocalDateTime;
 public class Session {
 
     /**
-     * 会话唯一标识，主键
+     * Session unique identifier, primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 用户ID，引用sys_users表
+     * User ID, references sys_users table
      */
     @TableField("user_id")
     private Long userId;
 
     /**
-     * 访问令牌哈希值，不以明文存储
+     * Access token hash value, not stored in plaintext
      */
     @TableField("access_token_hash")
     private String accessTokenHash;
 
     /**
-     * 设备信息（设备类型、操作系统、浏览器等）
+     * Device information (device type, operating system, browser, etc.)
      */
     @TableField("device_info")
     private String deviceInfo;
 
     /**
-     * 登录IP地址
+     * Login IP address
      */
     @TableField("ip_address")
     private String ipAddress;
 
     /**
-     * 用户代理字符串，用于设备识别
+     * User agent string, used for device identification
      */
     @TableField("user_agent")
     private String userAgent;
 
     /**
-     * 会话活跃状态：0=已撤销，1=活跃
+     * Session active status: 0=revoked, 1=active
      */
     @TableField("active")
     private Integer active;
 
     /**
-     * 最后刷新时间，用于清理长期未使用的会话
+     * Last refresh time, used for cleaning up long-unused sessions
      */
     @TableField("last_refresh_at")
     private LocalDateTime lastRefreshAt;
 
     /**
-     * 删除标志：0=未删除，1=已删除
+     * Delete flag: 0=not deleted, 1=deleted
      */
     @TableLogic
     @TableField("delete_flag")
     private Integer deleteFlag;
 
     /**
-     * 会话创建时间
+     * Session creation time
      */
     @TableField(value = "created_at")
     private LocalDateTime createdAt;
 
     /**
-     * 会话信息最后更新时间
+     * Session information last update time
      */
     @TableField(value = "updated_at")
     private LocalDateTime updatedAt;

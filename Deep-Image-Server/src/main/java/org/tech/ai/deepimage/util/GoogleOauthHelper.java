@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Google OAuth工具类
- * 处理OAuth流程中的URL构建、参数处理等操作
+ * Google OAuth Utility Class
+ * Handles URL building, parameter processing, and other operations in OAuth flow
  * 
  * @author zgq
  * @since 2025-10-01
@@ -43,7 +43,7 @@ public class GoogleOauthHelper {
     public static final String ID_TOKEN = "id_token";
 
     /**
-     * 构建Google OAuth授权URL
+     * Build Google OAuth authorization URL
      */
     public static String buildAuthorizationUrl(AuthorizationUrlParams params) {
         try {
@@ -64,27 +64,27 @@ public class GoogleOauthHelper {
                         .append(encodeParameter(params.getState()));
             }
 
-            // 添加nonce参数（安全考虑）
+            // Add nonce parameter (for security)
             if (StringUtils.hasText(params.getNonce())) {
                 url.append("&").append(PARAM_NONCE).append("=")
                         .append(encodeParameter(params.getNonce()));
             }
 
-            log.debug("构建授权URL: {}", url);
+            log.debug("Built authorization URL: {}", url);
             return url.toString();
         } catch (Exception e) {
-            log.error("构建授权URL失败", e);
-            throw new RuntimeException("构建授权URL失败", e);
+            log.error("Failed to build authorization URL", e);
+            throw new RuntimeException("Failed to build authorization URL", e);
         }
     }
 
     /**
-     * 构建OAuth回调重定向URL（成功）
+     * Build OAuth callback redirect URL (success)
      */
     public static String buildSuccessRedirectUrl(String fromUrl, String accessToken, String refreshToken) {
         try {
             if (!StringUtils.hasText(fromUrl)) {
-                fromUrl = "http://localhost:5173"; // 默认前端地址
+                fromUrl = "http://localhost:5173"; // Default frontend address
             }
 
             StringBuilder url = new StringBuilder(fromUrl);
@@ -95,21 +95,21 @@ public class GoogleOauthHelper {
             url.append("&").append(PARAM_REFRESH_TOKEN).append("=")
                     .append(encodeParameter(refreshToken));
 
-            log.debug("构建成功重定向URL: {}", url);
+            log.debug("Built success redirect URL: {}", url);
             return url.toString();
         } catch (Exception e) {
-            log.error("构建成功重定向URL失败", e);
-            throw new RuntimeException("构建成功重定向URL失败", e);
+            log.error("Failed to build success redirect URL", e);
+            throw new RuntimeException("Failed to build success redirect URL", e);
         }
     }
 
     /**
-     * 构建OAuth回调重定向URL（失败）
+     * Build OAuth callback redirect URL (error)
      */
     public static String buildErrorRedirectUrl(String fromUrl, String error) {
         try {
             if (!StringUtils.hasText(fromUrl)) {
-                fromUrl = "http://localhost:5173"; // 默认前端地址
+                fromUrl = "http://localhost:5173"; // Default frontend address
             }
 
             StringBuilder url = new StringBuilder(fromUrl);
@@ -119,16 +119,16 @@ public class GoogleOauthHelper {
                     .append("=").append(encodeParameter(error));
             url.append("&").append(PARAM_LOGIN_SUCCESS).append("=false");
 
-            log.debug("构建错误重定向URL: {}", url);
+            log.debug("Built error redirect URL: {}", url);
             return url.toString();
         } catch (Exception e) {
-            log.error("构建错误重定向URL失败", e);
-            throw new RuntimeException("构建错误重定向URL失败", e);
+            log.error("Failed to build error redirect URL", e);
+            throw new RuntimeException("Failed to build error redirect URL", e);
         }
     }
 
     /**
-     * 构建OAuth token请求参数
+     * Build OAuth token request parameters
      */
     public static Map<String, String> buildTokenRequestParams(TokenRequestParams params) {
         Map<String, String> requestParams = new HashMap<>();
@@ -138,12 +138,12 @@ public class GoogleOauthHelper {
         requestParams.put(PARAM_REDIRECT_URI, params.getRedirectUri());
         requestParams.put(PARAM_GRANT_TYPE, GRANT_TYPE_AUTHORIZATION_CODE);
 
-        log.debug("构建token请求参数: {}", requestParams);
+        log.debug("Built token request parameters: {}", requestParams);
         return requestParams;
     }
 
     /**
-     * 验证OAuth回调参数
+     * Validate OAuth callback parameters
      */
     public static OauthCallbackValidation validateCallbackParams(String code, String state, String error) {
         OauthCallbackValidation validation = new OauthCallbackValidation();
@@ -169,29 +169,29 @@ public class GoogleOauthHelper {
     }
 
     /**
-     * 验证token响应
+     * Validate token response
      */
     public static boolean validateTokenResponse(Map<String, Object> tokenResponse) {
         if (tokenResponse == null) {
-            log.error("Token响应为空");
+            log.error("Token response is empty");
             return false;
         }
 
-        // 检查id_token
+        // Check id_token
         if (tokenResponse.containsKey(ID_TOKEN)) {
             String idToken = getStringValue(tokenResponse, ID_TOKEN);
             if (StringUtils.hasText(idToken)) {
-                log.debug("Token响应验证通过，使用id_token");
+                log.debug("Token response validation passed, using id_token");
                 return true;
             }
         }
 
-        log.error("Token响应中缺少有效的id_token字段");
+        log.error("Token response missing valid id_token field");
         return false;
     }
 
     /**
-     * 从Map中安全获取字符串值
+     * Safely get string value from Map
      */
     private static String getStringValue(Map<String, Object> map, String key) {
         Object value = map.get(key);
@@ -199,7 +199,7 @@ public class GoogleOauthHelper {
     }
 
     /**
-     * URL编码参数
+     * URL encode parameter
      */
     private static String encodeParameter(String value) {
         if (!StringUtils.hasText(value)) {
@@ -208,39 +208,39 @@ public class GoogleOauthHelper {
         try {
             return URLEncoder.encode(value, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.warn("URL编码失败，使用原始值: {}", value);
+            log.warn("URL encoding failed, using original value: {}", value);
             return value;
         }
     }
 
     /**
-     * 构建state字符串（Base64URL编码fromUrl）
+     * Build state string (Base64URL encode fromUrl)
      */
     public static String buildStateString(String fromUrl) {
         if (!StringUtils.hasText(fromUrl)) {
-            throw new IllegalArgumentException("fromUrl不能为空");
+            throw new IllegalArgumentException("fromUrl cannot be empty");
         }
         return base64UrlEncode(fromUrl);
     }
 
     /**
-     * 解析state字符串
+     * Parse state string
      */
     public static String parseStateString(String state) {
         if (!StringUtils.hasText(state)) {
-            throw new IllegalArgumentException("state参数不能为空");
+            throw new IllegalArgumentException("state parameter cannot be empty");
         }
 
         try {
             return base64UrlDecode(state);
         } catch (Exception e) {
-            log.error("解析state参数失败: {}", state, e);
-            throw new RuntimeException("解析state参数失败", e);
+            log.error("Failed to parse state parameter: {}", state, e);
+            throw new RuntimeException("Failed to parse state parameter", e);
         }
     }
 
     /**
-     * Base64URL编码
+     * Base64URL encode
      */
     private static String base64UrlEncode(String input) {
         try {
@@ -248,25 +248,25 @@ public class GoogleOauthHelper {
                     .withoutPadding()
                     .encodeToString(input.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            log.error("Base64URL编码失败", e);
-            throw new RuntimeException("Base64URL编码失败", e);
+            log.error("Base64URL encoding failed", e);
+            throw new RuntimeException("Base64URL encoding failed", e);
         }
     }
 
     /**
-     * Base64URL解码
+     * Base64URL decode
      */
     private static String base64UrlDecode(String input) {
         try {
             return new String(Base64.getUrlDecoder().decode(input), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.error("Base64URL解码失败", e);
-            throw new RuntimeException("Base64URL解码失败", e);
+            log.error("Base64URL decoding failed", e);
+            throw new RuntimeException("Base64URL decoding failed", e);
         }
     }
 
     /**
-     * 授权URL构建参数
+     * Authorization URL build parameters
      */
     @Data
     public static class AuthorizationUrlParams {
@@ -281,7 +281,7 @@ public class GoogleOauthHelper {
     }
 
     /**
-     * Token请求参数
+     * Token request parameters
      */
     @Data
     public static class TokenRequestParams {
@@ -292,7 +292,7 @@ public class GoogleOauthHelper {
     }
 
     /**
-     * OAuth回调参数验证结果
+     * OAuth callback parameter validation result
      */
     @Data
     public static class OauthCallbackValidation {
@@ -304,14 +304,14 @@ public class GoogleOauthHelper {
     }
 
     /**
-     * 创建AuthorizationUrlParams构建器
+     * Create AuthorizationUrlParams builder
      */
     public static AuthorizationUrlParamsBuilder authorizationUrl() {
         return new AuthorizationUrlParamsBuilder();
     }
 
     /**
-     * 创建TokenRequestParams构建器
+     * Create TokenRequestParams builder
      */
     public static TokenRequestParamsBuilder tokenRequest() {
         return new TokenRequestParamsBuilder();

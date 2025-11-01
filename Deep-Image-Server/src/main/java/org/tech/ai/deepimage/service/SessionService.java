@@ -5,7 +5,7 @@ import org.tech.ai.deepimage.model.dto.request.FindSessionByTokenRequest;
 import org.tech.ai.deepimage.entity.Session;
 
 /**
- * 用户会话表 服务类
+ * User session table service class
  * 
  * @author zgq
  * @since 2025-09-29
@@ -13,7 +13,7 @@ import org.tech.ai.deepimage.entity.Session;
 public interface SessionService extends IService<Session> {
 
     /**
-     * 根据accessToken和用户ID查找会话
+     * Find session by accessToken and user ID
      */
     Session findByAccessTokenAndUserId(FindSessionByTokenRequest request);
 }

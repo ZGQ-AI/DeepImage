@@ -1,13 +1,13 @@
 <!--
-  头像上传组件
-  支持三种上传方式：文件选择、URL 输入、粘贴图片
-  交互流程：先预览，确认后才上传
+  Avatar Upload Component
+  Supports three upload methods: file selection, URL input, paste image
+  Interaction flow: preview first, upload after confirmation
 -->
 <template>
   <div class="avatar-upload">
-    <!-- 头像预览区域 -->
+    <!-- Avatar preview area -->
     <div class="avatar-preview-wrapper">
-      <!-- 当前头像显示（已确认的头像） -->
+      <!-- Current avatar display (confirmed avatar) -->
       <div class="avatar-display" @click="handleClickAvatar">
         <a-image
           v-if="confirmedImageUrl"
@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <!-- 操作按钮 -->
+      <!-- Action buttons -->
       <a-space>
         <a-button type="primary" size="small" @click="showUploadModal">
           <EditOutlined /> {{ confirmedImageUrl ? '更换头像' : '上传头像' }}
@@ -35,7 +35,7 @@
       </a-space>
     </div>
 
-    <!-- 上传模态框 -->
+    <!-- Upload modal -->
     <a-modal
       v-model:open="uploadModalVisible"
       title="上传头像"
@@ -45,7 +45,7 @@
       @cancel="handleCancelUpload"
     >
       <div class="upload-modal-content">
-        <!-- 预览区域 -->
+        <!-- Preview area -->
         <div class="preview-section">
           <div class="preview-label">预览</div>
           <div class="preview-wrapper">
@@ -65,10 +65,10 @@
           </div>
         </div>
 
-        <!-- 上传方式切换 -->
+        <!-- Upload method switch -->
         <a-tabs v-model:activeKey="uploadTab" size="small">
           <a-tab-pane key="upload" tab="上传新头像">
-            <!-- 使用通用文件上传组件 -->
+            <!-- Use common file uploader component -->
             <CommonFileUploader
               ref="commonUploaderRef"
               :max-size="maxSize"
@@ -82,7 +82,7 @@
               @file-select="handleFileSelect"
             />
 
-            <!-- 上传提示 -->
+            <!-- Upload tips -->
             <div class="upload-tips">
               <InfoCircleOutlined style="margin-right: 4px; color: #1890ff" />
               支持 JPG、PNG、WEBP 格式 · 大小不超过 {{ maxSizeMB }}MB · 建议尺寸 400x400 像素
@@ -160,9 +160,9 @@ import { BusinessType } from '../../types/file'
 import type { FileInfoResponse } from '../../types/file'
 
 interface Props {
-  /** 当前头像 URL */
+  /** Current avatar URL */
   modelValue?: string
-  /** 最大文件大小（MB），默认 5MB */
+  /** Maximum file size (MB), default 5MB */
   maxSize?: number
 }
 
@@ -179,30 +179,30 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-// 状态
+// State
 const uploadModalVisible = ref(false)
 const uploading = ref(false)
 const uploadTab = ref<'upload' | 'history'>('upload')
 const commonUploaderRef = ref<InstanceType<typeof CommonFileUploader>>()
 
-// 预览相关
-const previewImageUrl = ref('') // 模态框中预览的图片 URL（本地 base64 或网络 URL）
-const previewFile = ref<File | null>(null) // 待上传的文件对象
-const previewSource = ref<'file' | 'url' | 'history'>('file') // 预览来源
-const selectedHistoryFileId = ref<number>(0) // 选中的历史头像 ID
+// Preview related
+const previewImageUrl = ref('') // Preview image URL in modal (local base64 or network URL)
+const previewFile = ref<File | null>(null) // File object to upload
+const previewSource = ref<'file' | 'url' | 'history'>('file') // Preview source
+const selectedHistoryFileId = ref<number>(0) // Selected history avatar ID
 
-// 历史头像相关
+// History avatar related
 const historyAvatars = ref<FileInfoResponse[]>([])
 const loadingHistory = ref(false)
 
-// 已确认的头像 URL（父组件传入的）
+// Confirmed avatar URL (passed from parent component)
 const confirmedImageUrl = computed(() => props.modelValue)
 
-// 计算属性
+// Computed properties
 const maxSizeMB = computed(() => props.maxSize)
 const maxSizeBytes = computed(() => props.maxSize * 1024 * 1024)
 
-// 按日期分组的历史头像
+// History avatars grouped by date
 const groupedHistoryAvatars = computed(() => {
   const groups: Array<{ date: string; label: string; avatars: FileInfoResponse[] }> = []
   const now = new Date()
@@ -211,7 +211,7 @@ const groupedHistoryAvatars = computed(() => {
   const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
   const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-  // 按日期分组
+  // Group by date
   const todayAvatars: FileInfoResponse[] = []
   const yesterdayAvatars: FileInfoResponse[] = []
   const thisWeekAvatars: FileInfoResponse[] = []
@@ -234,7 +234,7 @@ const groupedHistoryAvatars = computed(() => {
     }
   })
 
-  // 构建分组数据
+  // Build group data
   if (todayAvatars.length > 0) {
     groups.push({ date: 'today', label: '今天', avatars: todayAvatars })
   }
@@ -255,7 +255,7 @@ const groupedHistoryAvatars = computed(() => {
 })
 
 
-// 监听上传标签页切换，加载历史头像
+// Watch upload tab switch, load history avatars
 watch(uploadTab, (newTab) => {
   if (newTab === 'history' && historyAvatars.value.length === 0) {
     loadHistoryAvatars()
@@ -263,7 +263,7 @@ watch(uploadTab, (newTab) => {
 })
 
 /**
- * 将文件读取为 Data URL
+ * Read file as Data URL
  */
 async function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -275,14 +275,14 @@ async function readFileAsDataURL(file: File): Promise<string> {
 }
 
 /**
- * 处理通用上传组件选择的文件
+ * Handle files selected by common uploader component
  */
 async function handleFileSelect(files: File[]) {
-  const file = files[0] // 头像上传只处理第一个文件
+  const file = files[0] // Avatar upload only processes the first file
   if (!file) return
 
   try {
-    // 创建本地预览
+    // Create local preview
     const dataUrl = await readFileAsDataURL(file)
     
     previewImageUrl.value = dataUrl
@@ -290,13 +290,13 @@ async function handleFileSelect(files: File[]) {
     previewSource.value = 'file'
     message.success('图片已加载，请确认后上传')
   } catch (error) {
-    console.error('读取文件失败:', error)
+    console.error('Failed to read file:', error)
     message.error('读取文件失败')
   }
 }
 
 /**
- * 加载历史头像列表
+ * Load history avatar list
  */
 async function loadHistoryAvatars() {
   loadingHistory.value = true
@@ -313,7 +313,7 @@ async function loadHistoryAvatars() {
       throw new Error(data.message || '获取历史头像失败')
     }
   } catch (error) {
-    console.error('加载历史头像失败:', error)
+    console.error('Failed to load history avatars:', error)
     message.error('加载历史头像失败')
   } finally {
     loadingHistory.value = false
@@ -321,7 +321,7 @@ async function loadHistoryAvatars() {
 }
 
 /**
- * 选择历史头像
+ * Select history avatar
  */
 function selectHistoryAvatar(avatar: FileInfoResponse) {
   previewImageUrl.value = avatar.fileUrl
@@ -332,34 +332,34 @@ function selectHistoryAvatar(avatar: FileInfoResponse) {
 }
 
 /**
- * 显示上传模态框
+ * Show upload modal
  */
 function showUploadModal() {
   uploadModalVisible.value = true
-  // 重置状态
+  // Reset state
   previewImageUrl.value = ''
   previewFile.value = null
   uploadTab.value = 'upload'
   
-  // 等待 DOM 更新后自动聚焦到上传区域，使其可以直接粘贴
+  // Auto focus upload area after DOM update, allowing direct paste
   nextTick(() => {
     setTimeout(() => {
       commonUploaderRef.value?.focus()
-    }, 300) // 增加延迟确保Modal完全渲染
+    }, 300) // Increase delay to ensure Modal is fully rendered
   })
 }
 
 /**
- * 点击头像区域（仅用于查看大图，不触发上传）
+ * Click avatar area (only for viewing large image, does not trigger upload)
  */
 function handleClickAvatar(event: MouseEvent) {
-  // 不做任何操作，让 a-image 的预览功能生效
+  // Do nothing, let a-image preview feature work
   event.stopPropagation()
 }
 
 
 /**
- * 确认上传
+ * Confirm upload
  */
 async function handleConfirmUpload() {
   if (!previewImageUrl.value) {
@@ -371,26 +371,26 @@ async function handleConfirmUpload() {
 
   try {
     if (previewSource.value === 'url') {
-      // URL 来源，直接使用 URL
+      // URL source, use URL directly
       emit('update:modelValue', previewImageUrl.value)
-      emit('upload-success', previewImageUrl.value, 0) // fileId 为 0 表示外部 URL
+      emit('upload-success', previewImageUrl.value, 0) // fileId 0 means external URL
       message.success('头像设置成功！')
       uploadModalVisible.value = false
     } else if (previewSource.value === 'history') {
-      // 历史头像，直接使用
+      // History avatar, use directly
       emit('update:modelValue', previewImageUrl.value)
       emit('upload-success', previewImageUrl.value, selectedHistoryFileId.value)
       message.success('头像已更换！')
       uploadModalVisible.value = false
     } else if (previewFile.value) {
-      // 文件来源，上传到服务器
+      // File source, upload to server
       const { data } = await uploadFile(previewFile.value, BusinessType.AVATAR)
 
       if (data.code === 200 && data.data) {
         const response = data.data
         let avatarUrl = response.fileUrl
 
-        // 如果返回了 thumbnailUrl，可以优先使用缩略图
+        // If thumbnailUrl is returned, prefer using thumbnail
         if (response.thumbnailUrl) {
           avatarUrl = response.thumbnailUrl
         }
@@ -400,7 +400,7 @@ async function handleConfirmUpload() {
         message.success('头像上传成功！')
         uploadModalVisible.value = false
 
-        // 刷新历史头像列表
+        // Refresh history avatar list
         if (historyAvatars.value.length > 0) {
           loadHistoryAvatars()
         }
@@ -409,7 +409,7 @@ async function handleConfirmUpload() {
       }
     }
   } catch (error) {
-    console.error('上传失败:', error)
+    console.error('Upload failed:', error)
     const err = error as Error
     message.error(err.message || '上传失败，请重试')
     emit('upload-error', err)
@@ -419,7 +419,7 @@ async function handleConfirmUpload() {
 }
 
 /**
- * 取消上传
+ * Cancel upload
  */
 function handleCancelUpload() {
   uploadModalVisible.value = false
@@ -429,7 +429,7 @@ function handleCancelUpload() {
 
 
 /**
- * 清除头像
+ * Clear avatar
  */
 function handleClearAvatar() {
   emit('update:modelValue', '')
@@ -446,7 +446,7 @@ function handleClearAvatar() {
   max-width: 480px;
 }
 
-/* 头像预览区域 */
+/* Avatar preview area */
 .avatar-preview-wrapper {
   display: flex;
   flex-direction: column;
@@ -454,7 +454,7 @@ function handleClearAvatar() {
   gap: 16px;
 }
 
-/* 头像显示区域 */
+/* Avatar display area */
 .avatar-display {
   width: 128px;
   height: 128px;
@@ -473,7 +473,7 @@ function handleClearAvatar() {
   border-color: #1890ff;
 }
 
-/* a-image 组件样式 */
+/* a-image component styles */
 :deep(.avatar-image) {
   width: 128px !important;
   height: 128px !important;
@@ -507,14 +507,14 @@ function handleClearAvatar() {
   color: #666;
 }
 
-/* 上传模态框 */
+/* Upload modal */
 .upload-modal-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* 预览区域 */
+/* Preview area */
 .preview-section {
   display: flex;
   flex-direction: column;
@@ -566,7 +566,7 @@ function handleClearAvatar() {
 }
 
 
-/* 上传提示 */
+/* Upload tips */
 .upload-tips {
   padding: 12px;
   background: #f0f7ff;
@@ -577,7 +577,7 @@ function handleClearAvatar() {
   border: 1px solid #d6e4ff;
 }
 
-/* 历史头像区域 */
+/* History avatar area */
 .history-avatars-wrapper {
   min-height: 300px;
   padding: 16px 0;
@@ -612,7 +612,7 @@ function handleClearAvatar() {
 .history-avatar-item {
   position: relative;
   width: 100%;
-  padding-bottom: 100%; /* 1:1 正方形 */
+  padding-bottom: 100%; /* 1:1 square */
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;

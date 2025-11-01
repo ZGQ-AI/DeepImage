@@ -1,5 +1,5 @@
 /**
- * 用户相关API接口
+ * User-related API interfaces
  */
 import request from '../request'
 import type { ApiResponse } from '../types/api'
@@ -11,35 +11,35 @@ import type {
 } from '../types/user'
 
 /**
- * 获取当前用户信息
+ * Get current user profile
  */
 export function getUserProfile() {
   return request.get<ApiResponse<UserProfileResponse>>('/api/user/profile')
 }
 
 /**
- * 更新用户信息
+ * Update user profile
  */
 export function updateUserProfile(data: UpdateUserProfileRequest) {
   return request.put<ApiResponse<UserProfileResponse>>('/api/user/profile', data)
 }
 
 /**
- * 获取用户会话列表
+ * Get user session list
  */
 export function getUserSessions() {
   return request.get<ApiResponse<SessionListResponse>>('/api/user/sessions')
 }
 
 /**
- * 删除指定会话
+ * Delete a specific session
  */
 export function deleteSession(sessionId: number) {
   return request.delete<ApiResponse<boolean>>(`/api/user/sessions/${sessionId}`)
 }
 
 /**
- * 删除其他所有会话
+ * Delete all other sessions
  */
 export function deleteOtherSessions() {
   return request.delete<ApiResponse<DeleteOtherSessionsResponse>>('/api/user/sessions/others')

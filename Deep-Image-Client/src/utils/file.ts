@@ -1,11 +1,11 @@
 /**
- * 文件相关工具函数
+ * File-related utility functions
  */
 
 /**
- * 格式化文件大小
- * @param bytes 文件大小（字节）
- * @returns 格式化后的文件大小字符串，如 "1.5 MB"
+ * Format file size
+ * @param bytes File size in bytes
+ * @returns Formatted file size string, e.g., "1.5 MB"
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'

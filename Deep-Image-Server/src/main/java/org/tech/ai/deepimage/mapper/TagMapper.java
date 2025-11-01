@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.tech.ai.deepimage.entity.Tag;
 
 /**
- * 标签表 Mapper 接口
+ * Tag table Mapper interface
  * 
  * @author zgq
  * @since 2025-10-01

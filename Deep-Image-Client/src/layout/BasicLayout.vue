@@ -1,22 +1,22 @@
 <!-- 
-  基础布局组件
-  提供整个应用的页面布局结构，包含头部导航、内容区域和底部
+  Basic Layout Component
+  Provides the page layout structure for the entire application, including header navigation, content area and footer
 -->
 <template>
   <div id="basicLayout">
-    <!-- 使用 Ant Design 的布局组件，设置最小高度为100vh -->
+    <!-- Use Ant Design layout component, set minimum height to 100vh -->
     <a-layout style="min-height: 100vh">
-      <!-- 头部区域：包含全局导航栏 -->
+      <!-- Header area: includes global navigation bar -->
       <a-layout-header class="header">
         <GlobalHeader />
       </a-layout-header>
 
-      <!-- 内容区域：根据路由动态渲染页面内容 -->
+      <!-- Content area: dynamically renders page content based on routes -->
       <a-layout-content class="content">
         <router-view />
       </a-layout-content>
 
-      <!-- 底部区域：显示项目链接 -->
+      <!-- Footer area: displays project links -->
       <a-layout-footer class="footer">
         <a href="https://github.com/dawn83679/DeepImage" target="_blank">
           <GithubOutlined /> GitHub
@@ -27,14 +27,14 @@
 </template>
 
 <script setup lang="ts">
-// 导入全局头部组件
+// Import global header component
 import GlobalHeader from '@/components/GlobalHeader.vue'
-// 导入 GitHub 图标组件
+// Import GitHub icon component
 import { GithubOutlined } from '@ant-design/icons-vue'
 </script>
 
 <style scoped>
-/* 头部样式 */
+/* Header styles */
 #basicLayout .header {
   background-color: white;
   margin-bottom: 16px;
@@ -42,7 +42,7 @@ import { GithubOutlined } from '@ant-design/icons-vue'
   padding-inline: 20px;
 }
 
-/* 底部样式 - 固定在页面底部 */
+/* Footer styles - fixed at bottom of page */
 #basicLayout .footer {
   background-color: #efefef;
   padding: 16px;
@@ -53,10 +53,10 @@ import { GithubOutlined } from '@ant-design/icons-vue'
   text-align: center;
 }
 
-/* 内容区域样式 - 渐变背景 */
+/* Content area styles - gradient background */
 #basicLayout .content {
   padding: 20px;
   background: linear-gradient(to right, #efefef, #fff);
-  margin-bottom: 28px; /* 为固定底部留出空间 */
+  margin-bottom: 28px; /* Reserve space for fixed footer */
 }
 </style>

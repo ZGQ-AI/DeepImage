@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * 删除其他会话响应
+ * Delete other sessions response
  * 
  * @author zgq
  * @since 2025-10-01
@@ -14,7 +14,7 @@ import lombok.Data;
 public class DeleteOtherSessionsResponse {
     
     /**
-     * 成功删除的会话数量
+     * Number of successfully deleted sessions
      */
     private Integer deletedCount;
 }

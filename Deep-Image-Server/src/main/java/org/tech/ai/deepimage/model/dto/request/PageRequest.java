@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 /**
- * 分页请求基础类
+ * Pagination request base class
  * 
  * @author zgq
  * @since 2025-10-01
@@ -14,20 +14,20 @@ import lombok.Data;
 public class PageRequest {
     
     /**
-     * 页码，默认第1页
+     * Page number, default is page 1
      */
     @Min(value = 1, message = "页码必须大于0")
     private Integer page = 1;
     
     /**
-     * 每页数量，默认20条
+     * Page size, default is 20
      */
     @Min(value = 1, message = "每页数量必须大于0")
     @Max(value = 100, message = "每页数量不能超过100")
     private Integer pageSize = 20;
     
     /**
-     * 计算偏移量
+     * Calculate offset
      * @return offset
      */
     public Integer getOffset() {

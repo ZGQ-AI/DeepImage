@@ -1,7 +1,7 @@
 package org.tech.ai.deepimage.util;
 
 /**
- * 简单的计时器工具类
+ * Simple timer utility class
  * 
  * @author zgq
  * @since 2025-10-22
@@ -15,16 +15,16 @@ public class Timer {
     }
 
     /**
-     * 创建并启动计时器
+     * Create and start timer
      * 
-     * @return Timer 实例
+     * @return Timer instance
      */
     public static Timer start() {
         return new Timer();
     }
 
     /**
-     * 停止计时
+     * Stop timer
      */
     public void stop() {
         if (endTime == null) {
@@ -33,10 +33,10 @@ public class Timer {
     }
 
     /**
-     * 获取已耗时（毫秒）
-     * 如果未调用 stop()，返回从创建到当前的时间
+     * Get elapsed time (milliseconds)
+     * If stop() is not called, returns time from creation to current
      * 
-     * @return 耗时（毫秒）
+     * @return Elapsed time (milliseconds)
      */
     public long getElapsedMillis() {
         long end = endTime != null ? endTime : System.currentTimeMillis();

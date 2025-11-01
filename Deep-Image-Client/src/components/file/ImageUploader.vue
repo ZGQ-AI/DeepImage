@@ -1,10 +1,10 @@
 <!--
-  图库批量上传组件
-  使用 CommonFileUploader 通用组件，专注于业务逻辑
+  Gallery Batch Upload Component
+  Uses CommonFileUploader generic component, focuses on business logic
 -->
 <template>
   <div class="image-uploader">
-    <!-- 使用通用文件上传组件 -->
+    <!-- Use common file uploader component -->
     <CommonFileUploader
       ref="commonUploaderRef"
       :max-size="maxSize"
@@ -20,7 +20,7 @@
       @file-select="handleFileSelect"
     />
 
-    <!-- 上传进度 -->
+    <!-- Upload progress -->
     <div v-if="uploading" class="upload-progress">
       <a-progress
         :percent="uploadProgress"
@@ -41,10 +41,10 @@ import CommonFileUploader from '../common/CommonFileUploader.vue'
 import { uploadFile } from '../../api/file'
 import { BusinessType } from '../../types/file'
 
-// Props - 保持外部 API 不变
+// Props - Keep external API unchanged
 interface Props {
-  maxSize?: number // 最大文件大小，单位MB
-  maxCount?: number // 最大文件数量
+  maxSize?: number // Maximum file size in MB
+  maxCount?: number // Maximum file count
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -52,7 +52,7 @@ const props = withDefaults(defineProps<Props>(), {
   maxCount: 20
 })
 
-// Emits - 保持外部 API 不变
+// Emits - Keep external API unchanged
 const emit = defineEmits<{
   success: [files: any[]]
   error: [error: any]
@@ -64,32 +64,32 @@ const uploadProgress = ref(0)
 const currentFile = ref('')
 const commonUploaderRef = ref<InstanceType<typeof CommonFileUploader>>()
 
-// 组件挂载后自动聚焦，支持直接粘贴
+// Auto focus after component mount, supports direct paste
 onMounted(() => {
   setTimeout(() => {
     commonUploaderRef.value?.focus()
-  }, 200) // 等待组件渲染完成
+  }, 200) // Wait for component rendering to complete
 })
 
-// 文件选择处理 - 调用上传 API
+// File selection handler - call upload API
 const handleFileSelect = async (files: File[]) => {
-  // 批量上传文件
+  // Batch upload files
   for (const file of files) {
     await handleUploadSingle(file)
   }
 }
 
-// 单个文件上传
+// Single file upload
 const handleUploadSingle = async (file: File) => {
   try {
     uploading.value = true
     uploadProgress.value = 0
     currentFile.value = file.name
 
-    // 调用上传 API
+    // Call upload API
     const response = await uploadFile(file, BusinessType.IMAGE)
     
-    // 后端返回格式：{ code: number, message: string, data: T }
+    // Backend response format: { code: number, message: string, data: T }
     if (response.data.code === 200 && response.data.data) {
       message.success(`${file.name} 上传成功`)
       uploadProgress.value = 100
@@ -113,7 +113,7 @@ const handleUploadSingle = async (file: File) => {
   width: 100%;
 }
 
-/* 上传进度 */
+/* Upload progress */
 .upload-progress {
   margin-top: 16px;
   padding: 16px;

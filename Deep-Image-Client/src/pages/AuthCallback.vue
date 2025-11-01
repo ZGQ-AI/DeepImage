@@ -1,5 +1,5 @@
 <!--
-  Google OAuth回调处理页面
+  Google OAuth Callback Handler Page
 -->
 <template>
   <div class="callback-page">
@@ -40,7 +40,7 @@ const redirectPath = ref('/')
 
 onMounted(async () => {
   try {
-    // 解析URL参数
+    // Parse URL parameters
     const params = new URLSearchParams(window.location.search)
     const accessToken = params.get('access_token')
     const refreshToken = params.get('refresh_token')
@@ -48,7 +48,7 @@ onMounted(async () => {
     const loginSuccess = params.get('loginSuccess')
     redirectPath.value = params.get('redirect') || '/'
 
-    // 检查是否有错误
+    // Check if there's an error
     if (loginError || loginSuccess === 'false') {
       error.value = true
       errorMessage.value = getErrorMessage(loginError)
@@ -56,7 +56,7 @@ onMounted(async () => {
       return
     }
 
-    // 检查token是否存在
+    // Check if token exists
     if (!accessToken || !refreshToken) {
       error.value = true
       errorMessage.value = '登录失败，缺少认证信息'
@@ -64,7 +64,7 @@ onMounted(async () => {
       return
     }
 
-    // 保存token到store（使用localStorage作为默认存储模式）
+    // Save token to store (use localStorage as default storage mode)
     authStore.applyTokenPair(
       {
         accessToken,
@@ -74,18 +74,18 @@ onMounted(async () => {
       'local', // Google OAuth always uses localStorage
     )
 
-    // 获取用户信息（带重试机制）
+    // Fetch user information (with retry mechanism)
     try {
       await fetchProfileWithRetry()
     } catch (profileError) {
-      // 即使获取用户信息失败，token已保存，允许用户继续使用
+      // Even if fetching user info fails, token is saved, allow user to continue
       console.warn('[AuthCallback] Failed to fetch user profile:', profileError)
-      // 不抛出错误，允许继续跳转
+      // Don't throw error, allow navigation to continue
     }
 
     message.success('登录成功！')
 
-    // 立即跳转到指定页面
+    // Navigate to specified page immediately
     router.replace(redirectPath.value)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,8 +97,8 @@ onMounted(async () => {
 })
 
 /**
- * 带重试机制的用户信息获取
- * 网络波动时自动重试，提高成功率
+ * Fetch user profile with retry mechanism
+ * Automatically retries on network fluctuations to improve success rate
  */
 async function fetchProfileWithRetry(maxRetries = 2) {
   let lastError
@@ -106,19 +106,19 @@ async function fetchProfileWithRetry(maxRetries = 2) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       await userStore.fetchProfile()
-      return // 成功
+      return // Success
     } catch (err) {
       lastError = err
-      console.warn(`获取用户信息失败，重试 ${i + 1}/${maxRetries}`)
+      console.warn(`Failed to fetch user profile, retry ${i + 1}/${maxRetries}`)
 
       if (i < maxRetries - 1) {
-        // 等待 1 秒后重试
+        // Wait 1 second before retry
         await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     }
   }
 
-  throw lastError // 所有重试都失败
+  throw lastError // All retries failed
 }
 
 function getErrorMessage(errorCode: string | null): string {
@@ -135,7 +135,7 @@ function getErrorMessage(errorCode: string | null): string {
 }
 
 /**
- * 返回登录页，保留 redirect 参数
+ * Return to login page, preserve redirect parameter
  */
 function backToLogin() {
   if (redirectPath.value && redirectPath.value !== '/') {
@@ -192,7 +192,7 @@ p {
   font-size: 16px;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 576px) {
   .callback-content {
     min-width: auto;

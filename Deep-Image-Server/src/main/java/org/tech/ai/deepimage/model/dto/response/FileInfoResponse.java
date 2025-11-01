@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 文件信息响应
+ * File information response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -17,72 +17,72 @@ import java.util.List;
 public class FileInfoResponse {
     
     /**
-     * 文件ID
+     * File ID
      */
     private Long fileId;
     
     /**
-     * 原始文件名
+     * Original file name
      */
     private String originalFilename;
     
     /**
-     * 文件访问URL
+     * File access URL
      */
     private String fileUrl;
     
     /**
-     * 缩略图URL
+     * Thumbnail URL
      */
     private String thumbnailUrl;
     
     /**
-     * 文件大小（字节）
+     * File size (bytes)
      */
     private Long fileSize;
     
     /**
-     * 内容类型
+     * Content type
      */
     private String contentType;
     
     /**
-     * 文件扩展名
+     * File extension
      */
     private String fileExtension;
     
     /**
-     * 业务类型
+     * Business type
      */
     private String businessType;
     
     /**
-     * 文件状态
+     * File status
      */
     private String status;
     
     /**
-     * 访问权限
+     * Access permission
      */
     private String visibility;
     
     /**
-     * 文件关联的标签
+     * Tags associated with file
      */
     private List<TagResponse> tags;
     
     /**
-     * 引用计数
+     * Reference count
      */
     private Integer referenceCount;
     
     /**
-     * 创建时间
+     * Creation time
      */
     private LocalDateTime createdAt;
     
     /**
-     * 更新时间
+     * Update time
      */
     private LocalDateTime updatedAt;
 }

@@ -5,7 +5,7 @@
       <p class="search-description">{{ PAGE_DESCRIPTIONS.SEARCH }}</p>
     </div>
 
-    <!-- 步骤指示器 -->
+    <!-- Step indicator -->
     <div class="steps-container">
       <a-steps :current="currentStep" size="small">
         <a-step :title="STEP_DESCRIPTIONS.SEARCH.title" :description="STEP_DESCRIPTIONS.SEARCH.description" />
@@ -14,7 +14,7 @@
       </a-steps>
     </div>
 
-    <!-- 第一步：搜索表单 -->
+    <!-- Step 1: Search form -->
     <div v-if="currentStep === 0" class="search-form">
       <a-card :bordered="false" style="margin-bottom: 24px">
         <div class="form-content">
@@ -64,7 +64,7 @@
       </a-card>
     </div>
 
-    <!-- 第二步：图片选择 -->
+    <!-- Step 2: Image selection -->
     <div v-if="currentStep === 1" class="image-selection">
       <a-card :bordered="false" style="margin-bottom: 24px">
         <template #title>
@@ -92,7 +92,7 @@
           </div>
         </template>
 
-        <!-- 标签选择 -->
+        <!-- Tag selection -->
         <div class="tag-selection">
           <label class="form-label">添加标签（可选）</label>
           <a-select
@@ -105,7 +105,7 @@
           />
         </div>
 
-        <!-- 图片网格 -->
+        <!-- Image grid -->
         <div class="image-grid">
           <div 
             v-for="(image, index) in searchResults?.images"
@@ -150,9 +150,9 @@
       </a-card>
     </div>
 
-    <!-- 第三步：下载进度和结果 -->
+    <!-- Step 3: Download progress and results -->
     <div v-if="currentStep === 2" class="download-progress">
-      <!-- 下载中状态 -->
+      <!-- Downloading status -->
       <div v-if="isDownloading" class="downloading-status">
         <a-card title="正在下载" :bordered="false">
           <div class="downloading-content">
@@ -164,7 +164,7 @@
         </a-card>
       </div>
 
-      <!-- 下载结果 -->
+      <!-- Download results -->
       <div v-if="downloadResult && !isDownloading" class="download-result">
         <a-card title="下载结果" :bordered="false">
           <div class="result-summary">
@@ -201,7 +201,7 @@
             </a-button>
           </div>
 
-          <!-- 失败列表 -->
+          <!-- Failed list -->
           <div v-if="downloadResult.failedImages?.length > 0" class="failed-images">
             <h4>下载失败的图片：</h4>
             <a-list
@@ -222,7 +222,7 @@
       </div>
     </div>
 
-    <!-- 版权提醒 -->
+    <!-- Copyright notice -->
     <a-alert
       type="warning"
       style="margin-top: 24px"
@@ -256,8 +256,8 @@ import type {
 const router = useRouter()
 const tagStore = useTagStore()
 
-// 响应式数据
-const currentStep = ref(0) // 0:搜索 1:选择 2:下载
+// Reactive data
+const currentStep = ref(0) // 0: search 1: select 2: download
 const searchForm = ref<SearchImageRequest>({
   keyword: '',
   count: UPLOAD_CONFIG.SEARCH_COUNT
@@ -276,7 +276,7 @@ const isSearching = ref(false)
 const isDownloading = ref(false)
 const lastSearchKeyword = ref('')
 
-// 计算属性
+// Computed properties
 const tagOptions = computed(() => 
   tagStore.tags.map(tag => ({
     label: tag.tagName,
@@ -284,7 +284,7 @@ const tagOptions = computed(() =>
   }))
 )
 
-// 方法
+// Methods
 const handleSearch = async () => {
   if (!searchForm.value.keyword.trim()) {
     message.warning(MESSAGES.SEARCH_KEYWORD_REQUIRED)
@@ -300,9 +300,9 @@ const handleSearch = async () => {
     
     if (response.images && response.images.length > 0) {
       message.success(MESSAGES.SEARCH_SUCCESS(response.images.length))
-      currentStep.value = 1 // 进入选择阶段
+      currentStep.value = 1 // Enter selection phase
       
-      // 准备下载表单
+      // Prepare download form
       downloadForm.value.keyword = searchForm.value.keyword
       downloadForm.value.selectedImages = []
       downloadForm.value.tagIds = []
@@ -354,17 +354,17 @@ const handleDownload = async () => {
   try {
     isDownloading.value = true
     
-    // 进入下载阶段
+    // Enter download phase
     currentStep.value = 2
     downloadResult.value = null
     
     message.info(`正在下载 ${selectedImages.value.length} 张图片，请稍候...`)
     
-    // 同步下载
+    // Synchronous download
     const result = await ImageSearchApi.downloadImages(downloadForm.value)
     downloadResult.value = result
     
-    // 显示结果
+    // Show results
     if (result.status === 'completed') {
       message.success(`下载完成！成功下载 ${result.successCount} 张图片`)
     } else if (result.status === 'partial') {
@@ -385,7 +385,7 @@ const handleImageError = (event: Event) => {
   img.style.display = 'none'
 }
 
-// getStatusColor 和 getStatusText 已由 StatusDisplay 组件替代
+// getStatusColor and getStatusText have been replaced by StatusDisplay component
 
 const goToGallery = () => {
   router.push('/gallery')
@@ -404,13 +404,13 @@ const startNewSearch = () => {
   }
 }
 
-// 生命周期
+// Lifecycle
 onMounted(async () => {
-  // 获取标签列表
+  // Fetch tag list
   await tagStore.fetchTags()
 })
 
-// 无需清理异步任务
+// No need to clean up async tasks
 </script>
 
 <style scoped>

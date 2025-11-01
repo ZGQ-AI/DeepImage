@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Google OAuth配置属性
+ * Google OAuth configuration properties
  * 
  * @author zgq
  * @since 2025-10-01

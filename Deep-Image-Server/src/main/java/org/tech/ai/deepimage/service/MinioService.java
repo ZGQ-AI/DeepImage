@@ -6,221 +6,221 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * MinIO对象存储服务接口
- * 封装MinIO常用操作API
+ * MinIO object storage service interface
+ * Encapsulates common MinIO operation APIs
  * 
  * @author zgq
  * @since 2025-10-02
  */
 public interface MinioService {
 
-    // ========== 文件上传 ==========
+    // ========== File Upload ==========
 
     /**
-     * 上传文件(从输入流)
+     * Upload file (from input stream)
      * 
-     * @param inputStream 文件输入流
-     * @param objectName  对象名称(存储路径)
-     * @param contentType 内容类型(MIME类型)
-     * @return 文件访问URL
+     * @param inputStream File input stream
+     * @param objectName  Object name (storage path)
+     * @param contentType Content type (MIME type)
+     * @return File access URL
      */
     String uploadFile(InputStream inputStream, String objectName, String contentType);
 
     /**
-     * 上传文件到指定存储桶
+     * Upload file to specified bucket
      * 
-     * @param bucketName  存储桶名称
-     * @param inputStream 文件输入流
-     * @param objectName  对象名称
-     * @param contentType 内容类型
-     * @return 文件访问URL
+     * @param bucketName  Bucket name
+     * @param inputStream File input stream
+     * @param objectName  Object name
+     * @param contentType Content type
+     * @return File access URL
      */
     String uploadFile(String bucketName, InputStream inputStream, String objectName, String contentType);
 
-    // ========== 文件下载 ==========
+    // ========== File Download ==========
 
     /**
-     * 下载文件
+     * Download file
      * 
-     * @param objectName 对象名称
-     * @return 文件输入流
+     * @param objectName Object name
+     * @return File input stream
      */
     InputStream downloadFile(String objectName);
 
     /**
-     * 下载指定存储桶的文件
+     * Download file from specified bucket
      * 
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
-     * @return 文件输入流
+     * @param bucketName Bucket name
+     * @param objectName Object name
+     * @return File input stream
      */
     InputStream downloadFile(String bucketName, String objectName);
 
-    // ========== 文件删除 ==========
+    // ========== File Delete ==========
 
     /**
-     * 删除文件
+     * Delete file
      * 
-     * @param objectName 对象名称
+     * @param objectName Object name
      */
     void deleteFile(String objectName);
 
     /**
-     * 删除指定存储桶的文件
+     * Delete file from specified bucket
      * 
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
+     * @param bucketName Bucket name
+     * @param objectName Object name
      */
     void deleteFile(String bucketName, String objectName);
 
     /**
-     * 批量删除文件
+     * Batch delete files
      * 
-     * @param objectNames 对象名称列表
+     * @param objectNames Object name list
      */
     void deleteFiles(List<String> objectNames);
 
     /**
-     * 批量删除指定存储桶的文件
+     * Batch delete files from specified bucket
      * 
-     * @param bucketName  存储桶名称
-     * @param objectNames 对象名称列表
+     * @param bucketName  Bucket name
+     * @param objectNames Object name list
      */
     void deleteFiles(String bucketName, List<String> objectNames);
 
-    // ========== 预签名URL ==========
+    // ========== Presigned URL ==========
 
     /**
-     * 获取上传预签名URL (用于前端直传)
+     * Get presigned upload URL (for direct frontend upload)
      * 
-     * @param objectName 对象名称
-     * @param expires    过期时间(秒)
-     * @return 预签名URL
+     * @param objectName Object name
+     * @param expires    Expiry time (seconds)
+     * @return Presigned URL
      */
     String getPresignedUploadUrl(String objectName, int expires);
 
     /**
-     * 获取下载预签名URL
+     * Get presigned download URL
      * 
-     * @param objectName 对象名称
-     * @param expires    过期时间(秒)
-     * @return 预签名下载URL
+     * @param objectName Object name
+     * @param expires    Expiry time (seconds)
+     * @return Presigned download URL
      */
     String getPresignedDownloadUrl(String objectName, int expires);
 
     /**
-     * 获取预签名URL (指定存储桶)
+     * Get presigned URL (specified bucket)
      * 
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
-     * @param expires    过期时间(秒)
-     * @param isUpload   是否为上传URL
-     * @return 预签名URL
+     * @param bucketName Bucket name
+     * @param objectName Object name
+     * @param expires    Expiry time (seconds)
+     * @param isUpload   Whether it is upload URL
+     * @return Presigned URL
      */
     String getPresignedUrl(String bucketName, String objectName, int expires, boolean isUpload);
 
-    // ========== 文件查询 ==========
+    // ========== File Query ==========
 
     /**
-     * 列出文件
+     * List files
      * 
-     * @param prefix 前缀(可用于目录过滤)
-     * @return 文件对象信息列表
+     * @param prefix Prefix (can be used for directory filtering)
+     * @return File object information list
      */
     List<FileObjectInfoResponse> listFiles(String prefix);
 
     /**
-     * 列出指定存储桶的文件
+     * List files from specified bucket
      * 
-     * @param bucketName 存储桶名称
-     * @param prefix     前缀
-     * @param recursive  是否递归列出
-     * @return 文件对象信息列表
+     * @param bucketName Bucket name
+     * @param prefix     Prefix
+     * @param recursive  Whether to list recursively
+     * @return File object information list
      */
     List<FileObjectInfoResponse> listFiles(String bucketName, String prefix, boolean recursive);
 
     /**
-     * 获取文件信息
+     * Get file information
      * 
-     * @param objectName 对象名称
-     * @return 文件对象信息
+     * @param objectName Object name
+     * @return File object information
      */
     FileObjectInfoResponse getFileInfo(String objectName);
 
     /**
-     * 获取指定存储桶的文件信息
+     * Get file information from specified bucket
      * 
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
-     * @return 文件对象信息
+     * @param bucketName Bucket name
+     * @param objectName Object name
+     * @return File object information
      */
     FileObjectInfoResponse getFileInfo(String bucketName, String objectName);
 
     /**
-     * 判断文件是否存在
+     * Check if file exists
      * 
-     * @param objectName 对象名称
-     * @return 是否存在
+     * @param objectName Object name
+     * @return Whether exists
      */
     boolean fileExists(String objectName);
 
     /**
-     * 判断指定存储桶的文件是否存在
+     * Check if file exists in specified bucket
      * 
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
-     * @return 是否存在
+     * @param bucketName Bucket name
+     * @param objectName Object name
+     * @return Whether exists
      */
     boolean fileExists(String bucketName, String objectName);
 
-    // ========== 存储桶管理 ==========
+    // ========== Bucket Management ==========
 
     /**
-     * 检查存储桶是否存在
+     * Check if bucket exists
      * 
-     * @param bucketName 存储桶名称
-     * @return 是否存在
+     * @param bucketName Bucket name
+     * @return Whether exists
      */
     boolean bucketExists(String bucketName);
 
     /**
-     * 创建存储桶
+     * Create bucket
      * 
-     * @param bucketName 存储桶名称
+     * @param bucketName Bucket name
      */
     void createBucket(String bucketName);
 
     /**
-     * 删除存储桶
+     * Delete bucket
      * 
-     * @param bucketName 存储桶名称
+     * @param bucketName Bucket name
      */
     void deleteBucket(String bucketName);
 
     /**
-     * 列出所有存储桶
+     * List all buckets
      * 
-     * @return 存储桶名称列表
+     * @return Bucket name list
      */
     List<String> listBuckets();
 
-    // ========== 复制和移动 ==========
+    // ========== Copy and Move ==========
 
     /**
-     * 复制对象
+     * Copy object
      * 
-     * @param sourceBucket 源存储桶
-     * @param sourceObject 源对象名称
-     * @param targetBucket 目标存储桶
-     * @param targetObject 目标对象名称
+     * @param sourceBucket Source bucket
+     * @param sourceObject Source object name
+     * @param targetBucket Target bucket
+     * @param targetObject Target object name
      */
     void copyObject(String sourceBucket, String sourceObject, String targetBucket, String targetObject);
 
     /**
-     * 复制对象(同一存储桶内)
+     * Copy object (within same bucket)
      * 
-     * @param sourceObject 源对象名称
-     * @param targetObject 目标对象名称
+     * @param sourceObject Source object name
+     * @param targetObject Target object name
      */
     void copyObject(String sourceObject, String targetObject);
 }

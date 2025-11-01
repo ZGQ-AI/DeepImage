@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.tech.ai.deepimage.entity.RefreshToken;
 
 /**
- * 刷新令牌表 Mapper 接口
+ * Refresh token table Mapper interface
  * 
  * @author zgq
  * @since 2025-09-29

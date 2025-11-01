@@ -1,9 +1,9 @@
 <!--
-  标签管理页面
+  Tag Management Page
 -->
 <template>
   <div class="tag-management-page">
-    <!-- 页面头部 -->
+    <!-- Page header -->
     <a-page-header title="标签管理" @back="() => router.back()">
       <template #subTitle>
         <span style="color: #8c8c8c">管理您的标签分类</span>
@@ -45,7 +45,7 @@
       </template>
     </a-page-header>
 
-    <!-- 主要内容区域 -->
+    <!-- Main content area -->
     <div class="content-wrapper">
       <a-card :bordered="false" class="tags-card">
         <TagList
@@ -57,7 +57,7 @@
       </a-card>
     </div>
 
-    <!-- 创建/编辑标签模态框 -->
+    <!-- Create/Edit tag modal -->
     <TagModal
       v-model:open="modalVisible"
       :loading="tagStore.operationLoading"
@@ -88,7 +88,7 @@ const tagStore = useTagStore()
 const modalVisible = ref(false)
 const currentTag = ref<TagResponse | null>(null)
 
-// 统计数据
+// Statistics data
 const totalUsageCount = computed(() => {
   return tagStore.tags.reduce((sum, tag) => sum + tag.usageCount, 0)
 })
@@ -98,40 +98,40 @@ const averageUsageCount = computed(() => {
   return totalUsageCount.value / tagStore.tags.length
 })
 
-// 刷新数据
+// Refresh data
 async function handleRefresh() {
   await tagStore.fetchTags()
 }
 
-// 创建标签
+// Create tag
 function handleCreate() {
   currentTag.value = null
   modalVisible.value = true
 }
 
-// 编辑标签
+// Edit tag
 function handleEdit(tag: TagResponse) {
   currentTag.value = tag
   modalVisible.value = true
 }
 
-// 删除标签
+// Delete tag
 async function handleDelete(tagId: number) {
   await tagStore.deleteTag(tagId)
 }
 
-// 提交表单（创建或编辑）
+// Submit form (create or edit)
 async function handleSubmit(data: { tagName: string; color?: string; tagId?: number }) {
   try {
     if (data.tagId) {
-      // 编辑
+      // Edit
       await tagStore.updateTag({
         tagId: data.tagId,
         tagName: data.tagName,
         color: data.color,
       })
     } else {
-      // 创建
+      // Create
       await tagStore.createTag({
         tagName: data.tagName,
         color: data.color,
@@ -139,11 +139,11 @@ async function handleSubmit(data: { tagName: string; color?: string; tagId?: num
     }
     modalVisible.value = false
   } catch {
-    // 错误已在 store 中处理
+    // Errors are handled in store
   }
 }
 
-// 页面初始化
+// Page initialization
 onMounted(async () => {
   await handleRefresh()
 })
@@ -214,7 +214,7 @@ onMounted(async () => {
   padding: 24px;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 992px) {
   .content-wrapper {
     padding: 0 12px;

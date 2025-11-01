@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.enums;
 import lombok.Getter;
 
 /**
- * 分享类型枚举
+ * Share type enum
  * 
  * @author zgq
  * @since 2025-10-01

@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 权限信息表
+ * Permission information table
  * 
  * @author zgq
  * @since 2025-09-29
@@ -16,55 +16,55 @@ import java.time.LocalDateTime;
 public class Permission {
 
     /**
-     * 权限唯一标识，主键
+     * Permission unique identifier, primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 权限显示名称，全局唯一
+     * Permission display name, globally unique
      */
     @TableField("permission_name")
     private String permissionName;
 
     /**
-     * 权限代码，用于程序逻辑，全局唯一
+     * Permission code, used for program logic, globally unique
      */
     @TableField("permission_code")
     private String permissionCode;
 
     /**
-     * 权限描述信息
+     * Permission description information
      */
     @TableField("description")
     private String description;
 
     /**
-     * 删除标志：0=未删除，1=已删除
+     * Delete flag: 0=not deleted, 1=deleted
      */
     @TableField("delete_flag")
     private Integer deleteFlag;
 
     /**
-     * 权限创建时间
+     * Permission creation time
      */
     @TableField(value = "created_at")
     private LocalDateTime createdAt;
 
     /**
-     * 权限信息最后更新时间
+     * Permission information last update time
      */
     @TableField(value = "updated_at")
     private LocalDateTime updatedAt;
 
     /**
-     * 创建者用户ID
+     * Creator user ID
      */
     @TableField("created_by")
     private Long createdBy;
 
     /**
-     * 最后更新者用户ID
+     * Last updater user ID
      */
     @TableField("updated_by")
     private Long updatedBy;

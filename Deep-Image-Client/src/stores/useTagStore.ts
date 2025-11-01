@@ -1,5 +1,5 @@
 /**
- * 标签Store - 管理标签信息
+ * Tag Store - Manages tag information
  */
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
@@ -13,15 +13,15 @@ import {
 import type { CreateTagRequest, UpdateTagRequest, TagResponse } from '../types/tag'
 
 export const useTagStore = defineStore('tag', () => {
-  // 标签列表
+  // Tag list
   const tags = ref<TagResponse[]>([])
 
-  // 加载状态
+  // Loading states
   const tagsLoading = ref(false)
   const operationLoading = ref(false)
 
   /**
-   * 获取标签列表
+   * Fetch tag list
    */
   async function fetchTags() {
     tagsLoading.value = true
@@ -42,7 +42,7 @@ export const useTagStore = defineStore('tag', () => {
   }
 
   /**
-   * 创建标签
+   * Create a tag
    */
   async function createTag(request: CreateTagRequest) {
     operationLoading.value = true
@@ -50,7 +50,7 @@ export const useTagStore = defineStore('tag', () => {
       const { data } = await createTagApi(request)
       if (data.code === 200) {
         message.success('标签创建成功')
-        // 刷新标签列表
+        // Refresh tag list
         await fetchTags()
         return data.data
       } else {
@@ -66,7 +66,7 @@ export const useTagStore = defineStore('tag', () => {
   }
 
   /**
-   * 更新标签
+   * Update a tag
    */
   async function updateTag(request: UpdateTagRequest) {
     operationLoading.value = true
@@ -74,7 +74,7 @@ export const useTagStore = defineStore('tag', () => {
       const { data } = await updateTagApi(request)
       if (data.code === 200) {
         message.success('标签更新成功')
-        // 刷新标签列表
+        // Refresh tag list
         await fetchTags()
         return data.data
       } else {
@@ -90,7 +90,7 @@ export const useTagStore = defineStore('tag', () => {
   }
 
   /**
-   * 删除标签
+   * Delete a tag
    */
   async function deleteTag(tagId: number) {
     operationLoading.value = true
@@ -98,7 +98,7 @@ export const useTagStore = defineStore('tag', () => {
       const { data } = await deleteTagApi({ tagId })
       if (data.code === 200) {
         message.success('标签删除成功')
-        // 刷新标签列表
+        // Refresh tag list
         await fetchTags()
         return true
       } else {
@@ -114,7 +114,7 @@ export const useTagStore = defineStore('tag', () => {
   }
 
   /**
-   * 清空标签状态（用于退出登录等场景）
+   * Clear tag state (used for logout and other scenarios)
    */
   function clearTagState() {
     tags.value = []

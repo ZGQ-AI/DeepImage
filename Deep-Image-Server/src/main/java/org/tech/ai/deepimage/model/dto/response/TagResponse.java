@@ -7,7 +7,7 @@ import org.tech.ai.deepimage.entity.Tag;
 import java.time.LocalDateTime;
 
 /**
- * 标签响应
+ * Tag response
  * 
  * @author zgq
  * @since 2025-10-01
@@ -17,34 +17,34 @@ import java.time.LocalDateTime;
 public class TagResponse {
     
     /**
-     * 标签ID
+     * Tag ID
      */
     private Long id;
     
     /**
-     * 标签名称
+     * Tag name
      */
     private String tagName;
     
     /**
-     * 标签颜色（十六进制格式）
+     * Tag color (hexadecimal format)
      */
     private String color;
     
     /**
-     * 使用次数
+     * Usage count
      */
     private Integer usageCount;
     
     /**
-     * 创建时间
+     * Creation time
      */
     private LocalDateTime createdAt;
     
     /**
-     * 从Tag实体转换为TagResponse
+     * Convert from Tag entity to TagResponse
      * 
-     * @param tag Tag实体
+     * @param tag Tag entity
      * @return TagResponse
      */
     public static TagResponse from(Tag tag) {

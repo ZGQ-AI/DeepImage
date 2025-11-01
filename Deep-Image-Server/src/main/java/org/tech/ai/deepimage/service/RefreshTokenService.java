@@ -6,30 +6,30 @@ import org.tech.ai.deepimage.model.dto.request.RevokeRefreshTokenBySessionReques
 import org.tech.ai.deepimage.entity.RefreshToken;
 
 /**
- * 刷新令牌表 服务类
+ * Refresh token table service class
  * 
  * @author zgq
  * @since 2025-09-29
  */
 public interface RefreshTokenService extends IService<RefreshToken> {
     /**
-     * 生成并持久化新的 RefreshToken，返回明文 refreshToken
+     * Generate and persist new RefreshToken, return plaintext refreshToken
      */
     String createAndStoreRefreshToken(CreateRefreshTokenRequest request);
 
     /**
-     * 校验 refreshToken 是否有效（未过期、未撤销、未删除），返回对应实体；无效则返回 null
+     * Verify if refreshToken is valid (not expired, not revoked, not deleted), return corresponding entity; return null if invalid
      */
     RefreshToken verifyAndGet(String refreshTokenPlain);
 
 
     /**
-     * 撤销指定的 RefreshToken
+     * Revoke specified RefreshToken
      */
     void revoke(String refreshTokenPlain);
 
     /**
-     * 撤销指定会话的所有 RefreshToken
+     * Revoke all RefreshTokens of specified session
      */
     void revokeAllBySessionId(RevokeRefreshTokenBySessionRequest request);
 }

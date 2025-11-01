@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 文件工具类
+ * File utility class
  * 
  * @author zgq
  * @since 2025-10-02
@@ -20,7 +20,7 @@ public class FileUtil {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
     
     /**
-     * 文件扩展名到MIME类型的映射
+     * Mapping from file extension to MIME type
      */
     private static final Map<String, String> EXTENSION_TO_MIME = new HashMap<>();
     
@@ -36,14 +36,14 @@ public class FileUtil {
     }
     
     /**
-     * 生成MinIO对象名称
-     * 格式: {userId}/{businessType}/{date}/{uuid}.{extension}
-     * 例如: 1001/avatar/20251002/abc123def456.jpg
+     * Generate MinIO object name
+     * Format: {userId}/{businessType}/{date}/{uuid}.{extension}
+     * Example: 1001/avatar/20251002/abc123def456.jpg
      * 
-     * @param userId 用户ID
-     * @param businessType 业务类型（如：avatar、document、image等）
-     * @param extension 文件扩展名（如：jpg、png、pdf）
-     * @return MinIO对象名称
+     * @param userId User ID
+     * @param businessType Business type (e.g., avatar, document, image)
+     * @param extension File extension (e.g., jpg, png, pdf)
+     * @return MinIO object name
      */
     public static String generateObjectName(Long userId, String businessType, String extension) {
         String date = LocalDateTime.now().format(DATE_FORMATTER);
@@ -57,10 +57,10 @@ public class FileUtil {
     }
     
     /**
-     * 获取文件扩展名（不含点）
+     * Get file extension (without dot)
      * 
-     * @param filename 文件名
-     * @return 扩展名（小写），如果没有扩展名返回空字符串
+     * @param filename Filename
+     * @return Extension (lowercase), empty string if no extension
      */
     public static String getFileExtension(String filename) {
         if (filename == null || filename.isEmpty()) {
@@ -76,10 +76,10 @@ public class FileUtil {
     }
     
     /**
-     * 获取文件名（不含扩展名）
+     * Get filename without extension
      * 
-     * @param filename 文件名
-     * @return 不含扩展名的文件名
+     * @param filename Filename
+     * @return Filename without extension
      */
     public static String getFileNameWithoutExtension(String filename) {
         if (filename == null || filename.isEmpty()) {
@@ -95,10 +95,10 @@ public class FileUtil {
     }
     
     /**
-     * 格式化文件大小为人类可读格式
+     * Format file size in human-readable format
      * 
-     * @param size 文件大小（字节）
-     * @return 格式化后的大小（如：1.5 MB）
+     * @param size File size (bytes)
+     * @return Formatted size (e.g., 1.5 MB)
      */
     public static String formatFileSize(Long size) {
         if (size == null || size < 0) {
@@ -117,26 +117,26 @@ public class FileUtil {
     }
     
     /**
-     * 检查文件名是否合法
+     * Check if filename is valid
      * 
-     * @param filename 文件名
-     * @return 是否合法
+     * @param filename Filename
+     * @return Whether valid
      */
     public static boolean isValidFilename(String filename) {
         if (filename == null || filename.trim().isEmpty()) {
             return false;
         }
         
-        // 检查是否包含非法字符
+        // Check if contains invalid characters
         String invalidChars = "[\\\\/:*?\"<>|]";
         return !filename.matches(".*" + invalidChars + ".*");
     }
     
     /**
-     * 根据文件扩展名获取MIME类型
+     * Get MIME type based on file extension
      * 
-     * @param extension 文件扩展名（不区分大小写）
-     * @return MIME类型，如果未找到则返回默认类型（image/jpeg）
+     * @param extension File extension (case-insensitive)
+     * @return MIME type, default type (image/jpeg) if not found
      */
     public static String getMimeType(String extension) {
         if (extension == null || extension.isEmpty()) {
@@ -146,10 +146,10 @@ public class FileUtil {
     }
     
     /**
-     * 判断Content-Type是否为图片类型
+     * Check if Content-Type is image type
      * 
-     * @param contentType Content-Type头
-     * @return 是否为图片
+     * @param contentType Content-Type header
+     * @return Whether it is an image
      */
     public static boolean isImageType(String contentType) {
         return contentType != null && contentType.startsWith("image/");

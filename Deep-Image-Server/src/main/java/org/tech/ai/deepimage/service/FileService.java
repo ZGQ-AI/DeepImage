@@ -8,228 +8,228 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * 文件管理Service接口
+ * File Management Service Interface
  * 
  * @author zgq
  * @since 2025-10-02
  */
 public interface FileService {
     
-    // ========== 文件上传 ==========
+    // ========== File Upload ==========
     
     /**
-     * 单文件上传
+     * Single file upload
      * 
-     * @param request 上传请求
-     * @return 上传响应
+     * @param request Upload request
+     * @return Upload response
      */
     FileUploadResponse uploadFile(UploadFileRequest request);
     
     /**
-     * 检查文件是否已存在
+     * Check if file exists
      * 
-     * @param request 文件存在性检查请求
-     * @return 检查结果
+     * @param request File existence check request
+     * @return Check result
      */
     FileExistsResponse checkFileExists(FileExistsCheckRequest request);
     
-    // ========== 文件查询 ==========
+    // ========== File Query ==========
     
     /**
-     * 分页查询文件列表（统一接口）
-     * 支持按业务类型、标签ID筛选，支持自定义排序
+     * Paginated file list query (unified interface)
+     * Supports filtering by business type and tag ID, supports custom sorting
      * 
-     * @param request 查询请求
-     * @return 文件列表分页结果
+     * @param request Query request
+     * @return File list pagination result
      */
     Page<FileInfoResponse> listFiles(ListFilesRequest request);
     
     /**
-     * 查询文件详情
+     * Query file details
      * 
-     * @param fileId 文件ID
-     * @return 文件详情
+     * @param fileId File ID
+     * @return File details
      */
     FileDetailResponse getFileDetail(Long fileId);
     
-    // ========== 文件下载 ==========
+    // ========== File Download ==========
     
     /**
-     * 下载文件
+     * Download file
      * 
-     * @param fileId 文件ID
-     * @return 文件输入流
+     * @param fileId File ID
+     * @return File input stream
      */
     InputStream downloadFile(Long fileId);
     
     /**
-     * 获取文件预览URL
+     * Get file preview URL
      * 
-     * @param fileId 文件ID
-     * @param expirySeconds 过期时间（秒）
-     * @return 预览URL响应
+     * @param fileId File ID
+     * @param expirySeconds Expiration time (seconds)
+     * @return Preview URL response
      */
     FilePreviewResponse getPreviewUrl(Long fileId, Integer expirySeconds);
     
-    // ========== 文件管理 ==========
+    // ========== File Management ==========
     
     /**
-     * 重命名文件
+     * Rename file
      * 
-     * @param request 重命名请求
-     * @return 文件信息
+     * @param request Rename request
+     * @return File information
      */
     FileInfoResponse renameFile(RenameFileRequest request);
     
     /**
-     * 删除文件（软删除）
+     * Delete file (soft delete)
      * 
-     * @param fileId 文件ID
-     * @return 是否成功
+     * @param fileId File ID
+     * @return Whether successful
      */
     Boolean deleteFile(Long fileId);
     
     /**
-     * 批量删除文件
+     * Batch delete files
      * 
-     * @param request 批量操作请求
-     * @return 批量操作响应
+     * @param request Batch operation request
+     * @return Batch operation response
      */
     BatchOperationResponse batchDeleteFiles(BatchOperationRequest request);
     
     /**
-     * 彻底删除文件（从MinIO删除）
+     * Permanently delete file (delete from MinIO)
      * 
-     * @param fileId 文件ID
-     * @return 是否成功
+     * @param fileId File ID
+     * @return Whether successful
      */
     Boolean permanentDeleteFile(Long fileId);
     
-    // ========== 文件标签 ==========
+    // ========== File Tags ==========
     
     /**
-     * 为文件添加标签
+     * Add tags to file
      * 
-     * @param request 添加标签请求
-     * @return 文件的所有标签
+     * @param request Add tags request
+     * @return All tags of the file
      */
     List<TagResponse> addFileTags(AddFileTagsRequest request);
     
     /**
-     * 移除文件标签
+     * Remove file tag
      * 
-     * @param fileId 文件ID
-     * @param tagId 标签ID
-     * @return 是否成功
+     * @param fileId File ID
+     * @param tagId Tag ID
+     * @return Whether successful
      */
     Boolean removeFileTag(Long fileId, Long tagId);
     
     /**
-     * 查询文件的所有标签
+     * Query all tags of a file
      * 
-     * @param fileId 文件ID
-     * @return 标签列表
+     * @param fileId File ID
+     * @return Tag list
      */
     List<TagResponse> getFileTags(Long fileId);
     
-    // ========== 文件分享 ==========
+    // ========== File Sharing ==========
     
     /**
-     * 创建文件分享
+     * Create file share
      * 
-     * @param request 创建分享请求
-     * @return 分享信息
+     * @param request Create share request
+     * @return Share information
      */
     FileShareResponse createFileShare(CreateFileShareRequest request);
     
     /**
-     * 取消分享
+     * Cancel share
      * 
-     * @param shareId 分享ID
-     * @return 是否成功
+     * @param shareId Share ID
+     * @return Whether successful
      */
     Boolean cancelFileShare(Long shareId);
     
     /**
-     * 查询我的分享列表（分享出去的）
+     * Query my outgoing shares list (shared files)
      * 
-     * @param page 页码
-     * @param size 每页大小
-     * @return 分享列表分页结果
+     * @param page Page number
+     * @param size Page size
+     * @return Share list pagination result
      */
     Page<FileShareResponse> listOutgoingShares(Integer page, Integer size);
     
     /**
-     * 查询收到的分享列表
+     * Query incoming shares list
      * 
-     * @param page 页码
-     * @param size 每页大小
-     * @return 分享列表分页结果
+     * @param page Page number
+     * @param size Page size
+     * @return Share list pagination result
      */
     Page<FileShareResponse> listIncomingShares(Integer page, Integer size);
     
     /**
-     * 查询分享详情
+     * Query share details
      * 
-     * @param shareId 分享ID
-     * @return 分享信息
+     * @param shareId Share ID
+     * @return Share information
      */
     FileShareResponse getShareDetail(Long shareId);
     
-    // ========== 访问日志 ==========
+    // ========== Access Logs ==========
     
     /**
-     * 查询文件访问日志
+     * Query file access logs
      * 
-     * @param request 查询请求
-     * @return 访问日志分页结果
+     * @param request Query request
+     * @return Access logs pagination result
      */
     Page<FileAccessLogResponse> getFileAccessLogs(GetFileAccessLogsRequest request);
     
     /**
-     * 查询用户文件统计
+     * Query user file statistics
      * 
-     * @return 统计信息
+     * @return Statistics information
      */
     FileStatisticsResponse getFileStatistics();
     
-    // ========== 回收站管理 ==========
+    // ========== Recycle Bin Management ==========
     
     /**
-     * 查询回收站文件列表（支持分页和排序）
+     * Query recycle bin file list (supports pagination and sorting)
      * 
-     * @param request 分页查询请求
-     * @return 回收站文件分页列表
+     * @param request Pagination query request
+     * @return Recycle bin file pagination list
      */
     Page<FileInfoResponse> queryTrash(RecycleBinQueryRequest request);
     
     /**
-     * 批量恢复文件
+     * Batch restore files
      * 
-     * @param request 批量操作请求
-     * @return 操作结果
+     * @param request Batch operation request
+     * @return Operation result
      */
     BatchOperationResponse batchRestoreFiles(BatchOperationRequest request);
     
     /**
-     * 批量彻底删除文件
+     * Batch permanently delete files
      * 
-     * @param request 批量操作请求
-     * @return 操作结果
+     * @param request Batch operation request
+     * @return Operation result
      */
     BatchOperationResponse batchPermanentDeleteFiles(BatchOperationRequest request);
     
     /**
-     * 清空回收站
+     * Empty recycle bin
      * 
-     * @return 操作结果
+     * @return Operation result
      */
     BatchOperationResponse emptyRecycleBin();
     
     /**
-     * 获取回收站统计信息
+     * Get recycle bin statistics
      * 
-     * @return 统计信息
+     * @return Statistics information
      */
     TrashStatsResponse getTrashStats();
 }

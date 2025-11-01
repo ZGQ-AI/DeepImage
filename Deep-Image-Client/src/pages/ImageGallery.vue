@@ -5,7 +5,7 @@
       <p class="gallery-description">{{ PAGE_DESCRIPTIONS.GALLERY }}</p>
     </div>
 
-    <!-- 当有图片时显示工具栏 -->
+    <!-- Show toolbar when there are images -->
     <div v-if="images.length > 0" class="gallery-toolbar">
       <div class="toolbar-left">
         <a-button type="primary" @click="showUploader = !showUploader">
@@ -25,7 +25,7 @@
         </span>
       </div>
       <div class="toolbar-right">
-        <!-- 文件名搜索 -->
+        <!-- Filename search -->
         <a-input-search
           v-model:value="searchKeyword"
           :placeholder="PLACEHOLDERS.SEARCH_FILE_NAME"
@@ -35,7 +35,7 @@
           @change="handleSearchChange"
         />
         
-        <!-- 排序选择 -->
+        <!-- Sort selection -->
         <a-select
           v-model:value="sortOption"
           style="width: 160px; margin-right: 16px;"
@@ -49,7 +49,7 @@
           <a-select-option :value="SORT_OPTIONS.FILENAME_DESC.value">{{ SORT_OPTIONS.FILENAME_DESC.label }}</a-select-option>
         </a-select>
         
-        <!-- 标签筛选 -->
+        <!-- Tag filter -->
         <a-select
           v-model:value="selectedTagId"
           :placeholder="PLACEHOLDERS.FILTER_BY_TAG"
@@ -74,7 +74,7 @@
       </div>
     </div>
 
-    <!-- 上传区域 -->
+    <!-- Upload area -->
     <div v-if="shouldShowUploader" class="upload-section">
       <ImageUploader 
         :max-size="UPLOAD_CONFIG.MAX_SIZE" 
@@ -84,7 +84,7 @@
       />
     </div>
 
-    <!-- 批量操作工具栏 -->
+    <!-- Batch operation toolbar -->
     <BatchToolbar
       v-if="selectionMode"
       :is-all-selected="isAllSelected"
@@ -106,11 +106,11 @@
       </template>
     </BatchToolbar>
 
-    <!-- 图片展示区域 -->
+    <!-- Image display area -->
     <div class="gallery-content">
-      <!-- 图片列表 - 根据视图模式显示 -->
+      <!-- Image list - display according to view mode -->
       <div v-if="images.length > 0" class="images-container">
-        <!-- 网格视图 -->
+        <!-- Grid view -->
         <ImageMasonryView
           v-if="viewMode === 'grid'"
           :images="images"
@@ -125,7 +125,7 @@
           @toggle-select="handleToggleSelect"
         />
         
-        <!-- 列表视图 -->
+        <!-- List view -->
         <ImageListView
           v-else-if="viewMode === 'list'"
           :images="images"
@@ -142,7 +142,7 @@
       </div>
     </div>
 
-    <!-- 图片预览弹窗 -->
+    <!-- Image preview modal -->
     <a-image-preview-group 
       :preview="{
         visible: previewVisible,
@@ -159,14 +159,14 @@
       />
     </a-image-preview-group>
 
-    <!-- 标签管理弹窗 -->
+    <!-- Tag management modal -->
     <FileTagManager
       v-model:open="tagManagerVisible"
       :file-info="currentImageForTag"
       @tags-updated="handleTagsUpdated"
     />
 
-    <!-- 重命名弹窗 -->
+    <!-- Rename modal -->
     <RenameModal
       v-model:open="renameModalVisible"
       :current-filename="currentImageForRename?.originalFilename || ''"
@@ -195,7 +195,7 @@ import type { FileInfoResponse } from '../types/file'
 import type { ViewMode } from '../components/file/ViewModeToggle.vue'
 import type { TagResponse } from '../types/tag'
 
-// 状态管理
+// State management
 const showUploader = ref(false)
 const images = ref<FileInfoResponse[]>([])
 const loading = ref(false)
@@ -211,31 +211,31 @@ const renaming = ref(false)
 const availableTags = ref<TagResponse[]>([])
 const selectedTagId = ref<number | null>(null)
 
-// 批量操作状态
+// Batch operation state
 const selectionMode = ref(false)
 const selectedFileIds = ref<Set<number>>(new Set())
 
-// 搜索和排序
+// Search and sort
 const searchKeyword = ref<string>('')
-const sortOption = ref<string>('createdAt-desc') // 默认按上传时间降序
+const sortOption = ref<string>('createdAt-desc') // Default sort by upload time descending
 let searchTimer: any = null
 
-// 计算是否应该显示上传器
+// Compute whether to show uploader
 const shouldShowUploader = computed(() => {
-  // 如果没有图片，总是显示上传器
+  // If no images, always show uploader
   if (images.value.length === 0) return true
-  // 如果有图片，则根据用户手动控制
+  // If images exist, controlled by user
   return showUploader.value
 })
 
-// 计算是否全选
+// Compute if all selected
 const isAllSelected = computed(() => {
   return images.value.length > 0 && selectedFileIds.value.size === images.value.length
 })
 
-// formatFileSize 已从 utils/file.ts 导入
+// formatFileSize is imported from utils/file.ts
 
-// 加载可用标签
+// Load available tags
 const loadTags = async () => {
   try {
     const response = await listTags()
@@ -243,98 +243,98 @@ const loadTags = async () => {
       availableTags.value = response.data.data || []
     }
   } catch (error) {
-    console.error('加载标签失败:', error)
+    console.error('Failed to load tags:', error)
   }
 }
 
-// 加载图片列表
+// Load image list
 const loadImages = async () => {
   try {
     loading.value = true
     
-    // 解析排序选项
+    // Parse sort option
     const [sortBy, sortOrder] = sortOption.value.split('-')
     
-    // 使用统一的 listFiles 接口
+    // Use unified listFiles interface
     const response = await listFiles({
       businessType: BusinessType.IMAGE,
-      tagId: selectedTagId.value || undefined,  // 如果有选中的标签，传入标签ID
-      filename: searchKeyword.value || undefined,  // 文件名搜索
-      sortBy,  // 排序字段
-      sortOrder,  // 排序方向
+      tagId: selectedTagId.value || undefined,  // If tag selected, pass tag ID
+      filename: searchKeyword.value || undefined,  // Filename search
+      sortBy,  // Sort field
+      sortOrder,  // Sort direction
       page: 1,
       pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE
     })
 
-    // API 返回的数据结构：{ code, message, data: { records, total, ... } }
+    // API response structure: { code, message, data: { records, total, ... } }
     images.value = response.data.data?.records || []
   } catch (error: any) {
-    console.error('加载图片失败:', error)
+    console.error('Failed to load images:', error)
     message.error(MESSAGES.LOADING_IMAGES)
   } finally {
     loading.value = false
   }
 }
 
-// 上传成功处理
+// Handle upload success
 const handleUploadSuccess = (newImages: any[]) => {
-  // 将新上传的图片添加到列表前面
+  // Add newly uploaded images to the front of the list
   images.value.unshift(...newImages)
   message.success(MESSAGES.UPLOAD_SUCCESS(newImages.length))
   
-  // 如果之前没有图片，现在有了图片，可以隐藏上传器
-  // 如果之前就有图片，则按用户意愿控制
+  // If no images before, now have images, can hide uploader
+  // If images existed before, controlled by user preference
   if (images.value.length === newImages.length) {
-    // 这是第一次上传，保持上传器显示，方便继续上传
+    // First upload, keep uploader visible for continued uploads
     showUploader.value = false
   } else {
-    // 已经有图片了，自动收起上传器
+    // Images already exist, auto-collapse uploader
     showUploader.value = false
   }
 }
 
-// 上传失败处理
+// Handle upload error
 const handleUploadError = (error: any) => {
-  console.error('上传失败:', error)
+  console.error('Upload failed:', error)
 }
 
-// 视图模式切换处理
+// Handle view mode change
 const handleViewModeChange = (mode: ViewMode) => {
-  // 保存用户偏好到本地存储
+  // Save user preference to local storage
   localStorage.setItem('gallery-view-mode', mode)
 }
 
-// 搜索处理（防抖）
+// Handle search (debounced)
 const handleSearchChange = () => {
-  // 清除之前的定时器
+  // Clear previous timer
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
   
-    // 设置新的定时器（500ms 后执行搜索）
+    // Set new timer (execute search after 500ms)
     searchTimer = setTimeout(() => {
       loadImages()
     }, STYLE_CONFIG.DEBOUNCE_TIMEOUT)
 }
 
-// 立即搜索（按下回车或点击搜索按钮时）
+// Immediate search (when Enter pressed or search button clicked)
 const handleSearch = () => {
-  // 清除防抖定时器
+  // Clear debounce timer
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
-  // 立即执行搜索
+  // Execute search immediately
   loadImages()
 }
 
-// 排序变化处理
+// Handle sort change
 const handleSortChange = () => {
   loadImages()
 }
 
-// 图片操作处理
+// Handle image operations
 const handleImagePreview = (image: FileInfoResponse) => {
-  // 找到当前图片在列表中的索引
+  // Find current image index in list
   currentImageIndex.value = images.value.findIndex(img => img.fileId === image.fileId)
   if (currentImageIndex.value === -1) {
     currentImageIndex.value = 0
@@ -352,15 +352,15 @@ const handleImageDownload = async (image: FileInfoResponse) => {
       duration: 0
     })
 
-    // 调用后端下载接口
+    // Call backend download API
     const response = await downloadFile(image.fileId)
     
-    // 从响应头获取文件名
+    // Get filename from response headers
     const contentDisposition = response.headers['content-disposition']
     let filename = image.originalFilename
     
     if (contentDisposition) {
-      // 解析 Content-Disposition 头获取文件名
+      // Parse Content-Disposition header to get filename
       const filenameMatch = contentDisposition.match(/filename\*=UTF-8''(.+)/)
       if (filenameMatch && filenameMatch[1]) {
         filename = decodeURIComponent(filenameMatch[1])
@@ -372,7 +372,7 @@ const handleImageDownload = async (image: FileInfoResponse) => {
       }
     }
 
-    // 创建 Blob 和下载链接
+    // Create Blob and download link
     const blob = new Blob([response.data])
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -380,11 +380,11 @@ const handleImageDownload = async (image: FileInfoResponse) => {
     link.download = filename
     link.style.display = 'none'
     
-    // 触发下载
+    // Trigger download
     document.body.appendChild(link)
     link.click()
     
-    // 清理
+    // Cleanup
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
     
@@ -394,7 +394,7 @@ const handleImageDownload = async (image: FileInfoResponse) => {
     })
 
   } catch (error) {
-    console.error('下载图片失败:', error)
+    console.error('Failed to download image:', error)
     message.error({
       content: MESSAGES.DOWNLOAD_ERROR(error instanceof Error ? error.message : '未知错误'),
       key: `download-${image.fileId}`
@@ -412,7 +412,7 @@ const handleRenameConfirm = async (newFilename: string) => {
   
   const image = currentImageForRename.value
   
-  // 验证文件名
+  // Validate filename
   if (!newFilename || newFilename === image.originalFilename) {
     if (newFilename === image.originalFilename) {
       message.info(MESSAGES.RENAME_NO_CHANGE)
@@ -431,11 +431,11 @@ const handleRenameConfirm = async (newFilename: string) => {
       duration: 0
     })
 
-    // 调用重命名接口
+    // Call rename API
     const response = await renameFile(image.fileId, newFilename)
     
     if (response.data.code === 200 && response.data.data) {
-      // 更新列表中的图片信息
+      // Update image info in list
       const index = images.value.findIndex(img => img.fileId === image.fileId)
       if (index !== -1) {
         images.value[index] = response.data.data
@@ -450,7 +450,7 @@ const handleRenameConfirm = async (newFilename: string) => {
       throw new Error(response.data.message || '重命名失败')
     }
   } catch (error) {
-    console.error('重命名图片失败:', error)
+    console.error('Failed to rename image:', error)
     message.error({
       content: `重命名失败: ${error instanceof Error ? error.message : '未知错误'}`,
       key: `rename-${image.fileId}`
@@ -460,20 +460,20 @@ const handleRenameConfirm = async (newFilename: string) => {
   }
 }
 
-// 标签筛选变化
+// Handle tag filter change
 const handleTagFilterChange = () => {
   loadImages()
 }
 
-// 管理标签
+// Manage tags
 const handleManageTags = (image: FileInfoResponse) => {
   currentImageForTag.value = image
   tagManagerVisible.value = true
 }
 
-// 标签更新后回调
+// Callback after tags updated
 const handleTagsUpdated = (tags: TagResponse[]) => {
-  // 更新当前图片的标签
+  // Update current image's tags
   if (currentImageForTag.value) {
     const imageIndex = images.value.findIndex(img => img.fileId === currentImageForTag.value!.fileId)
     if (imageIndex !== -1) {
@@ -485,12 +485,12 @@ const handleTagsUpdated = (tags: TagResponse[]) => {
     }
   }
   
-  // 重新加载标签列表
+  // Reload tag list
   loadTags()
 }
 
 const handleImageDelete = async (image: FileInfoResponse) => {
-  // 使用 Modal 确认删除
+  // Use Modal to confirm deletion
   Modal.confirm({
     title: '确认删除',
     content: MESSAGES.DELETE_CONFIRM(1).replace('选中的', `图片 "${image.originalFilename}"`).replace('张图片', ''),
@@ -505,13 +505,13 @@ const handleImageDelete = async (image: FileInfoResponse) => {
           duration: 0
         })
 
-        // 调用批量删除接口（单个文件）
+        // Call batch delete API (single file)
         const response = await batchDeleteFiles([image.fileId])
         
         if (response.data.code === 200 && response.data.data) {
           const result = response.data.data
           if (result.success > 0) {
-            // 从列表中移除该图片
+            // Remove image from list
             images.value = images.value.filter(img => img.fileId !== image.fileId)
             
             message.success({
@@ -525,7 +525,7 @@ const handleImageDelete = async (image: FileInfoResponse) => {
           throw new Error(response.data.message || '删除失败')
         }
       } catch (error) {
-        console.error('删除图片失败:', error)
+        console.error('Failed to delete image:', error)
         message.error({
           content: `删除失败: ${error instanceof Error ? error.message : '未知错误'}`,
           key: `delete-${image.fileId}`
@@ -535,7 +535,7 @@ const handleImageDelete = async (image: FileInfoResponse) => {
   })
 }
 
-// 切换选择模式
+// Toggle selection mode
 const toggleSelectionMode = () => {
   selectionMode.value = !selectionMode.value
   if (!selectionMode.value) {
@@ -543,7 +543,7 @@ const toggleSelectionMode = () => {
   }
 }
 
-// 切换单个文件选择
+// Toggle single file selection
 const handleToggleSelect = (fileId: number) => {
   if (selectedFileIds.value.has(fileId)) {
     selectedFileIds.value.delete(fileId)
@@ -552,7 +552,7 @@ const handleToggleSelect = (fileId: number) => {
   }
 }
 
-// 全选/取消全选
+// Select all / deselect all
 const handleSelectAll = (checked: boolean) => {
   if (checked) {
     images.value.forEach(img => selectedFileIds.value.add(img.fileId))
@@ -561,7 +561,7 @@ const handleSelectAll = (checked: boolean) => {
   }
 }
 
-// 批量删除
+// Batch delete
 const handleBatchDelete = async () => {
   const count = selectedFileIds.value.size
   if (count === 0) {
@@ -589,10 +589,10 @@ const handleBatchDelete = async () => {
         if (response.data.code === 200 && response.data.data) {
           const result = response.data.data
           
-          // 从列表中移除成功删除的图片
+          // Remove successfully deleted images from list
           images.value = images.value.filter(img => !fileIds.includes(img.fileId))
           
-          // 清空选择
+          // Clear selection
           selectedFileIds.value.clear()
           selectionMode.value = false
           
@@ -611,7 +611,7 @@ const handleBatchDelete = async () => {
           throw new Error(response.data.message || '批量删除失败')
         }
       } catch (error) {
-        console.error('批量删除失败:', error)
+        console.error('Failed to batch delete:', error)
         message.error({
           content: `批量删除失败: ${error instanceof Error ? error.message : '未知错误'}`,
           key: 'batch-delete'
@@ -621,7 +621,7 @@ const handleBatchDelete = async () => {
   })
 }
 
-// 初始化用户偏好设置
+// Initialize user preferences
 const initUserPreferences = () => {
   const savedViewMode = localStorage.getItem('gallery-view-mode') as ViewMode
   if (savedViewMode && ['grid', 'list'].includes(savedViewMode)) {
@@ -629,7 +629,7 @@ const initUserPreferences = () => {
   }
 }
 
-// 页面加载时获取图片列表和用户偏好
+// Load image list and user preferences on page mount
 onMounted(() => {
   initUserPreferences()
   loadImages()

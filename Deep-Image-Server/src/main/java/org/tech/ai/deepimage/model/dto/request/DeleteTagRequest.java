@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 /**
- * 删除标签请求
+ * Delete tag request
  * 
  * @author zgq
  * @since 2025-10-01
@@ -14,7 +14,7 @@ import lombok.Data;
 public class DeleteTagRequest {
     
     /**
-     * 标签ID
+     * Tag ID
      */
     @NotNull(message = "标签ID不能为空")
     @Positive(message = "标签ID必须为正数")

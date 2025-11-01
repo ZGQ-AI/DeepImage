@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.enums;
 import lombok.Getter;
 
 /**
- * 文件业务类型枚举
+ * File business type enum
  * 
  * @author zgq
  * @since 2025-10-02
@@ -24,24 +24,24 @@ public enum BusinessTypeEnum {
     }
     
     /**
-     * 根据名称获取枚举（忽略大小写）
+     * Get enum by name (case-insensitive)
      * 
-     * @param name 枚举名称
-     * @return 枚举值
+     * @param name Enum name
+     * @return Enum value
      */
     public static BusinessTypeEnum fromName(String name) {
         try {
             return BusinessTypeEnum.valueOf(name.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("未知的业务类型: " + name);
+            throw new IllegalArgumentException("Unknown business type: " + name);
         }
     }
     
     /**
-     * 验证业务类型是否合法
+     * Validate if business type is valid
      * 
-     * @param name 枚举名称
-     * @return 是否合法
+     * @param name Enum name
+     * @return Whether valid
      */
     public static boolean isValid(String name) {
         try {

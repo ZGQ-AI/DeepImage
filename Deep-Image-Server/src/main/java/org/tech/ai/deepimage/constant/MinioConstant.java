@@ -1,7 +1,7 @@
 package org.tech.ai.deepimage.constant;
 
 /**
- * MinIO相关常量
+ * MinIO related constants
  * 
  * @author zgq
  * @since 2025-10-02
@@ -9,17 +9,17 @@ package org.tech.ai.deepimage.constant;
 public class MinioConstant {
 
     /**
-     * 默认预签名URL过期时间(秒) - 1小时
+     * Default presigned URL expiration time (seconds) - 1 hour
      */
     public static final int DEFAULT_PRESIGNED_EXPIRY = 3600;
 
     /**
-     * 最大预签名URL过期时间(秒) - 7天
+     * Maximum presigned URL expiration time (seconds) - 7 days
      */
     public static final int MAX_PRESIGNED_EXPIRY = 604800;
 
     /**
-     * 最小预签名URL过期时间(秒) - 1分钟
+     * Minimum presigned URL expiration time (seconds) - 1 minute
      */
     public static final int MIN_PRESIGNED_EXPIRY = 60;
 
@@ -27,4 +27,3 @@ public class MinioConstant {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 }
-

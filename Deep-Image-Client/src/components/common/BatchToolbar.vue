@@ -1,6 +1,6 @@
 <!--
-  批量操作工具栏组件
-  用于图片库和回收站等需要批量操作的页面
+  Batch Operation Toolbar Component
+  Used for pages that require batch operations like image gallery and recycle bin
 -->
 <template>
   <div class="batch-toolbar">
@@ -22,7 +22,7 @@
     </div>
     <div class="batch-toolbar-right">
       <slot name="actions">
-        <!-- 默认操作按钮区域，可由父组件自定义 -->
+        <!-- Default action button area, can be customized by parent component -->
       </slot>
     </div>
   </div>
@@ -32,17 +32,17 @@
 import { computed } from 'vue'
 
 interface Props {
-  /** 是否全选 */
+  /** Whether all items are selected */
   isAllSelected: boolean
-  /** 已选中的数量 */
+  /** Number of selected items */
   selectedCount: number
-  /** 总数 */
+  /** Total count */
   totalCount: number
-  /** 全选文字 */
+  /** Select all text */
   selectAllText?: string
-  /** 总数文字模板 */
+  /** Total text template */
   totalTextTemplate?: string
-  /** 已选文字模板 */
+  /** Selected text template */
   selectedTextTemplate?: string
 }
 
@@ -56,17 +56,17 @@ const emit = defineEmits<{
   'select-all': [checked: boolean]
 }>()
 
-// 计算总数文字
+// Compute total text
 const totalText = computed(() => {
   return props.totalTextTemplate.replace('{count}', String(props.totalCount))
 })
 
-// 计算已选文字
+// Compute selected text
 const selectedText = computed(() => {
   return props.selectedTextTemplate.replace('{count}', String(props.selectedCount))
 })
 
-// 全选/取消全选处理
+// Handle select all / deselect all
 const handleSelectAllChange = (e: { target: { checked: boolean } }) => {
   emit('select-all', e.target.checked)
 }

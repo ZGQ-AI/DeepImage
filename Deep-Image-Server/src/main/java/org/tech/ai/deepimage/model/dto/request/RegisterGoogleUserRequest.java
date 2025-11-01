@@ -5,8 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Google用户信息DTO
- * 从Google ID Token中提取的用户信息
+ * Google user information DTO
+ * User information extracted from Google ID Token
  * 
  * @author zgq
  * @since 2025-10-01
@@ -17,17 +17,17 @@ import lombok.NoArgsConstructor;
 public class RegisterGoogleUserRequest {
     
     /**
-     * 用户邮箱（必需）
+     * User email (required)
      */
     private String email;
     
     /**
-     * 用户全名（可选）
+     * User full name (optional)
      */
     private String name;
     
     /**
-     * 用户头像URL（可选）
+     * User avatar URL (optional)
      */
     private String picture;
 }

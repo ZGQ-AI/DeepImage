@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.tech.ai.deepimage.entity.RolePermission;
 
 /**
- * 角色权限关联表 服务类
+ * Role-permission association table service class
  * 
  * @author zgq
  * @since 2025-09-29

@@ -1,5 +1,5 @@
 /**
- * 标签管理相关API接口
+ * Tag management-related API interfaces
  */
 import request from '../request'
 import type { ApiResponse } from '../types/api'
@@ -11,28 +11,28 @@ import type {
 } from '../types/tag'
 
 /**
- * 创建标签
+ * Create tag
  */
 export function createTag(data: CreateTagRequest) {
   return request.post<ApiResponse<TagResponse>>('/api/tags', data)
 }
 
 /**
- * 查询当前用户所有标签
+ * Query all tags of current user
  */
 export function listTags() {
   return request.get<ApiResponse<TagResponse[]>>('/api/tags')
 }
 
 /**
- * 更新标签
+ * Update tag
  */
 export function updateTag(data: UpdateTagRequest) {
   return request.put<ApiResponse<TagResponse>>('/api/tags', data)
 }
 
 /**
- * 删除标签
+ * Delete tag
  */
 export function deleteTag(data: DeleteTagRequest) {
   return request.delete<ApiResponse<void>>('/api/tags', { data })

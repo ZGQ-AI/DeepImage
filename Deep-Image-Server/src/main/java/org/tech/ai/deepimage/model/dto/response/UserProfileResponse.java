@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 用户信息响应
+ * User profile response
  * 
  * @author zgq
  * @since 2025-10-01
@@ -14,42 +14,42 @@ import java.time.LocalDateTime;
 public class UserProfileResponse {
     
     /**
-     * 用户ID
+     * User ID
      */
     private Long id;
     
     /**
-     * 用户名
+     * Username
      */
     private String username;
     
     /**
-     * 邮箱地址
+     * Email address
      */
     private String email;
     
     /**
-     * 手机号
+     * Phone number
      */
     private String phone;
     
     /**
-     * 头像URL
+     * Avatar URL
      */
     private String avatarUrl;
     
     /**
-     * 邮箱验证状态
+     * Email verification status
      */
     private Boolean verified;
     
     /**
-     * 注册时间
+     * Registration time
      */
     private LocalDateTime createdAt;
     
     /**
-     * 最后更新时间
+     * Last update time
      */
     private LocalDateTime updatedAt;
 }

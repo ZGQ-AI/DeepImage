@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.tech.ai.deepimage.entity.Role;
 
 /**
- * 角色信息表 Mapper 接口
+ * Role information table Mapper interface
  * 
  * @author zgq
  * @since 2025-09-29

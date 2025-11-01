@@ -7,7 +7,7 @@ import org.tech.ai.deepimage.mapper.PermissionMapper;
 import org.tech.ai.deepimage.service.PermissionService;
 
 /**
- * 权限信息表 服务实现类
+ * Permission information table service implementation class
  * 
  * @author zgq
  * @since 2025-09-29

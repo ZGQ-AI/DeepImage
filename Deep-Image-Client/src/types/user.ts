@@ -1,9 +1,9 @@
 /**
- * 用户相关类型定义
+ * User-related type definitions
  */
 
 /**
- * 用户信息响应
+ * User profile response
  */
 export interface UserProfileResponse {
   id: number
@@ -17,7 +17,7 @@ export interface UserProfileResponse {
 }
 
 /**
- * 更新用户信息请求
+ * Update user profile request
  */
 export interface UpdateUserProfileRequest {
   username?: string
@@ -26,7 +26,7 @@ export interface UpdateUserProfileRequest {
 }
 
 /**
- * 会话项响应
+ * Session item response
  */
 export interface SessionItemResponse {
   id: number
@@ -40,7 +40,7 @@ export interface SessionItemResponse {
 }
 
 /**
- * 会话列表响应
+ * Session list response
  */
 export interface SessionListResponse {
   sessions: SessionItemResponse[]
@@ -50,7 +50,7 @@ export interface SessionListResponse {
 }
 
 /**
- * 删除其他会话响应
+ * Delete other sessions response
  */
 export interface DeleteOtherSessionsResponse {
   deletedCount: number

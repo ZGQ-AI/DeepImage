@@ -1,5 +1,5 @@
 /**
- * 文件相关API接口
+ * File-related API interfaces
  */
 import request from '../request'
 import type { ApiResponse } from '../types/api'
@@ -15,10 +15,10 @@ import type {
 import type { TagResponse } from '../types/tag'
 
 /**
- * 上传文件
- * @param file 文件对象
- * @param businessType 业务类型
- * @param tagIds 标签ID列表（可选）
+ * Upload file
+ * @param file File object
+ * @param businessType Business type
+ * @param tagIds Tag ID list (optional)
  */
 export function uploadFile(file: File, businessType: BusinessType, tagIds?: number[]) {
   const formData = new FormData()
@@ -37,9 +37,9 @@ export function uploadFile(file: File, businessType: BusinessType, tagIds?: numb
 }
 
 /**
- * 查询文件列表（统一接口）
- * 支持按业务类型、标签ID筛选，支持自定义排序
- * @param requestData 查询参数
+ * Query file list (unified interface)
+ * Supports filtering by business type and tag ID, supports custom sorting
+ * @param requestData Query parameters
  */
 export function listFiles(requestData: ListFilesRequest) {
   return request.post<ApiResponse<PageResponse<FileInfoResponse>>>(
@@ -49,8 +49,8 @@ export function listFiles(requestData: ListFilesRequest) {
 }
 
 /**
- * 下载文件
- * @param fileId 文件ID
+ * Download file
+ * @param fileId File ID
  */
 export function downloadFile(fileId: number) {
   return request.get(`/api/files/download`, {
@@ -60,8 +60,8 @@ export function downloadFile(fileId: number) {
 }
 
 /**
- * 批量删除文件（软删除）
- * @param fileIds 文件ID列表
+ * Batch delete files (soft delete)
+ * @param fileIds File ID list
  */
 export function batchDeleteFiles(fileIds: number[]) {
   return request.delete<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files', {
@@ -70,9 +70,9 @@ export function batchDeleteFiles(fileIds: number[]) {
 }
 
 /**
- * 重命名文件
- * @param fileId 文件ID
- * @param newFilename 新文件名
+ * Rename file
+ * @param fileId File ID
+ * @param newFilename New filename
  */
 export function renameFile(fileId: number, newFilename: string) {
   return request.post<ApiResponse<FileInfoResponse>>('/api/files/rename', {
@@ -82,17 +82,17 @@ export function renameFile(fileId: number, newFilename: string) {
 }
 
 /**
- * 为文件添加标签
- * @param data 添加标签请求
+ * Add tags to file
+ * @param data Add tags request
  */
 export function addFileTags(data: AddFileTagsRequest) {
   return request.post<ApiResponse<TagResponse[]>>('/api/files/add-tags', data)
 }
 
 /**
- * 移除文件标签
- * @param fileId 文件ID
- * @param tagId 标签ID
+ * Remove file tag
+ * @param fileId File ID
+ * @param tagId Tag ID
  */
 export function removeFileTag(fileId: number, tagId: number) {
   return request.delete<ApiResponse<boolean>>('/api/files/remove-tag', {
@@ -101,8 +101,8 @@ export function removeFileTag(fileId: number, tagId: number) {
 }
 
 /**
- * 查询文件的所有标签
- * @param fileId 文件ID
+ * Query all tags of a file
+ * @param fileId File ID
  */
 export function getFileTags(fileId: number) {
   return request.get<ApiResponse<TagResponse[]>>('/api/files/tags', {
@@ -111,16 +111,16 @@ export function getFileTags(fileId: number) {
 }
 
 /**
- * 查询回收站文件列表（支持分页和排序）
- * @param params 分页查询参数
+ * Query recycle bin file list (supports pagination and sorting)
+ * @param params Pagination query parameters
  */
 export function getTrash(params?: import('../types/file').RecycleBinQueryRequest) {
   return request.get<ApiResponse<import('../types/file').PageResponse<import('../types/file').FileInfoResponse>>>('/api/files/trash', { params })
 }
 
 /**
- * 批量恢复文件
- * @param fileIds 文件ID列表
+ * Batch restore files
+ * @param fileIds File ID list
  */
 export function batchRestoreFiles(fileIds: number[]) {
   return request.post<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files/restore', {
@@ -129,8 +129,8 @@ export function batchRestoreFiles(fileIds: number[]) {
 }
 
 /**
- * 批量彻底删除文件
- * @param fileIds 文件ID列表
+ * Batch permanently delete files
+ * @param fileIds File ID list
  */
 export function batchPermanentDeleteFiles(fileIds: number[]) {
   return request.delete<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files/permanent', {
@@ -139,14 +139,14 @@ export function batchPermanentDeleteFiles(fileIds: number[]) {
 }
 
 /**
- * 清空回收站
+ * Empty recycle bin
  */
 export function emptyRecycleBin() {
   return request.delete<ApiResponse<import('../types/file').BatchOperationResponse>>('/api/files/trash/empty')
 }
 
 /**
- * 获取回收站统计信息
+ * Get recycle bin statistics
  */
 export function getTrashStats() {
   return request.get<ApiResponse<import('../types/file').TrashStatsResponse>>('/api/files/trash/stats')

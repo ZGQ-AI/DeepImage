@@ -23,21 +23,21 @@ public class SaTokenConfigure implements WebMvcConfigurer {
     @Resource
     private SessionService sessionService;
     
-    // 注册拦截器
+    // Register interceptor
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 自定义拦截器，用于排除 OPTIONS 请求
+        // Custom interceptor to exclude OPTIONS requests
         registry.addInterceptor(new HandlerInterceptor() {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-                // OPTIONS 请求直接放行（CORS 预检请求）
+                // OPTIONS requests directly pass through (CORS preflight requests)
                 if ("OPTIONS".equals(request.getMethod())) {
                     return true;
                 }
                 
-                // 1) 框架登录校验
+                // 1) Framework login check
                 StpUtil.checkLogin();
-                // 2) 业务会话活跃校验
+                // 2) Business session active check
                 String token = StpUtil.getTokenValue();
                 long userId = StpUtil.getLoginIdAsLong();
                 FindSessionByTokenRequest req = new FindSessionByTokenRequest();

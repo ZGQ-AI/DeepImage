@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Select;
 import org.tech.ai.deepimage.entity.User;
 
 /**
- * 用户信息表 Mapper 接口
+ * User information table Mapper interface
  * 
  * @author zgq
  * @since 2025-09-29

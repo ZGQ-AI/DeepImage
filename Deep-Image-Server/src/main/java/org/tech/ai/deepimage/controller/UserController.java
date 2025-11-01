@@ -14,7 +14,7 @@ import org.tech.ai.deepimage.model.dto.response.UserProfileResponse;
 import org.tech.ai.deepimage.service.UserService;
 
 /**
- * 用户控制器
+ * User controller
  * 
  * @author zgq
  * @since 2025-10-01
@@ -29,8 +29,8 @@ public class UserController {
     private UserService userService;
 
     /**
-     * 获取当前用户信息
-     * @return 用户信息
+     * Get current user information
+     * @return User information
      */
     @GetMapping("/profile")
     public ApiResponse<UserProfileResponse> getCurrentUserProfile() {
@@ -40,9 +40,9 @@ public class UserController {
     }
 
     /**
-     * 更新个人信息
-     * @param request 更新请求 
-     * @return 更新后的用户信息
+     * Update user profile
+     * @param request Update request 
+     * @return Updated user information
      */
     @PutMapping("/profile")
     public ApiResponse<UserProfileResponse> updateUserProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
@@ -52,8 +52,8 @@ public class UserController {
     }
 
     /**
-     * 查看个人会话列表（只返回活跃会话）
-     * @return 会话列表
+     * View user session list (only returns active sessions)
+     * @return Session list
      */
     @GetMapping("/sessions")
     public ApiResponse<SessionListResponse> listUserSessions() {
@@ -63,9 +63,9 @@ public class UserController {
     }
 
     /**
-     * 删除指定会话（踢出设备）
-     * @param sessionId 会话ID
-     * @return 是否成功
+     * Delete specified session (kick out device)
+     * @param sessionId Session ID
+     * @return Whether successful
      */
     @DeleteMapping("/sessions/{sessionId}")
     public ApiResponse<Boolean> deleteSession(@PathVariable Long sessionId) {
@@ -75,8 +75,8 @@ public class UserController {
     }
 
     /**
-     * 删除其他所有会话（仅保留当前设备）
-     * @return 删除结果
+     * Delete all other sessions (keep only current device)
+     * @return Delete result
      */
     @DeleteMapping("/sessions/others")
     public ApiResponse<DeleteOtherSessionsResponse> deleteOtherSessions() {

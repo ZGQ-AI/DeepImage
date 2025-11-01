@@ -7,7 +7,7 @@
     @cancel="handleCancel"
   >
     <div class="tag-manager">
-      <!-- 当前文件标签 -->
+      <!-- Current file tags -->
       <div class="section current-tags-section">
         <div class="section-header">
           <h4>当前标签</h4>
@@ -37,7 +37,7 @@
 
       <a-divider style="margin: 16px 0;" />
 
-      <!-- 选择标签 -->
+      <!-- Select tags -->
       <div class="section select-section">
         <div class="section-header">
           <h4>添加标签</h4>
@@ -72,7 +72,7 @@
         </div>
       </div>
 
-      <!-- 底部按钮 -->
+      <!-- Bottom buttons -->
       <div class="modal-footer">
         <a-button @click="handleCancel" size="large">关闭</a-button>
       </div>
@@ -112,19 +112,19 @@ const currentTags = ref<TagResponse[]>([])
 const allTags = ref<TagResponse[]>([])
 const loading = ref(false)
 
-// 可选择的标签（排除已有标签）
+// Selectable tags (exclude existing tags)
 const availableTags = computed(() => {
   const currentTagIds = new Set(currentTags.value.map(t => t.id))
   return allTags.value.filter(tag => !currentTagIds.has(tag.id))
 })
 
-// 加载数据
+// Load data
 const loadData = async () => {
   if (!props.fileInfo) return
 
   loading.value = true
   try {
-    // 并行加载文件标签和所有标签
+    // Load file tags and all tags in parallel
     const [fileTagsRes, allTagsRes] = await Promise.all([
       getFileTags(props.fileInfo.fileId),
       listTags()
@@ -138,32 +138,32 @@ const loadData = async () => {
       allTags.value = allTagsRes.data.data || []
     }
   } catch (error) {
-    console.error('加载标签数据失败:', error)
+    console.error('Failed to load tag data:', error)
     message.error('加载标签数据失败')
   } finally {
     loading.value = false
   }
 }
 
-// 监听弹窗打开
+// Watch modal open
 watch(() => props.open, (newVal) => {
   if (newVal) {
     loadData()
   }
 })
 
-// 快速添加单个标签
+// Quick add single tag
 const handleQuickAddTag = async (tagId: number) => {
   if (!props.fileInfo) return
 
-  // 检查是否已经有该标签
+  // Check if tag already exists
   if (currentTags.value.some(t => t.id === tagId)) {
     message.info('该标签已存在')
     return
   }
 
   try {
-    // 合并现有标签ID和新标签ID（后端是先删除再插入，所以需要传入所有标签）
+    // Merge existing tag IDs and new tag ID (backend deletes then inserts, so need to pass all tags)
     const existingTagIds = currentTags.value.map(t => t.id)
     const allTagIds = [...existingTagIds, tagId]
     
@@ -180,12 +180,12 @@ const handleQuickAddTag = async (tagId: number) => {
       throw new Error(response.data.message || '添加标签失败')
     }
   } catch (error) {
-    console.error('添加标签失败:', error)
+    console.error('Failed to add tag:', error)
     message.error(`添加标签失败: ${error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 
-// 移除标签
+// Remove tag
 const handleRemoveTag = async (tagId: number) => {
   if (!props.fileInfo) return
 
@@ -200,12 +200,12 @@ const handleRemoveTag = async (tagId: number) => {
       throw new Error(response.data.message || '移除标签失败')
     }
   } catch (error) {
-    console.error('移除标签失败:', error)
+    console.error('Failed to remove tag:', error)
     message.error(`移除标签失败: ${error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 
-// 关闭
+// Close
 const handleCancel = () => {
   visible.value = false
 }
@@ -243,7 +243,7 @@ const handleCancel = () => {
   min-height: 40px;
 }
 
-/* 当前标签 */
+/* Current tags */
 .tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -255,7 +255,7 @@ const handleCancel = () => {
   cursor: default;
 }
 
-/* 可选标签网格 */
+/* Selectable tags grid */
 .all-tags-grid {
   display: flex;
   flex-wrap: wrap;
@@ -279,7 +279,7 @@ const handleCancel = () => {
   font-size: 12px;
 }
 
-/* 底部按钮 */
+/* Bottom buttons */
 .modal-footer {
   margin-top: 24px;
   padding-top: 16px;
@@ -288,7 +288,7 @@ const handleCancel = () => {
   justify-content: flex-end;
 }
 
-/* 滚动条样式 */
+/* Scrollbar styles */
 .all-tags-grid::-webkit-scrollbar {
   width: 6px;
 }

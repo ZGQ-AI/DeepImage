@@ -14,7 +14,7 @@ import org.tech.ai.deepimage.service.TagService;
 import java.util.List;
 
 /**
- * 标签管理Controller
+ * Tag management Controller
  * 
  * @author zgq
  * @since 2025-10-01
@@ -28,10 +28,10 @@ public class TagController {
     private final TagService tagService;
     
     /**
-     * 创建标签
+     * Create tag
      * 
-     * @param request 创建标签请求
-     * @return 标签响应
+     * @param request Create tag request
+     * @return Tag response
      */
     @PostMapping
     public ApiResponse<TagResponse> createTag(@Valid @RequestBody CreateTagRequest request) {
@@ -40,9 +40,9 @@ public class TagController {
     }
     
     /**
-     * 查询当前用户所有标签
+     * Query all tags of current user
      * 
-     * @return 标签列表
+     * @return Tag list
      */
     @GetMapping
     public ApiResponse<List<TagResponse>> listTags() {
@@ -51,10 +51,10 @@ public class TagController {
     }
     
     /**
-     * 更新标签
+     * Update tag
      * 
-     * @param request 更新标签请求
-     * @return 标签响应
+     * @param request Update tag request
+     * @return Tag response
      */
     @PutMapping
     public ApiResponse<TagResponse> updateTag(@Valid @RequestBody UpdateTagRequest request) {
@@ -63,10 +63,10 @@ public class TagController {
     }
     
     /**
-     * 删除标签
+     * Delete tag
      * 
-     * @param request 删除标签请求
-     * @return 成功响应
+     * @param request Delete tag request
+     * @return Success response
      */
     @DeleteMapping
     public ApiResponse<Void> deleteTag(@Valid @RequestBody DeleteTagRequest request) {

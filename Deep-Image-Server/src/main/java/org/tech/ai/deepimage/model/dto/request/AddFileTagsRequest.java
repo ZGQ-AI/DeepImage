@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 添加文件标签请求
+ * Add file tags request
  * 
  * @author zgq
  * @since 2025-10-02
@@ -17,13 +17,13 @@ import java.util.List;
 public class AddFileTagsRequest {
     
     /**
-     * 文件ID
+     * File ID
      */
     @NotNull(message = "文件ID不能为空")
     private Long fileId;
     
     /**
-     * 标签ID列表
+     * Tag ID list
      */
     @NotEmpty(message = "标签ID列表不能为空")
     @Size(max = 10, message = "一次最多添加10个标签")

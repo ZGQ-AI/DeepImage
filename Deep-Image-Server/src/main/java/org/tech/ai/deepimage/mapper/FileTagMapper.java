@@ -8,7 +8,7 @@ import org.tech.ai.deepimage.entity.FileTag;
 import java.util.List;
 
 /**
- * 文件-标签关联表 Mapper 接口
+ * File-tag association table Mapper interface
  * 
  * @author zgq
  * @since 2025-10-01
@@ -17,7 +17,7 @@ import java.util.List;
 public interface FileTagMapper extends BaseMapper<FileTag> {
 
     /**
-     * 批量删除文件的标签关联
+     * Batch delete tag associations of files
      */
     int deleteBatchByFileIds(@Param("fileIds") List<Long> fileIds);
 }

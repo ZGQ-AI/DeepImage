@@ -6,8 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件分享表实体
- * 管理用户间的文件分享关系
+ * File share table entity
+ * Manages file sharing relationships between users
  * 
  * @author zgq
  * @since 2025-10-01
@@ -17,79 +17,79 @@ import java.time.LocalDateTime;
 public class FileShare {
 
     /**
-     * 分享记录唯一标识，主键
+     * Share record unique identifier, primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 被分享的文件ID，引用di_file_records表
+     * Shared file ID, references di_file_records table
      */
     @TableField("file_id")
     private Long fileId;
 
     /**
-     * 分享者用户ID(谁分享的)，引用sys_users表
+     * Sharer user ID (who shared), references sys_users table
      */
     @TableField("share_from_user_id")
     private Long shareFromUserId;
 
     /**
-     * 接收者用户ID(分享给谁)，引用sys_users表
+     * Recipient user ID (shared to whom), references sys_users table
      */
     @TableField("share_to_user_id")
     private Long shareToUserId;
 
     /**
-     * 分享类型枚举: PERMANENT, TEMPORARY
+     * Share type enum: PERMANENT, TEMPORARY
      */
     @TableField("share_type")
     private String shareType;
 
     /**
-     * 过期时间，仅TEMPORARY类型需要，NULL表示永久有效
+     * Expiry time, only needed for TEMPORARY type, NULL means permanently valid
      */
     @TableField("expires_at")
     private LocalDateTime expiresAt;
 
     /**
-     * 分享权限级别枚举: VIEW, DOWNLOAD, EDIT
+     * Share permission level enum: VIEW, DOWNLOAD, EDIT
      */
     @TableField("permission_level")
     private String permissionLevel;
 
     /**
-     * 撤销状态: 0=有效, 1=已撤销(软删除，保留分享历史)
+     * Revoked status: 0=valid, 1=revoked (soft delete, preserve share history)
      */
     @TableField("revoked")
     private Integer revoked;
 
     /**
-     * 分享留言，分享者给接收者的消息
+     * Share message, message from sharer to recipient
      */
     @TableField("message")
     private String message;
 
     /**
-     * 查看次数统计
+     * View count statistics
      */
     @TableField("view_count")
     private Integer viewCount;
 
     /**
-     * 下载次数统计
+     * Download count statistics
      */
     @TableField("download_count")
     private Integer downloadCount;
 
     /**
-     * 分享创建时间
+     * Share creation time
      */
     @TableField("created_at")
     private LocalDateTime createdAt;
 
     /**
-     * 分享信息最后更新时间
+     * Share information last update time
      */
     @TableField("updated_at")
     private LocalDateTime updatedAt;

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * MyBatis-Plus 配置类
+ * MyBatis-Plus Configuration Class
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,8 +16,8 @@ import org.springframework.context.annotation.Configuration;
 public class MybatisPlusConfig {
 
     /**
-     * 配置 MyBatis-Plus 分页插件
-     * 从 v3.5.9 开始，分页插件需要单独引入 mybatis-plus-jsqlparser 依赖
+     * Configure MyBatis-Plus pagination plugin
+     * Starting from v3.5.9, pagination plugin requires separate mybatis-plus-jsqlparser dependency
      * 
      * @return MybatisPlusInterceptor
      */
@@ -25,8 +25,8 @@ public class MybatisPlusConfig {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         
-        // 添加分页插件，指定数据库类型为 PostgreSQL
-        // 注意：如果配置多个插件，分页插件必须放在最后
+        // Add pagination plugin, specify database type as PostgreSQL
+        // Note: If configuring multiple plugins, pagination plugin must be placed last
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.POSTGRE_SQL));
         
         return interceptor;

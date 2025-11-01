@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- * 文件存在性检查响应
+ * File existence check response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -14,22 +14,22 @@ import lombok.Data;
 public class FileExistsResponse {
     
     /**
-     * 文件是否已存在
+     * Whether file exists
      */
     private Boolean exists;
     
     /**
-     * 如果存在，返回文件ID
+     * File ID if exists
      */
     private Long fileId;
     
     /**
-     * 如果存在，返回文件URL
+     * File URL if exists
      */
     private String fileUrl;
     
     /**
-     * 提示信息
+     * Message
      */
     private String message;
 }

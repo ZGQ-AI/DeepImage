@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * 图片搜索响应 DTO
+ * Image search response DTO
  */
 @Data
 @Builder
@@ -17,27 +17,27 @@ import java.util.List;
 public class SearchImageResponse {
 
     /**
-     * 任务ID，用于查询进度
+     * Task ID, used for querying progress
      */
     private String taskId;
 
     /**
-     * 任务状态：searching(搜索中), downloading(下载中), completed(完成), failed(失败)
+     * Task status: searching, downloading, completed, failed
      */
     private String status;
 
     /**
-     * 下载进度信息
+     * Download progress information
      */
     private ProgressInfo progress;
 
     /**
-     * 最终结果信息
+     * Final result information
      */
     private ResultInfo result;
 
     /**
-     * 进度信息
+     * Progress information
      */
     @Data
     @Builder
@@ -45,33 +45,33 @@ public class SearchImageResponse {
     @AllArgsConstructor
     public static class ProgressInfo {
         /**
-         * 总数量
+         * Total count
          */
         private Integer total;
 
         /**
-         * 已完成数量
+         * Completed count
          */
         private Integer completed;
 
         /**
-         * 失败数量
+         * Failed count
          */
         private Integer failed;
 
         /**
-         * 完成百分比 (0-100)
+         * Completion percentage (0-100)
          */
         private Integer percentage;
 
         /**
-         * 预估剩余时间（秒）
+         * Estimated remaining time (seconds)
          */
         private Long estimatedTimeRemaining;
     }
 
     /**
-     * 结果信息
+     * Result information
      */
     @Data
     @Builder
@@ -79,33 +79,33 @@ public class SearchImageResponse {
     @AllArgsConstructor
     public static class ResultInfo {
         /**
-         * 成功下载的图片数量
+         * Successfully downloaded image count
          */
         private Integer successCount;
 
         /**
-         * 失败的图片数量
+         * Failed image count
          */
         private Integer failedCount;
 
         /**
-         * 总耗时（秒）
+         * Total elapsed time (seconds)
          */
         private Long totalTimeSeconds;
 
         /**
-         * 成功下载的图片ID列表
+         * Successfully downloaded image ID list
          */
         private List<Long> downloadedFileIds;
 
         /**
-         * 失败的图片信息
+         * Failed image information
          */
         private List<FailedImageInfo> failedImages;
     }
 
     /**
-     * 失败图片信息
+     * Failed image information
      */
     @Data
     @Builder
@@ -113,12 +113,12 @@ public class SearchImageResponse {
     @AllArgsConstructor
     public static class FailedImageInfo {
         /**
-         * 图片URL
+         * Image URL
          */
         private String url;
 
         /**
-         * 失败原因
+         * Failure reason
          */
         private String errorMessage;
     }

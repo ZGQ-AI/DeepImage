@@ -7,7 +7,7 @@ import org.tech.ai.deepimage.mapper.RolePermissionMapper;
 import org.tech.ai.deepimage.service.RolePermissionService;
 
 /**
- * 角色权限关联表 服务实现类
+ * Role-permission association table service implementation class
  * 
  * @author zgq
  * @since 2025-09-29

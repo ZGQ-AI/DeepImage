@@ -20,7 +20,7 @@ import org.tech.ai.deepimage.util.Timer;
 import java.util.List;
 
 /**
- * 图片抓取控制器
+ * Image crawler controller
  */
 @Slf4j
 @RestController
@@ -33,10 +33,10 @@ public class ImageCrawlerController {
     private final ImageDownloadService imageDownloadService;
 
     /**
-     * 搜索图片（同步操作，只返回图片URL列表）
+     * Search images (synchronous operation, returns only image URL list)
      *
-     * @param request 搜索请求
-     * @return 图片列表
+     * @param request Search request
+     * @return Image list
      */
     @SaCheckLogin
     @PostMapping("/search")
@@ -52,15 +52,15 @@ public class ImageCrawlerController {
                 .searchTimeMs(timer.getElapsedMillis())
                 .build();
 
-        log.info("图片搜索完成：找到 {} 张图片，耗时：{}ms", images.size(), timer.getElapsedMillis());
+        log.info("Image search completed: found {} images, elapsed time: {}ms", images.size(), timer.getElapsedMillis());
         return ApiResponse.success(response);
     }
 
     /**
-     * 下载选中的图片（同步操作）
+     * Download selected images (synchronous operation)
      *
-     * @param request 下载请求
-     * @return 下载结果
+     * @param request Download request
+     * @return Download result
      */
     @SaCheckLogin
     @PostMapping("/download")
@@ -72,7 +72,7 @@ public class ImageCrawlerController {
                 request.getKeyword(),
                 request.getTagIds());
 
-        log.info("图片下载完成：成功 {}/{}，标签数：{}", 
+        log.info("Image download completed: success {}/{}, tag count: {}", 
                 result.getSuccessCount(), 
                 result.getTotalCount(),
                 request.getTagIds() != null ? request.getTagIds().size() : 0);

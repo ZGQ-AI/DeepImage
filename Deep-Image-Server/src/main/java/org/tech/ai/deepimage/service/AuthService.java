@@ -15,16 +15,16 @@ public interface AuthService {
     Boolean resetPassword(ResetPasswordRequest request);
     
     /**
-     * Google OAuth登录（内部方法）
-     * @param user 用户实体
+     * Google OAuth login (internal method)
+     * @param user User entity
      * @return TokenPairResponse
      */
     TokenPairResponse loginByGoogle(User user);
     
     /**
-     * Google用户自动注册
-     * @param registerGoogleUserRequest Google用户信息（email, name, picture）
-     * @return 用户实体
+     * Google user auto registration
+     * @param registerGoogleUserRequest Google user information (email, name, picture)
+     * @return User entity
      */
     User registerGoogleUser(RegisterGoogleUserRequest registerGoogleUserRequest);
 }

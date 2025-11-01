@@ -1,49 +1,49 @@
 /**
- * 标签管理相关类型定义
+ * Tag management-related type definitions
  */
 
 /**
- * 创建标签请求
+ * Create tag request
  */
 export interface CreateTagRequest {
-  /** 标签名称 */
+  /** Tag name */
   tagName: string
-  /** 标签颜色（可选，格式：#RRGGBB） */
+  /** Tag color (optional, format: #RRGGBB) */
   color?: string
 }
 
 /**
- * 更新标签请求
+ * Update tag request
  */
 export interface UpdateTagRequest {
-  /** 标签ID */
+  /** Tag ID */
   tagId: number
-  /** 标签名称（可选） */
+  /** Tag name (optional) */
   tagName?: string
-  /** 标签颜色（可选） */
+  /** Tag color (optional) */
   color?: string
 }
 
 /**
- * 删除标签请求
+ * Delete tag request
  */
 export interface DeleteTagRequest {
-  /** 标签ID */
+  /** Tag ID */
   tagId: number
 }
 
 /**
- * 标签响应
+ * Tag response
  */
 export interface TagResponse {
-  /** 标签ID */
+  /** Tag ID */
   id: number
-  /** 标签名称 */
+  /** Tag name */
   tagName: string
-  /** 标签颜色 */
+  /** Tag color */
   color?: string
-  /** 使用次数 */
+  /** Usage count */
   usageCount: number
-  /** 创建时间 */
+  /** Creation time */
   createdAt: string
 }

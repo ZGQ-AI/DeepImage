@@ -6,8 +6,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * 条件工具类
- * 提供简洁的条件判断和赋值操作
+ * Conditional utility class
+ * Provides concise conditional checking and assignment operations
  * 
  * @author zgq
  * @since 2025-10-03
@@ -15,10 +15,10 @@ import java.util.function.Supplier;
 public class ConditionalUtil {
 
     /**
-     * 如果字符串不为空，则执行设置操作
+     * If string is not blank, execute setter operation
      * 
-     * @param value 要检查的值
-     * @param setter 设置方法（通常是对象的 setter）
+     * @param value Value to check
+     * @param setter Setter method (usually object's setter)
      * 
      * @example
      * ConditionalUtil.setIfNotBlank(user.getName(), target::setUsername);
@@ -30,11 +30,11 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果字符串不为空，则执行设置操作，否则使用默认值
+     * If string is not blank, execute setter operation, otherwise use default value
      * 
-     * @param value 要检查的值
-     * @param defaultValue 默认值
-     * @param setter 设置方法
+     * @param value Value to check
+     * @param defaultValue Default value
+     * @param setter Setter method
      * 
      * @example
      * ConditionalUtil.setIfNotBlankOrElse(user.getName(), "Anonymous", target::setUsername);
@@ -44,11 +44,11 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果字符串不为空，则执行设置操作，否则使用默认值提供者
+     * If string is not blank, execute setter operation, otherwise use default value supplier
      * 
-     * @param value 要检查的值
-     * @param defaultSupplier 默认值提供者
-     * @param setter 设置方法
+     * @param value Value to check
+     * @param defaultSupplier Default value supplier
+     * @param setter Setter method
      * 
      * @example
      * ConditionalUtil.setIfNotBlankOrElse(
@@ -62,11 +62,11 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果对象不为 null，则执行设置操作
+     * If object is not null, execute setter operation
      * 
-     * @param value 要检查的值
-     * @param setter 设置方法
-     * @param <T> 值的类型
+     * @param value Value to check
+     * @param setter Setter method
+     * @param <T> Value type
      * 
      * @example
      * ConditionalUtil.setIfNotNull(user.getAge(), target::setAge);
@@ -78,12 +78,12 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果对象不为 null，则执行设置操作，否则使用默认值
+     * If object is not null, execute setter operation, otherwise use default value
      * 
-     * @param value 要检查的值
-     * @param defaultValue 默认值
-     * @param setter 设置方法
-     * @param <T> 值的类型
+     * @param value Value to check
+     * @param defaultValue Default value
+     * @param setter Setter method
+     * @param <T> Value type
      * 
      * @example
      * ConditionalUtil.setIfNotNullOrElse(user.getAge(), 18, target::setAge);
@@ -93,12 +93,12 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果对象不为 null，则执行设置操作，否则使用默认值提供者
+     * If object is not null, execute setter operation, otherwise use default value supplier
      * 
-     * @param value 要检查的值
-     * @param defaultSupplier 默认值提供者
-     * @param setter 设置方法
-     * @param <T> 值的类型
+     * @param value Value to check
+     * @param defaultSupplier Default value supplier
+     * @param setter Setter method
+     * @param <T> Value type
      * 
      * @example
      * ConditionalUtil.setIfNotNullOrElse(
@@ -112,12 +112,12 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果条件为真，则执行设置操作
+     * If condition is true, execute setter operation
      * 
-     * @param condition 条件
-     * @param value 要设置的值
-     * @param setter 设置方法
-     * @param <T> 值的类型
+     * @param condition Condition
+     * @param value Value to set
+     * @param setter Setter method
+     * @param <T> Value type
      * 
      * @example
      * ConditionalUtil.setIf(user.isVip(), "VIP", target::setLevel);
@@ -129,13 +129,13 @@ public class ConditionalUtil {
     }
 
     /**
-     * 根据条件设置不同的值
+     * Set different values based on condition
      * 
-     * @param condition 条件
-     * @param trueValue 条件为真时的值
-     * @param falseValue 条件为假时的值
-     * @param setter 设置方法
-     * @param <T> 值的类型
+     * @param condition Condition
+     * @param trueValue Value when condition is true
+     * @param falseValue Value when condition is false
+     * @param setter Setter method
+     * @param <T> Value type
      * 
      * @example
      * ConditionalUtil.setByCondition(user.isVip(), "VIP", "Normal", target::setLevel);
@@ -145,11 +145,11 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果对象不为 null，则执行操作（不是赋值，而是执行一段逻辑）
+     * If object is not null, execute action (not assignment, but execute a piece of logic)
      * 
-     * @param value 要检查的值
-     * @param action 要执行的操作
-     * @param <T> 值的类型
+     * @param value Value to check
+     * @param action Action to execute
+     * @param <T> Value type
      * 
      * @example
      * ConditionalUtil.ifNotNull(session, s -> {
@@ -164,10 +164,10 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果字符串不为空，则执行操作
+     * If string is not blank, execute action
      * 
-     * @param value 要检查的值
-     * @param action 要执行的操作
+     * @param value Value to check
+     * @param action Action to execute
      * 
      * @example
      * ConditionalUtil.ifNotBlank(email, e -> sendEmail(e));
@@ -179,10 +179,10 @@ public class ConditionalUtil {
     }
 
     /**
-     * 如果条件为真，则执行操作
+     * If condition is true, execute action
      * 
-     * @param condition 条件
-     * @param action 要执行的操作
+     * @param condition Condition
+     * @param action Action to execute
      * 
      * @example
      * ConditionalUtil.ifTrue(user.isVip(), () -> sendVipEmail(user));
@@ -194,10 +194,10 @@ public class ConditionalUtil {
     }
 
     /**
-     * 链式条件设置构建器
-     * 支持多个条件的链式调用
+     * Chained conditional setter builder
+     * Supports chained calls with multiple conditions
      * 
-     * @param <T> 目标对象类型
+     * @param <T> Target object type
      * 
      * @example
      * ConditionalUtil.builder(user)
@@ -211,7 +211,7 @@ public class ConditionalUtil {
     }
 
     /**
-     * 条件设置构建器
+     * Conditional setter builder
      */
     public static class ConditionalBuilder<T> {
         private final T target;
@@ -221,7 +221,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 如果字符串不为空，则设置
+         * If string is not blank, set
          */
         public ConditionalBuilder<T> setIfNotBlank(String value, Consumer<String> setter) {
             ConditionalUtil.setIfNotBlank(value, setter);
@@ -229,7 +229,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 如果字符串不为空，则设置，否则使用默认值
+         * If string is not blank, set, otherwise use default value
          */
         public ConditionalBuilder<T> setIfNotBlankOrElse(String value, String defaultValue, Consumer<String> setter) {
             ConditionalUtil.setIfNotBlankOrElse(value, defaultValue, setter);
@@ -237,7 +237,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 如果字符串不为空，则设置，否则使用默认值提供者
+         * If string is not blank, set, otherwise use default value supplier
          */
         public ConditionalBuilder<T> setIfNotBlankOrElse(String value, Supplier<String> defaultSupplier, Consumer<String> setter) {
             ConditionalUtil.setIfNotBlankOrElse(value, defaultSupplier, setter);
@@ -245,7 +245,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 如果对象不为 null，则设置
+         * If object is not null, set
          */
         public <V> ConditionalBuilder<T> setIfNotNull(V value, Consumer<V> setter) {
             ConditionalUtil.setIfNotNull(value, setter);
@@ -253,7 +253,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 如果对象不为 null，则设置，否则使用默认值
+         * If object is not null, set, otherwise use default value
          */
         public <V> ConditionalBuilder<T> setIfNotNullOrElse(V value, V defaultValue, Consumer<V> setter) {
             ConditionalUtil.setIfNotNullOrElse(value, defaultValue, setter);
@@ -261,7 +261,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 如果条件为真，则设置
+         * If condition is true, set
          */
         public <V> ConditionalBuilder<T> setIf(boolean condition, V value, Consumer<V> setter) {
             ConditionalUtil.setIf(condition, value, setter);
@@ -269,7 +269,7 @@ public class ConditionalUtil {
         }
 
         /**
-         * 完成构建，返回目标对象
+         * Complete build, return target object
          */
         public T build() {
             return target;

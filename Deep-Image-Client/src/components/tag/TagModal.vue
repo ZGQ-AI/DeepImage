@@ -1,5 +1,5 @@
 <!--
-  标签创建/编辑模态框
+  Tag Create/Edit Modal
 -->
 <template>
   <a-modal
@@ -107,21 +107,21 @@ const formState = reactive({
 
 const isEdit = ref(false)
 
-// 颜色预设
+// Color presets
 const colorPresets = [
-  '#1890ff', // 蓝色
-  '#52c41a', // 绿色
-  '#faad14', // 橙色
-  '#f5222d', // 红色
-  '#722ed1', // 紫色
-  '#eb2f96', // 粉色
-  '#13c2c2', // 青色
-  '#fa8c16', // 橙红
-  '#a0d911', // 黄绿
-  '#2f54eb', // 深蓝
+  '#1890ff', // Blue
+  '#52c41a', // Green
+  '#faad14', // Orange
+  '#f5222d', // Red
+  '#722ed1', // Purple
+  '#eb2f96', // Pink
+  '#13c2c2', // Cyan
+  '#fa8c16', // Orange-red
+  '#a0d911', // Yellow-green
+  '#2f54eb', // Dark blue
 ]
 
-// 表单验证规则
+// Form validation rules
 const rules = {
   tagName: [
     { required: true, message: '请输入标签名称', trigger: 'blur' },
@@ -136,7 +136,7 @@ const rules = {
   ],
 }
 
-// 监听 tag 变化，初始化表单
+// Watch tag changes, initialize form
 watch(
   () => props.tag,
   (newTag) => {
@@ -153,7 +153,7 @@ watch(
   { immediate: true },
 )
 
-// 监听 open 变化，重置表单
+// Watch open changes, reset form
 watch(
   () => props.open,
   (newOpen) => {
@@ -163,7 +163,7 @@ watch(
   },
 )
 
-// 提交表单
+// Submit form
 async function handleOk() {
   try {
     await formRef.value?.validate()
@@ -177,11 +177,11 @@ async function handleOk() {
     }
     emit('submit', data)
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error('Form validation failed:', error)
   }
 }
 
-// 取消
+// Cancel
 function handleCancel() {
   emit('update:open', false)
 }

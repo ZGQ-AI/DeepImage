@@ -1,5 +1,5 @@
 <!--
-  会话管理列表组件
+  Session Management List Component
 -->
 <template>
   <div class="session-list">
@@ -7,7 +7,7 @@
       <template #renderItem="{ item }">
         <a-list-item>
           <a-list-item-meta>
-            <!-- 设备图标 -->
+            <!-- Device icon -->
             <template #avatar>
               <a-avatar :style="{ backgroundColor: item.isCurrent ? '#1890ff' : '#999' }">
                 <template #icon>
@@ -17,7 +17,7 @@
               </a-avatar>
             </template>
 
-            <!-- 设备名称 -->
+            <!-- Device name -->
             <template #title>
               <a-space>
                 <span>{{ parseDeviceName(item.userAgent) }}</span>
@@ -25,7 +25,7 @@
               </a-space>
             </template>
 
-            <!-- 详细信息 -->
+            <!-- Detailed information -->
             <template #description>
               <div class="session-details">
                 <div>
@@ -48,7 +48,7 @@
             </template>
           </a-list-item-meta>
 
-          <!-- 操作按钮 -->
+          <!-- Action buttons -->
           <template #actions>
             <a-popconfirm
               v-if="!item.isCurrent"
@@ -64,7 +64,7 @@
         </a-list-item>
       </template>
 
-      <!-- 空状态 -->
+      <!-- Empty state -->
       <template #empty>
         <a-empty description="暂无登录设备" />
       </template>
@@ -90,12 +90,12 @@ import { formatTime } from '../../utils/time'
 
 const userStore = useUserStore()
 
-// 删除会话
+// Delete session
 async function handleDeleteSession(sessionId: number) {
   await userStore.deleteSession(sessionId)
 }
 
-// 组件挂载时获取会话列表
+// Fetch session list on component mount
 onMounted(async () => {
   await userStore.fetchSessions()
 })
@@ -133,7 +133,7 @@ onMounted(async () => {
   border-bottom: none;
 }
 
-/* 滚动条样式 */
+/* Scrollbar styles */
 .session-list::-webkit-scrollbar {
   width: 6px;
 }

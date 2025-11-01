@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 文件标签关联Service实现类
+ * File-tag association Service implementation
  * 
  * @author zgq
  * @since 2025-10-02
@@ -34,35 +34,35 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void batchSetFileTags(Long fileId, Long userId, List<Long> tagIds) {
-        // 1. 查询文件当前的所有标签关联（用于后续减少使用计数）
+        // 1. Query all current tag associations of the file (for subsequent decrease usage count)
         Set<Long> oldTagIds = deleteAllByFileId(fileId);
         
-        // 2. 如果新标签列表为空，直接返回（只删除不添加）
+        // 2. If new tag list is empty, return directly (only delete, no add)
         if (CollectionUtils.isEmpty(tagIds)) {
             if (CollectionUtils.isNotEmpty(oldTagIds)) {
                 tagService.batchDecreaseUsageCount(oldTagIds);
             }
-            log.info("清空文件所有标签: fileId={}", fileId);
+            log.info("Cleared all file tags: fileId={}", fileId);
             return;
         }
         
-        // 3. 批量查询新标签，验证标签权限
+        // 3. Batch query new tags, validate tag permissions
         List<Tag> validTags = tagService.listValidTagsByIds(tagIds, userId);
         
         if (CollectionUtils.isEmpty(validTags)) {
-            log.warn("没有找到有效的标签: fileId={}, tagIds={}", fileId, tagIds);
+            log.warn("No valid tags found: fileId={}, tagIds={}", fileId, tagIds);
             if (CollectionUtils.isNotEmpty(oldTagIds)) {
                 tagService.batchDecreaseUsageCount(oldTagIds);
             }
             return;
         }
         
-        // 提取有效的标签ID
+        // Extract valid tag IDs
         List<Long> validTagIds = validTags.stream()
                 .map(Tag::getId)
                 .toList();
         
-        // 4. 批量插入新的关联关系
+        // 4. Batch insert new associations
         LocalDateTime now = LocalDateTime.now();
         List<FileTag> newFileTags = validTagIds.stream()
                 .map(tagId -> {
@@ -76,10 +76,10 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
         
         saveBatch(newFileTags);
         
-        // 5. 更新标签使用计数
+        // 5. Update tag usage count
         Set<Long> newTagIdSet = new HashSet<>(validTagIds);
         
-        // 减少旧标签中不再使用的标签计数
+        // Decrease count for tags that are no longer used
         Set<Long> removedTagIds = oldTagIds.stream()
                 .filter(tagId -> !newTagIdSet.contains(tagId))
                 .collect(Collectors.toSet());
@@ -87,7 +87,7 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
             tagService.batchDecreaseUsageCount(removedTagIds);
         }
         
-        // 增加新标签中之前没有的标签计数
+        // Increase count for tags that were not previously used
         Set<Long> addedTagIds = validTagIds.stream()
                 .filter(tagId -> !oldTagIds.contains(tagId))
                 .collect(Collectors.toSet());
@@ -95,13 +95,13 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
             tagService.batchIncreaseUsageCount(addedTagIds);
         }
         
-        log.info("批量设置文件标签成功: fileId={}, 新增{}个, 移除{}个", 
+        log.info("Batch set file tags successful: fileId={}, added {} tags, removed {} tags", 
                 fileId, addedTagIds.size(), removedTagIds.size());
     }
     
     @Override
     public List<TagResponse> getFileTagsResponse(Long fileId) {
-        // 查询文件的所有标签关联
+        // Query all tag associations of the file
         LambdaQueryWrapper<FileTag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileTag::getFileId, fileId);
         List<FileTag> fileTags = list(wrapper);
@@ -110,12 +110,12 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
             return List.of();
         }
         
-        // 提取标签ID列表
+        // Extract tag ID list
         List<Long> tagIds = fileTags.stream()
                 .map(FileTag::getTagId)
                 .collect(Collectors.toList());
         
-        // 批量查询标签详情
+        // Batch query tag details
         List<Tag> tags = tagService.listByIds(tagIds);
         
         return tags.stream()
@@ -126,20 +126,20 @@ public class FileTagServiceImpl extends ServiceImpl<FileTagMapper, FileTag> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Set<Long> deleteAllByFileId(Long fileId) {
-        // 查询文件当前的所有标签关联
+        // Query all current tag associations of the file
         LambdaQueryWrapper<FileTag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileTag::getFileId, fileId);
         List<FileTag> oldFileTags = list(wrapper);
         
-        // 提取旧标签ID
+        // Extract old tag IDs
         Set<Long> oldTagIds = oldFileTags.stream()
                 .map(FileTag::getTagId)
                 .collect(Collectors.toSet());
         
-        // 删除文件的所有旧标签关联
+        // Delete all old tag associations of the file
         if (CollectionUtils.isNotEmpty(oldFileTags)) {
             remove(wrapper);
-            log.info("删除文件旧标签关联: fileId={}, 删除{}个", fileId, oldFileTags.size());
+            log.info("Deleted old file tag associations: fileId={}, deleted {} associations", fileId, oldFileTags.size());
         }
         
         return oldTagIds;

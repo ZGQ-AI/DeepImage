@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * 文件管理Controller
+ * File Management Controller
  * 
  * @author zgq
  * @since 2025-10-02
@@ -34,10 +34,10 @@ public class FileController {
     
     private final FileService fileService;
     
-    // ========== 文件上传 ==========
+    // ========== File Upload ==========
     
     /**
-     * 单文件上传
+     * Single file upload
      * POST /api/files/upload
      */
     @PostMapping("/upload")
@@ -56,7 +56,7 @@ public class FileController {
     }
     
     /**
-     * 检查文件是否已存在
+     * Check if file exists
      * POST /api/files/check-exists
      */
     @PostMapping("/check-exists")
@@ -65,12 +65,12 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    // ========== 文件查询 ==========
+    // ========== File Query ==========
     
     /**
-     * 分页查询文件列表（统一接口）
+     * Paginated file list query (unified interface)
      * POST /api/files/list
-     * 支持按业务类型、标签ID筛选，支持自定义排序
+     * Supports filtering by business type and tag ID, supports custom sorting
      */
     @PostMapping("/list")
     public ApiResponse<Page<FileInfoResponse>> listFiles(@Valid @RequestBody ListFilesRequest request) {
@@ -79,7 +79,7 @@ public class FileController {
     }
 
     /**
-     * 查询文件详情
+     * Query file details
      * GET /api/files/detail
      */
     @GetMapping("/detail")
@@ -88,21 +88,21 @@ public class FileController {
         return ApiResponse.success(response);
     }
 
-    // ========== 文件下载 ==========
+    // ========== File Download ==========
     
     /**
-     * 下载文件
+     * Download file
      * GET /api/files/download
      */
     @GetMapping("/download")
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam Long fileId) {
-        // 获取文件详情
+        // Get file details
         FileDetailResponse fileDetail = fileService.getFileDetail(fileId);
         
-        // 下载文件流
+        // Download file stream
         InputStream inputStream = fileService.downloadFile(fileId);
         
-        // 设置响应头
+        // Set response headers
         String encodedFilename = URLEncoder.encode(fileDetail.getOriginalFilename(), StandardCharsets.UTF_8)
                 .replace("+", "%20");
         
@@ -117,7 +117,7 @@ public class FileController {
     }
     
     /**
-     * 获取文件预览URL
+     * Get file preview URL
      * GET /api/files/preview-url
      */
     @GetMapping("/preview-url")
@@ -128,10 +128,10 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    // ========== 文件管理 ==========
+    // ========== File Management ==========
     
     /**
-     * 重命名文件
+     * Rename file
      * POST /api/files/rename
      */
     @PostMapping("/rename")
@@ -141,7 +141,7 @@ public class FileController {
     }
     
     /**
-     * 批量删除文件
+     * Batch delete files
      * DELETE /api/files
      */
     @DeleteMapping
@@ -150,10 +150,10 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    // ========== 文件标签 ==========
+    // ========== File Tags ==========
     
     /**
-     * 为文件添加标签
+     * Add tags to file
      * POST /api/files/add-tags
      */
     @PostMapping("/add-tags")
@@ -163,7 +163,7 @@ public class FileController {
     }
     
     /**
-     * 移除文件标签
+     * Remove file tag
      * DELETE /api/files/remove-tag
      */
     @DeleteMapping("/remove-tag")
@@ -175,7 +175,7 @@ public class FileController {
     }
     
     /**
-     * 查询文件的所有标签
+     * Query all tags of a file
      * GET /api/files/tags
      */
     @GetMapping("/tags")
@@ -184,10 +184,10 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    // ========== 文件分享 ==========
+    // ========== File Sharing ==========
     
     /**
-     * 创建文件分享
+     * Create file share
      * POST /api/files/create-share
      */
     @PostMapping("/create-share")
@@ -197,7 +197,7 @@ public class FileController {
     }
     
     /**
-     * 取消分享
+     * Cancel share
      * DELETE /api/files/cancel-share
      */
     @DeleteMapping("/cancel-share")
@@ -207,7 +207,7 @@ public class FileController {
     }
     
     /**
-     * 查询我的分享列表（分享出去的）
+     * Query my outgoing shares list (shared files)
      * GET /api/files/shares/outgoing
      */
     @GetMapping("/shares/outgoing")
@@ -219,7 +219,7 @@ public class FileController {
     }
     
     /**
-     * 查询收到的分享列表
+     * Query incoming shares list
      * GET /api/files/shares/incoming
      */
     @GetMapping("/shares/incoming")
@@ -231,7 +231,7 @@ public class FileController {
     }
     
     /**
-     * 查询分享详情
+     * Query share details
      * GET /api/files/share-detail
      */
     @GetMapping("/share-detail")
@@ -240,10 +240,10 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    // ========== 访问日志 ==========
+    // ========== Access Logs ==========
     
     /**
-     * 查询文件访问日志
+     * Query file access logs
      * POST /api/files/access-logs
      */
     @PostMapping("/access-logs")
@@ -253,7 +253,7 @@ public class FileController {
     }
     
     /**
-     * 查询用户文件统计
+     * Query user file statistics
      * GET /api/files/statistics
      */
     @GetMapping("/statistics")
@@ -262,10 +262,10 @@ public class FileController {
         return ApiResponse.success(response);
     }
     
-    // ========== 回收站管理 ==========
+    // ========== Recycle Bin Management ==========
     
     /**
-     * 查询回收站文件列表（支持分页和排序）
+     * Query recycle bin file list (supports pagination and sorting)
      * GET /api/files/trash
      */
     @GetMapping("/trash")
@@ -275,7 +275,7 @@ public class FileController {
     }
     
     /**
-     * 批量恢复文件
+     * Batch restore files
      * POST /api/files/restore
      */
     @PostMapping("/restore")
@@ -285,7 +285,7 @@ public class FileController {
     }
     
     /**
-     * 批量彻底删除文件
+     * Batch permanently delete files
      * DELETE /api/files/permanent
      */
     @DeleteMapping("/permanent")
@@ -295,7 +295,7 @@ public class FileController {
     }
     
     /**
-     * 清空回收站
+     * Empty recycle bin
      * DELETE /api/files/trash/empty
      */
     @DeleteMapping("/trash/empty")
@@ -305,7 +305,7 @@ public class FileController {
     }
     
     /**
-     * 获取回收站统计信息
+     * Get recycle bin statistics
      * GET /api/files/trash/stats
      */
     @GetMapping("/trash/stats")

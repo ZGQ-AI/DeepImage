@@ -10,7 +10,7 @@ import org.tech.ai.deepimage.service.SessionService;
 import org.tech.ai.deepimage.util.CryptoUtil;
 
 /**
- * 用户会话表 服务实现类
+ * User session table service implementation class
  * 
  * @author zgq
  * @since 2025-09-29

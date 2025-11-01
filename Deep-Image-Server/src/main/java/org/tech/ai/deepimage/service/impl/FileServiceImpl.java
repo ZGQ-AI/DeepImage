@@ -35,7 +35,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 文件管理Service实现类
+ * File management Service implementation
  *
  * @author zgq
  * @since 2025-10-02
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> implements FileService {
 
-    // MinIO 相关服务
+    // MinIO related services
     private final MinioService minioService;
     private final MinioProperties minioProperties;
 
@@ -57,7 +57,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     private final UserService userService;
     private final FileRecordService fileRecordService;
 
-    // ========== 文件上传 ==========
+    // ========== File Upload ==========
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -65,60 +65,60 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Long userId = StpUtil.getLoginIdAsLong();
         MultipartFile file = request.getFile();
 
-        log.info("开始上传文件: userId={}, filename={}, size={}, businessType={}",
+        log.info("Starting file upload: userId={}, filename={}, size={}, businessType={}",
                 userId, file.getOriginalFilename(), file.getSize(), request.getBusinessType());
 
         try {
-            // 1. 校验业务类型
+            // 1. Validate business type
             if (!BusinessTypeEnum.isValid(request.getBusinessType())) {
                 throw BusinessException.badRequest(ResponseConstant.FILE_TYPE_INVALID_MESSAGE);
             }
 
-            // 2. 校验文件大小
+            // 2. Validate file size
             if (file.getSize() > FileConstant.MAX_FILE_SIZE) {
                 throw BusinessException.badRequest(ResponseConstant.FILE_SIZE_EXCEEDED_MESSAGE);
             }
 
-            // 3. 读取文件内容到内存（避免 InputStream 重复使用问题）
+            // 3. Read file content into memory (avoid InputStream reuse issues)
             byte[] fileBytes = file.getBytes();
 
-            // 4. 计算文件哈希
+            // 4. Calculate file hash
             String fileHash = HashUtil.sha256(fileBytes);
 
-            // 5. 检查文件是否已存在（全局去重）
+            // 5. Check if file already exists (global deduplication)
             FileRecord existingFile = checkExistingFile(fileHash);
             if (existingFile != null) {
-                log.info("文件已存在，复用现有文件: existingFileId={}, currentUserId={}",
+                log.info("File already exists, reusing existing file: existingFileId={}, currentUserId={}",
                         existingFile.getId(), userId);
-                // 复用现有文件，为当前用户创建新的记录
+                // Reuse existing file, create new record for current user
                 return buildUploadResponse(existingFile);
             }
 
-            // 6. 生成对象名称
+            // 6. Generate object name
             String objectName = FileUtil.generateObjectName(userId, request.getBusinessType(),
                     FileUtil.getFileExtension(file.getOriginalFilename()));
 
-            // 7. 上传到MinIO（使用字节数组创建新的 InputStream）
+            // 7. Upload to MinIO (create new InputStream from byte array)
             String fileUrl = minioService.uploadFile(
                     new ByteArrayInputStream(fileBytes), objectName, file.getContentType());
 
-            // 8. 保存文件记录
+            // 8. Save file record
             FileRecord fileRecord = buildFileRecord(userId, file, objectName, fileUrl, fileHash, request);
             save(fileRecord);
 
-            // 9. 关联标签（使用 FileTagService）
+            // 9. Associate tags (using FileTagService)
             if (CollectionUtils.isNotEmpty(request.getTagIds())) {
                 fileTagService.batchSetFileTags(fileRecord.getId(), userId, request.getTagIds());
             }
 
-            // 10. 记录访问日志
+            // 10. Log access
             logFileAccess(fileRecord.getId(), userId, AccessTypeEnum.UPLOAD.name());
 
-            log.info("文件上传成功: fileId={}", fileRecord.getId());
+            log.info("File upload successful: fileId={}", fileRecord.getId());
             return buildUploadResponse(fileRecord);
 
         } catch (Exception e) {
-            log.error("文件上传失败: userId={}, filename={}", userId, file.getOriginalFilename(), e);
+            log.error("File upload failed: userId={}, filename={}", userId, file.getOriginalFilename(), e);
             throw BusinessException.badRequest(ResponseConstant.FILE_UPLOAD_FAILED_MESSAGE + ": " + e.getMessage());
         }
     }
@@ -127,11 +127,11 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public FileExistsResponse checkFileExists(FileExistsCheckRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 全局查询是否已有相同哈希的文件
+        // Query globally for files with the same hash
         FileRecord existingFile = checkExistingFile(request.getFileHash());
 
         if (existingFile != null) {
-            log.info("文件已存在: fileHash={}, userId={}", request.getFileHash(), userId);
+            log.info("File already exists: fileHash={}, userId={}", request.getFileHash(), userId);
             return FileExistsResponse.builder()
                     .exists(true)
                     .fileId(existingFile.getId())
@@ -146,26 +146,26 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .build();
     }
 
-    // ========== 文件查询 ==========
+    // ========== File Query ==========
 
     @Override
     public Page<FileInfoResponse> listFiles(ListFilesRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 如果指定了标签ID，先查询关联的文件ID列表
+        // If tagId is specified, query associated file IDs first
         List<Long> fileIds = null;
         if (request.getTagId() != null) {
-            // 校验标签权限
+            // Validate tag permissions
             Tag userTag = tagService.getUserTag(request.getTagId(), userId);
             BusinessException.assertNotNull(userTag, ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-            // 查询该标签关联的所有文件ID
+            // Query all file IDs associated with this tag
             LambdaQueryWrapper<FileTag> fileTagWrapper = new LambdaQueryWrapper<>();
             fileTagWrapper.eq(FileTag::getTagId, request.getTagId());
             List<FileTag> fileTags = fileTagService.list(fileTagWrapper);
 
             if (fileTags.isEmpty()) {
-                // 如果没有关联的文件，直接返回空结果
+                // If no associated files, return empty result directly
                 return new Page<>(request.getPage(), request.getPageSize(), 0);
             }
 
@@ -174,27 +174,27 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                     .collect(Collectors.toList());
         }
 
-        // 构建查询条件
+        // Build query conditions
         Page<FileRecord> page = new Page<>(request.getPage(), request.getPageSize());
         LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileRecord::getUserId, userId);
 
-        // 如果有标签筛选，添加 fileIds 条件
+        // If tag filter is applied, add fileIds condition
         if (fileIds != null) {
             wrapper.in(FileRecord::getId, fileIds);
         }
 
-        // 业务类型筛选
+        // Business type filter
         if (StringUtils.isNotBlank(request.getBusinessType())) {
             wrapper.eq(FileRecord::getBusinessType, request.getBusinessType());
         }
 
-        // 文件名搜索
+        // Filename search
         if (StringUtils.isNotBlank(request.getFilename())) {
             wrapper.like(FileRecord::getOriginalFilename, request.getFilename());
         }
 
-        // 排序
+        // Sort
         if (FileConstant.SORT_BY_FILE_SIZE.equals(request.getSortBy())) {
             wrapper.orderBy(true, FileConstant.SORT_ORDER_ASC.equals(request.getSortOrder()), FileRecord::getFileSize);
         } else if (FileConstant.SORT_BY_FILENAME.equals(request.getSortBy())) {
@@ -205,7 +205,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
         Page<FileRecord> recordPage = page(page, wrapper);
 
-        // 转换为响应对象
+        // Convert to response objects
         Page<FileInfoResponse> responsePage = new Page<>(recordPage.getCurrent(), recordPage.getSize(),
                 recordPage.getTotal());
         responsePage.setRecords(recordPage.getRecords().stream()
@@ -219,34 +219,34 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public FileDetailResponse getFileDetail(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询文件记录
+        // Query file record
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
-        // 权限校验
+        // Permission check
         checkFilePermission(fileRecord, userId);
 
-        // 构建详情响应
+        // Build detail response
         return buildFileDetailResponse(fileRecord);
     }
 
-    // ========== 文件下载 ==========
+    // ========== File Download ==========
 
     @Override
     public InputStream downloadFile(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询文件记录
+        // Query file record
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
-        // 权限校验
+        // Permission check
         checkFilePermission(fileRecord, userId);
 
-        // 记录访问日志
+        // Log access
         logFileAccess(fileId, userId, AccessTypeEnum.DOWNLOAD.name());
 
-        // 从MinIO下载
+        // Download from MinIO
         return minioService.downloadFile(fileRecord.getObjectName());
     }
 
@@ -254,18 +254,18 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public FilePreviewResponse getPreviewUrl(Long fileId, Integer expirySeconds) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询文件记录
+        // Query file record
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
-        // 默认有效期
+        // Default expiry time
         if (expirySeconds == null || expirySeconds <= 0) {
             expirySeconds = FileConstant.DEFAULT_PREVIEW_EXPIRY_SECONDS;
         }
 
-        // 如果是文件所有者，直接通过权限校验
+        // If user is file owner, directly pass permission check
         if (fileRecord.getUserId().equals(userId)) {
-            // 文件所有者不受分享时间限制，直接生成预签名URL
+            // File owner is not restricted by share time limit, directly generate presigned URL
             String previewUrl = minioService.getPresignedDownloadUrl(fileRecord.getObjectName(), expirySeconds);
             logFileAccess(fileId, userId, AccessTypeEnum.PREVIEW.name());
 
@@ -276,32 +276,32 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                     .build();
         }
 
-        // 如果不是文件所有者，检查分享权限和时间限制
+        // If not file owner, check share permissions and time restrictions
         FileShare fileShare = fileShareService.getValidShareByFileAndUser(fileId, userId);
 
-        // 如果没有找到分享记录，无权访问
+        // If no share record found, access denied
         BusinessException.assertNotNull(fileShare, ResponseConstant.FILE_ACCESS_DENIED_MESSAGE);
 
-        // 检查分享是否过期
+        // Check if share has expired
         LocalDateTime now = LocalDateTime.now();
         if (fileShare.getExpiresAt() != null) {
             BusinessException.throwIf(fileShare.getExpiresAt().isBefore(now) || fileShare.getExpiresAt().isEqual(now),
                     ResponseConstant.FORBIDDEN, ResponseConstant.SHARE_EXPIRED_MESSAGE);
 
-            // 计算分享剩余的有效时间（秒）
+            // Calculate remaining valid time of share (in seconds)
             long remainingSeconds = java.time.Duration.between(now, fileShare.getExpiresAt()).getSeconds();
 
-            // 预览URL有效期不能超过分享的剩余有效期
+            // Preview URL expiry cannot exceed remaining share expiry
             if (expirySeconds > remainingSeconds) {
-                expirySeconds = (int) Math.max(60, remainingSeconds); // 确保至少 60 秒
-                log.info("预览URL有效期受分享限制，调整为: {} 秒", expirySeconds);
+                expirySeconds = (int) Math.max(60, remainingSeconds); // Ensure at least 60 seconds
+                log.info("Preview URL expiry adjusted due to share limit: {} seconds", expirySeconds);
             }
         }
 
-        // 生成预签名URL
+        // Generate presigned URL
         String previewUrl = minioService.getPresignedDownloadUrl(fileRecord.getObjectName(), expirySeconds);
 
-        // 记录访问日志
+        // Log access
         logFileAccess(fileId, userId, AccessTypeEnum.PREVIEW.name());
 
         return FilePreviewResponse.builder()
@@ -311,27 +311,27 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .build();
     }
 
-    // ========== 文件管理 ==========
+    // ========== File Management ==========
 
     @Override
     public FileInfoResponse renameFile(RenameFileRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
         Long fileId = request.getFileId();
 
-        // 查询文件记录
+        // Query file record
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
-        // 权限校验
+        // Permission check
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-        // 更新文件名
+        // Update filename
         fileRecord.setOriginalFilename(request.getNewFilename());
         fileRecord.setUpdatedAt(LocalDateTime.now());
         updateById(fileRecord);
 
-        log.info("文件重命名成功: fileId={}, newFilename={}", fileId, request.getNewFilename());
+        log.info("File rename successful: fileId={}, newFilename={}", fileId, request.getNewFilename());
         return buildFileInfoResponse(fileRecord);
     }
 
@@ -339,11 +339,11 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public Boolean deleteFile(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询文件记录
+        // Query file record
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
-        // 权限校验
+        // Permission check
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
@@ -354,7 +354,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
         update(updateWrapper);
 
-        log.info("文件删除成功（软删除）: fileId={}", fileId);
+        log.info("File deleted successfully (soft delete): fileId={}", fileId);
         return true;
     }
 
@@ -364,9 +364,9 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Long userId = StpUtil.getLoginIdAsLong();
         List<Long> fileIds = request.getFileIds();
 
-        log.info("批量删除文件: userId={}, fileIds={}", userId, fileIds);
+        log.info("Batch delete files: userId={}, fileIds={}", userId, fileIds);
 
-        // 直接批量更新，数据库层面自动过滤用户权限
+        // Batch update directly, database level automatically filters user permissions
         LambdaUpdateWrapper<FileRecord> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.in(FileRecord::getId, fileIds)
                 .eq(FileRecord::getUserId, userId)
@@ -377,7 +377,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
         int failedCount = fileIds.size() - updatedCount;
 
-        log.info("批量删除完成: total={}, success={}, failed={}",
+        log.info("Batch delete completed: total={}, success={}, failed={}",
                 fileIds.size(), updatedCount, failedCount);
 
         return BatchOperationResponse.builder()
@@ -392,39 +392,39 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public Boolean permanentDeleteFile(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询文件记录
+        // Query file record
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
 
-        // 权限校验
+        // Permission check
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-        // 检查引用计数
+        // Check reference count
         BusinessException.assertFalse(fileRecord.getReferenceCount() != null && fileRecord.getReferenceCount() > 0,
                 ResponseConstant.FILE_BEING_REFERENCED_MESSAGE);
 
-        // 从MinIO删除
+        // Delete from MinIO
         try {
             minioService.deleteFile(fileRecord.getObjectName());
         } catch (Exception e) {
-            log.error("从MinIO删除文件失败: fileId={}, objectName={}", fileId, fileRecord.getObjectName(), e);
+            log.error("Failed to delete file from MinIO: fileId={}, objectName={}", fileId, fileRecord.getObjectName(), e);
         }
 
-        // 删除数据库记录
+        // Delete database record
         removeById(fileId);
 
-        // 删除关联数据（使用 FileTagService）并减少标签使用计数
+        // Delete associated data (using FileTagService) and decrease tag usage count
         Set<Long> deletedTagIds = fileTagService.deleteAllByFileId(fileId);
         if (CollectionUtils.isNotEmpty(deletedTagIds)) {
             tagService.batchDecreaseUsageCount(deletedTagIds);
         }
 
-        log.info("文件彻底删除成功: fileId={}", fileId);
+        log.info("File permanently deleted: fileId={}", fileId);
         return true;
     }
 
-    // ========== 文件标签 ==========
+    // ========== File Tags ==========
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -432,16 +432,16 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Long userId = StpUtil.getLoginIdAsLong();
         Long fileId = request.getFileId();
 
-        // 校验文件权限
+        // Validate file permissions
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-        // 批量设置标签（使用 FileTagService）
+        // Batch set tags (using FileTagService)
         fileTagService.batchSetFileTags(fileId, userId, request.getTagIds());
 
-        // 返回文件的所有标签
+        // Return all tags of the file
         return fileTagService.getFileTagsResponse(fileId);
     }
 
@@ -450,22 +450,22 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public Boolean removeFileTag(Long fileId, Long tagId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 校验文件权限
+        // Validate file permissions
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.FILE_PERMISSION_DENIED_MESSAGE);
 
-        // 删除关联（使用 FileTagService）
+        // Delete association (using FileTagService)
         LambdaQueryWrapper<FileTag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileTag::getFileId, fileId)
                 .eq(FileTag::getTagId, tagId);
         fileTagService.remove(wrapper);
 
-        // 减少标签使用计数（使用 TagService）
+        // Decrease tag usage count (using TagService)
         tagService.batchDecreaseUsageCount(Set.of(tagId));
 
-        log.info("文件标签移除成功: fileId={}, tagId={}", fileId, tagId);
+        log.info("File tag removed successfully: fileId={}, tagId={}", fileId, tagId);
         return true;
     }
 
@@ -473,16 +473,16 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public List<TagResponse> getFileTags(Long fileId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询文件记录并校验权限
+        // Query file record and validate permissions
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
         checkFilePermission(fileRecord, userId);
 
-        // 使用 FileTagService 获取文件标签
+        // Use FileTagService to get file tags
         return fileTagService.getFileTagsResponse(fileId);
     }
 
-    // ========== 文件分享 ==========
+    // ========== File Sharing ==========
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -490,22 +490,22 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Long userId = StpUtil.getLoginIdAsLong();
         Long fileId = request.getFileId();
 
-        // 校验文件权限
+        // Validate file permissions
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.SHARE_PERMISSION_DENIED_MESSAGE);
 
-        // 校验目标用户
+        // Validate target user
         User targetUser = userService.getById(request.getShareToUserId());
         BusinessException.assertNotNull(targetUser, ResponseConstant.TARGET_USER_NOT_FOUND_MESSAGE);
 
-        // 校验分享类型和过期时间
+        // Validate share type and expiry time
         BusinessException.assertFalse(ShareTypeEnum.TEMPORARY.name().equals(request.getShareType())
                         && request.getExpiresAt() == null,
                 ResponseConstant.TEMPORARY_SHARE_REQUIRES_EXPIRY_MESSAGE);
 
-        // 检查是否已存在分享
+        // Check if share already exists
         LambdaQueryWrapper<FileShare> checkWrapper = new LambdaQueryWrapper<>();
         checkWrapper.eq(FileShare::getFileId, fileId)
                 .eq(FileShare::getShareToUserId, request.getShareToUserId())
@@ -513,7 +513,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         BusinessException.throwIf(fileShareService.count(checkWrapper) > 0,
                 ResponseConstant.PARAM_ERROR, ResponseConstant.SHARE_ALREADY_EXISTS_MESSAGE);
 
-        // 创建分享记录
+        // Create share record
         FileShare fileShare = new FileShare();
         fileShare.setFileId(fileId);
         fileShare.setShareFromUserId(userId);
@@ -522,16 +522,16 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         fileShare.setExpiresAt(request.getExpiresAt());
         fileShare.setPermissionLevel(request.getPermissionLevel());
         fileShare.setMessage(request.getMessage());
-        // 数据库默认值：revoked=0, view_count=0, download_count=0, created_at=now, updated_at=now
+        // Database default values: revoked=0, view_count=0, download_count=0, created_at=now, updated_at=now
         fileShareService.save(fileShare);
 
-        // 更新文件可见性
+        // Update file visibility
         if (FileVisibilityEnum.PRIVATE.name().equals(fileRecord.getVisibility())) {
             fileRecord.setVisibility(FileVisibilityEnum.SHARED.name());
             updateById(fileRecord);
         }
 
-        log.info("文件分享创建成功: shareId={}, fileId={}, toUserId={}",
+        log.info("File share created successfully: shareId={}, fileId={}, toUserId={}",
                 fileShare.getId(), fileId, request.getShareToUserId());
 
         return buildFileShareResponse(fileShare);
@@ -542,24 +542,24 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public Boolean cancelFileShare(Long shareId) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询分享记录
+        // Query share record
         FileShare fileShare = fileShareService.getById(shareId);
         BusinessException.assertNotNull(fileShare, ResponseConstant.SHARE_NOT_FOUND_MESSAGE);
 
-        // 权限校验
+        // Permission check
         BusinessException.assertTrue(fileShare.getShareFromUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.CANCEL_SHARE_PERMISSION_DENIED_MESSAGE);
 
-        // 撤销分享
+        // Revoke share
         fileShare.setRevoked(RevokedStatusEnum.REVOKED.getValue());
         fileShareService.updateById(fileShare);
 
-        // 检查文件是否还有其他有效分享
+        // Check if file has other valid shares
         LambdaQueryWrapper<FileShare> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileShare::getFileId, fileShare.getFileId())
                 .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue());
         if (fileShareService.count(wrapper) == 0) {
-            // 没有其他分享，更新文件可见性为私有
+            // No other shares, update file visibility to private
             FileRecord fileRecord = getById(fileShare.getFileId());
             if (fileRecord != null) {
                 fileRecord.setVisibility(FileVisibilityEnum.PRIVATE.name());
@@ -567,7 +567,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             }
         }
 
-        log.info("文件分享取消成功: shareId={}", shareId);
+        log.info("File share cancelled successfully: shareId={}", shareId);
         return true;
     }
 
@@ -623,7 +623,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         FileShare fileShare = fileShareService.getById(shareId);
         BusinessException.assertNotNull(fileShare, ResponseConstant.SHARE_NOT_FOUND_MESSAGE);
 
-        // 权限校验（必须是分享者或接收者）
+        // Permission check (must be sharer or recipient)
         BusinessException.assertTrue(
                 fileShare.getShareFromUserId().equals(userId) || fileShare.getShareToUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.VIEW_SHARE_PERMISSION_DENIED_MESSAGE);
@@ -631,20 +631,20 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         return buildFileShareResponse(fileShare);
     }
 
-    // ========== 访问日志 ==========
+    // ========== Access Logs ==========
 
     @Override
     public Page<FileAccessLogResponse> getFileAccessLogs(GetFileAccessLogsRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
         Long fileId = request.getFileId();
 
-        // 校验权限（必须是文件所有者）
+        // Validate permissions (must be file owner)
         FileRecord fileRecord = getById(fileId);
         BusinessException.assertNotNull(fileRecord, ResponseConstant.FILE_NOT_FOUND_MESSAGE);
         BusinessException.assertTrue(fileRecord.getUserId().equals(userId),
                 ResponseConstant.FORBIDDEN, ResponseConstant.VIEW_ACCESS_LOG_PERMISSION_DENIED_MESSAGE);
 
-        // 查询访问日志
+        // Query access logs
         Page<FileAccessLog> logPage = new Page<>(request.getPage(), request.getPageSize());
         LambdaQueryWrapper<FileAccessLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileAccessLog::getFileId, fileId)
@@ -652,7 +652,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
 
         fileAccessLogService.page(logPage, wrapper);
 
-        // 转换响应
+        // Convert response
         Page<FileAccessLogResponse> responsePage = new Page<>(logPage.getCurrent(), logPage.getSize(),
                 logPage.getTotal());
         responsePage.setRecords(logPage.getRecords().stream()
@@ -666,7 +666,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public FileStatisticsResponse getFileStatistics() {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        // 查询总文件数和总大小
+        // Query total file count and total size
         LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileRecord::getUserId, userId)
                 .eq(FileRecord::getDeleteFlag, DeleteStatusEnum.NOT_DELETED.getValue());
@@ -678,11 +678,11 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .mapToLong(FileRecord::getFileSize)
                 .sum();
 
-        // 按业务类型统计
+        // Statistics by business type
         Map<String, Long> typeCount = allFiles.stream()
                 .collect(Collectors.groupingBy(FileRecord::getBusinessType, Collectors.counting()));
 
-        // 分享统计
+        // Share statistics
         LambdaQueryWrapper<FileShare> shareOutWrapper = new LambdaQueryWrapper<>();
         shareOutWrapper.eq(FileShare::getShareFromUserId, userId)
                 .eq(FileShare::getRevoked, 0);
@@ -693,7 +693,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .eq(FileShare::getRevoked, 0);
         long shareInCount = fileShareService.count(shareInWrapper);
 
-        // 访问统计
+        // Access statistics
         List<Long> fileIds = allFiles.stream()
                 .map(FileRecord::getId)
                 .collect(Collectors.toList());
@@ -712,7 +712,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             totalUploads = accessTypeCount.getOrDefault(AccessTypeEnum.UPLOAD.name(), 0L);
         }
 
-        // 最近上传时间
+        // Last upload time
         LocalDateTime lastUploadedAt = allFiles.stream()
                 .map(FileRecord::getCreatedAt)
                 .max(LocalDateTime::compareTo)
@@ -735,24 +735,24 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .build();
     }
 
-    // ========== 私有辅助方法 ==========
+    // ========== Private Helper Methods ==========
 
     /**
-     * 检查是否存在相同哈希的文件（全局查找）
+     * Check if a file with the same hash exists (global lookup)
      *
-     * @param fileHash 文件SHA256哈希值
-     * @return 如果存在返回第一条记录，否则返回null
+     * @param fileHash SHA256 hash value of the file
+     * @return If exists, return the first record, otherwise return null
      */
     private FileRecord checkExistingFile(String fileHash) {
         LambdaQueryWrapper<FileRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FileRecord::getFileHash, fileHash)
                 .eq(FileRecord::getDeleteFlag, DeleteStatusEnum.NOT_DELETED.getValue())
-                .last("LIMIT 1"); // LIMIT 1 是必要的：相同哈希可能有多条记录（不同用户），只需要找到一条即可
+                .last("LIMIT 1"); // LIMIT 1 is necessary: same hash may have multiple records (different users), only need to find one
         return getOne(wrapper);
     }
 
     /**
-     * 构建FileRecord实体
+     * Build FileRecord entity
      */
     private FileRecord buildFileRecord(Long userId, MultipartFile file, String objectName,
                                        String fileUrl, String fileHash, UploadFileRequest request) {
@@ -769,12 +769,12 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         fileRecord.setVisibility(FileVisibilityEnum.PRIVATE.name());
         fileRecord.setFileUrl(fileUrl);
         fileRecord.setFileHash(fileHash);
-        // 数据库默认值：delete_flag=0, reference_count=0, created_at=now, updated_at=now
+        // Database default values: delete_flag=0, reference_count=0, created_at=now, updated_at=now
         return fileRecord;
     }
 
     /**
-     * 构建上传响应
+     * Build upload response
      */
     private FileUploadResponse buildUploadResponse(FileRecord fileRecord) {
         return FileUploadResponse.builder()
@@ -790,10 +790,10 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     /**
-     * 构建文件信息响应
+     * Build file info response
      */
     private FileInfoResponse buildFileInfoResponse(FileRecord fileRecord) {
-        // 查询文件的标签
+        // Query file tags
         List<TagResponse> tags = getFileTagsInternal(fileRecord.getId());
 
         return FileInfoResponse.builder()
@@ -815,13 +815,13 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     /**
-     * 构建文件详情响应
+     * Build file detail response
      */
     private FileDetailResponse buildFileDetailResponse(FileRecord fileRecord) {
-        // 查询文件的标签
+        // Query file tags
         List<TagResponse> tags = getFileTagsInternal(fileRecord.getId());
 
-        // 查询访问统计
+        // Query access statistics
         LambdaQueryWrapper<FileAccessLog> logWrapper = new LambdaQueryWrapper<>();
         logWrapper.eq(FileAccessLog::getFileId, fileRecord.getId());
         List<FileAccessLog> logs = fileAccessLogService.list(logWrapper);
@@ -837,7 +837,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
 
-        // 查询分享信息
+        // Query share information
         LambdaQueryWrapper<FileShare> shareWrapper = new LambdaQueryWrapper<>();
         shareWrapper.eq(FileShare::getFileId, fileRecord.getId())
                 .eq(FileShare::getRevoked, RevokedStatusEnum.NOT_REVOKED.getValue());
@@ -880,7 +880,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     /**
-     * 构建文件分享响应
+     * Build file share response
      */
     private FileShareResponse buildFileShareResponse(FileShare fileShare) {
         FileRecord fileRecord = getById(fileShare.getFileId());
@@ -910,7 +910,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     /**
-     * 构建文件访问日志响应
+     * Build file access log response
      */
     private FileAccessLogResponse buildFileAccessLogResponse(FileAccessLog log) {
         User user = userService.getById(log.getUserId());
@@ -926,19 +926,19 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     /**
-     * 检查文件权限（使用已查询的 fileRecord）
+     * Check file permissions (using already queried fileRecord)
      */
     private void checkFilePermission(FileRecord fileRecord, Long userId) {
-        // 检查是否为文件所有者
+        // Check if user is file owner
         if (fileRecord.getUserId().equals(userId)) {
             return;
         }
 
-        // 检查是否被分享（使用 FileShareService 封装的方法）
+        // Check if file is shared (using FileShareService encapsulated method)
         FileShare fileShare = fileShareService.getValidShareByFileAndUser(fileRecord.getId(), userId);
         BusinessException.assertNotNull(fileShare, ResponseConstant.FILE_ACCESS_DENIED_MESSAGE);
 
-        // 检查分享是否过期
+        // Check if share has expired
         if (fileShare.getExpiresAt() != null) {
             LocalDateTime now = LocalDateTime.now();
             BusinessException.throwIf(fileShare.getExpiresAt().isBefore(now) || fileShare.getExpiresAt().isEqual(now),
@@ -947,15 +947,15 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     }
 
     /**
-     * 内部方法：获取文件标签（不做权限检查）
+     * Internal method: Get file tags (no permission check)
      */
     private List<TagResponse> getFileTagsInternal(Long fileId) {
-        // 使用 FileTagService 获取文件标签
+        // Use FileTagService to get file tags
         return fileTagService.getFileTagsResponse(fileId);
     }
 
     /**
-     * 记录文件访问日志
+     * Log file access
      */
     private void logFileAccess(Long fileId, Long userId, String accessType) {
         try {
@@ -968,26 +968,26 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             log.setCreatedAt(LocalDateTime.now());
             fileAccessLogService.save(log);
         } catch (Exception e) {
-            log.warn("记录访问日志失败", e);
+            log.warn("Failed to log access", e);
         }
     }
 
-    // ========== 回收站管理 ==========
+    // ========== Recycle Bin Management ==========
 
     @Override
     public Page<FileInfoResponse> queryTrash(RecycleBinQueryRequest request) {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        log.info("查询回收站: userId={}, page={}, size={}",
+        log.info("Query recycle bin: userId={}, page={}, size={}",
                 userId, request.getPage(), request.getSize());
 
-        // 创建分页对象
+        // Create pagination object
         Page<FileRecord> page = new Page<>(request.getPage(), request.getSize());
 
-        // 使用自定义 Mapper 方法查询（绕过 @TableLogic）
+        // Use custom Mapper method to query (bypass @TableLogic)
         Page<FileRecord> recordPage = baseMapper.selectTrashFiles(page, userId);
 
-        // 转换为响应对象
+        // Convert to response objects
         Page<FileInfoResponse> responsePage = new Page<>();
         responsePage.setCurrent(recordPage.getCurrent());
         responsePage.setSize(recordPage.getSize());
@@ -1007,15 +1007,15 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Long userId = StpUtil.getLoginIdAsLong();
         List<Long> fileIds = request.getFileIds();
 
-        log.info("批量恢复文件: userId={}, fileIds={}", userId, fileIds);
+        log.info("Batch restore files: userId={}, fileIds={}", userId, fileIds);
 
-        // 查询回收站中的合法文件（使用自定义 Mapper 绕过 @TableLogic）
+        // Query valid files in recycle bin (using custom Mapper to bypass @TableLogic)
         List<FileRecord> validFileRecords = baseMapper.selectTrashFilesByIds(fileIds, userId);
         List<Long> validFileIds = validFileRecords.stream()
                 .map(FileRecord::getId)
                 .toList();
 
-        // 批量更新有效的文件（恢复）
+        // Batch update valid files (restore)
         int updatedCount = 0;
         if (!validFileIds.isEmpty()) {
             updatedCount = baseMapper.batchUpdateDeleteFlag(
@@ -1028,7 +1028,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         int successCount = updatedCount;
         int failedCount = fileIds.size() - successCount;
 
-        log.info("批量恢复完成: total={}, success={}, failed={}",
+        log.info("Batch restore completed: total={}, success={}, failed={}",
                 fileIds.size(), successCount, failedCount);
 
         return BatchOperationResponse.builder()
@@ -1044,53 +1044,53 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         Long userId = StpUtil.getLoginIdAsLong();
         List<Long> fileIds = request.getFileIds();
 
-        log.info("批量彻底删除文件: userId={}, fileIds={}", userId, fileIds);
+        log.info("Batch permanently delete files: userId={}, fileIds={}", userId, fileIds);
 
-        // 查询回收站中的合法文件（使用自定义 Mapper 绕过 @TableLogic）
+        // Query valid files in recycle bin (using custom Mapper to bypass @TableLogic)
         List<FileRecord> filesToDelete = baseMapper.selectTrashFilesByIds(fileIds, userId);
 
         if (filesToDelete.isEmpty()) {
             return BatchOperationResponse.builder().total(0).success(0).failed(0).build();
         }
 
-        // 收集合法的文件ID和对象名
+        // Collect valid file IDs and object names
         List<Long> validFileIds = filesToDelete.stream().map(FileRecord::getId).collect(Collectors.toList());
         List<String> objectNames = filesToDelete.stream().map(FileRecord::getObjectName).collect(Collectors.toList());
 
-        // 1. 从 MinIO 批量删除文件（失败不影响数据库操作）
+        // 1. Batch delete files from MinIO (failure does not affect database operations)
         try {
             minioService.deleteFiles(objectNames);
-            log.info("批量删除 MinIO 文件成功: count={}", objectNames.size());
+            log.info("Batch delete MinIO files successful: count={}", objectNames.size());
         } catch (Exception e) {
-            log.warn("批量删除 MinIO 文件失败（继续删除数据库记录）: error={}", e.getMessage());
+            log.warn("Batch delete MinIO files failed (continue deleting database records): error={}", e.getMessage());
         }
 
-        // 2. 查询并统计所有文件的标签使用次数
+        // 2. Query and count tag usage for all files
         LambdaQueryWrapper<FileTag> fileTagQuery = new LambdaQueryWrapper<>();
         fileTagQuery.in(FileTag::getFileId, validFileIds);
         List<FileTag> fileTags = fileTagService.list(fileTagQuery);
 
-        // 统计每个标签出现的次数（一个标签在多个文件中使用，需要减去对应的次数）
+        // Count occurrences of each tag (a tag used in multiple files needs to subtract corresponding count)
         Map<Long, Integer> tagCountMap = fileTags.stream()
                 .collect(Collectors.groupingBy(
                         FileTag::getTagId,
                         Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
                 ));
 
-        // 3. 批量删除文件标签关联
+        // 3. Batch delete file-tag associations
         fileTagMapper.deleteBatchByFileIds(validFileIds);
 
-        // 4. 批量物理删除文件记录
+        // 4. Batch physically delete file records
         int deletedCount = baseMapper.permanentDeleteBatch(validFileIds, userId);
 
-        // 5. 批量减少标签使用计数（按实际出现次数）
+        // 5. Batch decrease tag usage count (by actual occurrence count)
         if (!tagCountMap.isEmpty()) {
             tagService.batchDecreaseUsageCountByAmount(tagCountMap);
         }
 
         int failedCount = fileIds.size() - deletedCount;
 
-        log.info("批量彻底删除完成: total={}, success={}, failed={}",
+        log.info("Batch permanent delete completed: total={}, success={}, failed={}",
                 fileIds.size(), deletedCount, failedCount);
 
         return BatchOperationResponse.builder()
@@ -1105,9 +1105,9 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public BatchOperationResponse emptyRecycleBin() {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        log.info("清空回收站: userId={}", userId);
+        log.info("Empty recycle bin: userId={}", userId);
 
-        // 查询用户回收站所有文件ID
+        // Query all file IDs in user's recycle bin
         List<Long> fileIds = baseMapper.selectTrashFileIds(userId);
 
         if (fileIds.isEmpty()) {
@@ -1118,7 +1118,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                     .build();
         }
 
-        // 批量彻底删除
+        // Batch permanently delete
         BatchOperationRequest request = new BatchOperationRequest();
         request.setFileIds(fileIds);
 
@@ -1129,7 +1129,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     public TrashStatsResponse getTrashStats() {
         Long userId = StpUtil.getLoginIdAsLong();
 
-        log.info("查询回收站统计: userId={}", userId);
+        log.info("Query recycle bin statistics: userId={}", userId);
 
         TrashStatsResponse stats = baseMapper.selectTrashStats(userId);
 

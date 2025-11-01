@@ -1,9 +1,9 @@
 /**
- * 时间相关工具函数
+ * Time-related utility functions
  */
 
 /**
- * 格式化时间为相对时间（如"5分钟前"）或绝对时间
+ * Format time as relative time (e.g., "5 minutes ago") or absolute time
  */
 export function formatTime(dateStr: string): string {
   if (!dateStr) return '-'
@@ -12,24 +12,24 @@ export function formatTime(dateStr: string): string {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
 
-  // 计算时间差
+  // Calculate time difference
   const seconds = Math.floor(diff / 1000)
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
 
-  // 相对时间
+  // Relative time
   if (seconds < 60) return '刚刚'
   if (minutes < 60) return `${minutes}分钟前`
   if (hours < 24) return `${hours}小时前`
   if (days < 7) return `${days}天前`
 
-  // 绝对时间
+  // Absolute time
   return formatDateTime(dateStr)
 }
 
 /**
- * 格式化为完整日期时间
+ * Format as full date and time
  */
 export function formatDateTime(dateStr: string): string {
   if (!dateStr) return '-'
@@ -46,7 +46,7 @@ export function formatDateTime(dateStr: string): string {
 }
 
 /**
- * 格式化为日期（不含时间）
+ * Format as date (without time)
  */
 export function formatDate(dateStr: string): string {
   if (!dateStr) return '-'

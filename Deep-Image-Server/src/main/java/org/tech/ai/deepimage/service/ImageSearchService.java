@@ -5,24 +5,24 @@ import org.tech.ai.deepimage.model.dto.ImageInfo;
 import java.util.List;
 
 /**
- * 图片搜索服务接口
+ * Image search service interface
  */
 public interface ImageSearchService {
 
     /**
-     * 搜索图片
+     * Search images
      *
-     * @param keyword 搜索关键词
-     * @param count   需要的图片数量
-     * @return 图片信息列表
+     * @param keyword Search keyword
+     * @param count   Number of images needed
+     * @return Image information list
      */
     List<ImageInfo> searchImages(String keyword, int count);
 
     /**
-     * 清理图片URL，去除查询参数并处理协议
+     * Clean image URL, remove query parameters and handle protocol
      *
-     * @param originalUrl 原始URL
-     * @return 清理后的URL
+     * @param originalUrl Original URL
+     * @return Cleaned URL
      */
     String cleanImageUrl(String originalUrl);
 }

@@ -11,16 +11,16 @@
     class="login-modal"
   >
     <div class="modal-content">
-      <!-- Tabs 切换 -->
+      <!-- Tab switching -->
       <a-tabs
         v-model:activeKey="activeTab"
         centered
         size="large"
         :animated="{ inkBar: true, tabPane: true }"
       >
-        <!-- 登录 Tab -->
+        <!-- Login Tab -->
         <a-tab-pane key="login" tab="登录">
-          <!-- Google登录按钮 -->
+          <!-- Google login button -->
           <a-button class="google-login-btn" size="large" block @click="handleGoogleLogin">
             <template #icon>
               <img src="@/assets/google.svg" alt="Google" class="google-icon" />
@@ -28,7 +28,7 @@
             使用 Google 账号登录
           </a-button>
 
-          <!-- 分隔线 -->
+          <!-- Divider -->
           <a-divider>或使用邮箱密码登录</a-divider>
 
           <a-form
@@ -79,7 +79,7 @@
           </a-form>
         </a-tab-pane>
 
-        <!-- 注册 Tab -->
+        <!-- Register Tab -->
         <a-tab-pane key="register" tab="注册">
           <a-form
             ref="registerFormRef"
@@ -148,7 +148,7 @@
           </a-form>
         </a-tab-pane>
 
-        <!-- 重置密码 Tab -->
+        <!-- Reset Password Tab -->
         <a-tab-pane key="reset" tab="重置密码">
           <a-form
             ref="resetFormRef"
@@ -255,19 +255,19 @@ const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
 
-// 控制弹窗显示
+// Control modal visibility
 const visible = computed({
   get: () => props.open,
   set: (value) => emit('update:open', value),
 })
 
-// 当前激活的 Tab
+// Currently active tab
 const activeTab = ref(props.initialTab)
 
-// 加载状态
+// Loading state
 const loading = ref(false)
 
-// ===== 登录表单 =====
+// ===== Login Form =====
 const loginFormRef = ref()
 const loginForm = reactive<LoginRequest & { remember?: boolean }>({
   email: '',
@@ -283,7 +283,7 @@ const loginRules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
-// ===== 注册表单 =====
+// ===== Register Form =====
 const registerFormRef = ref()
 const registerForm = reactive<RegisterRequest & { confirmPassword?: string }>({
   username: '',
@@ -324,7 +324,7 @@ const registerRules = {
   ],
 }
 
-// ===== 重置密码表单 =====
+// ===== Reset Password Form =====
 const resetFormRef = ref()
 const resetForm = reactive<ResetPasswordRequest & { confirmPassword?: string }>({
   email: '',
@@ -362,10 +362,10 @@ const resetRules = {
   ],
 }
 
-// ===== 处理函数 =====
+// ===== Handler Functions =====
 const handleCancel = () => {
   visible.value = false
-  // 重置所有表单
+  // Reset all forms
   loginFormRef.value?.resetFields()
   registerFormRef.value?.resetFields()
   resetFormRef.value?.resetFields()
@@ -376,7 +376,7 @@ const onLogin = async () => {
     loading.value = true
     await authStore.login(loginForm)
     
-    // 加载用户信息
+    // Load user information
     try {
       await userStore.fetchProfile()
     } catch (err) {
@@ -387,7 +387,7 @@ const onLogin = async () => {
     emit('login-success')
     visible.value = false
 
-    // 处理重定向
+    // Handle redirect
     if (props.redirectPath) {
       router.push(props.redirectPath)
     }
@@ -407,7 +407,7 @@ const onRegister = async () => {
       message.success('注册成功，请登录')
       emit('register-success')
       activeTab.value = 'login'
-      // 清空注册表单
+      // Clear register form
       registerFormRef.value?.resetFields()
     } else {
       message.error(data.message || '注册失败')
@@ -427,7 +427,7 @@ const onResetPassword = async () => {
     if (data.code === 200) {
       message.success('密码重置成功，请使用新密码登录')
       activeTab.value = 'login'
-      // 清空重置密码表单
+      // Clear reset password form
       resetFormRef.value?.resetFields()
     } else {
       message.error(data.message || '密码重置失败')
@@ -440,25 +440,25 @@ const onResetPassword = async () => {
 }
 
 const handleGoogleLogin = () => {
-  // Google OAuth 登录
-  // 获取 redirect 参数（登录成功后要跳转的目标路径）
+  // Google OAuth login
+  // Get redirect parameter (target path after successful login)
   const redirect = props.redirectPath || ''
 
-  // 构建回调URL，将 redirect 参数传递给回调页面
+  // Build callback URL, pass redirect parameter to callback page
   let callbackUrl = `${window.location.origin}/auth/callback`
   if (redirect) {
     callbackUrl += `?redirect=${encodeURIComponent(redirect)}`
   }
 
-  // 跳转到后端OAuth发起接口
+  // Navigate to backend OAuth initiation endpoint
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
   const loginUrl = `${apiBaseUrl}/api/auth/google/login?fromUrl=${encodeURIComponent(callbackUrl)}`
 
-  // 直接跳转（浏览器会重定向到Google）
+  // Direct navigation (browser will redirect to Google)
   window.location.href = loginUrl
 }
 
-// 监听弹窗打开，重置 tab 到初始值
+// Watch modal open, reset tab to initial value
 watch(
   () => props.open,
   (newVal) => {
@@ -484,7 +484,7 @@ watch(
   overflow-y: auto;
 }
 
-/* Google 登录按钮 */
+/* Google login button */
 .google-login-btn {
   height: 48px;
   border: 1px solid #e5e7eb;
@@ -504,14 +504,14 @@ watch(
   height: 20px;
 }
 
-/* 分隔线样式 */
+/* Divider styles */
 :deep(.ant-divider) {
   margin: 24px 0;
   color: #9ca3af;
   font-size: 13px;
 }
 
-/* 表单样式优化 */
+/* Form style optimizations */
 :deep(.ant-form-item) {
   margin-bottom: 20px;
 }
@@ -556,7 +556,7 @@ watch(
   color: #40a9ff;
 }
 
-/* Tabs 样式优化 */
+/* Tabs style optimizations */
 :deep(.ant-tabs) {
   margin-top: 0;
 }
@@ -571,14 +571,14 @@ watch(
   padding: 12px 0;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 640px) {
   .login-modal :deep(.ant-modal-body) {
     padding: 24px 20px;
   }
 }
 
-/* 滚动条样式 */
+/* Scrollbar styles */
 .modal-content::-webkit-scrollbar {
   width: 6px;
 }

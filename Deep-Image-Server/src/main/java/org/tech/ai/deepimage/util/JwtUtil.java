@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Base64;
 
 /**
- * JWT工具类
- * 用于解析JWT token
+ * JWT Utility Class
+ * Used for parsing JWT tokens
  * 
  * @author zgq
  * @since 2025-10-01
@@ -19,27 +19,27 @@ public class JwtUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /**
-     * 从JWT中获取指定claim的字符串值
+     * Get specified claim's string value from JWT
      */
     public static String getClaimAsString(String token, String claimName) {
         try {
-            // JWT格式: header.payload.signature
+            // JWT format: header.payload.signature
             String[] parts = token.split("\\.");
             if (parts.length < 2) {
-                log.error("无效的JWT格式");
+                log.error("Invalid JWT format");
                 return null;
             }
             
-            // 解码payload部分（Base64URL）
+            // Decode payload part (Base64URL)
             String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
             
-            // 解析JSON
+            // Parse JSON
             JsonNode jsonNode = OBJECT_MAPPER.readTree(payload);
             JsonNode claimNode = jsonNode.get(claimName);
             
             return claimNode != null ? claimNode.asText() : null;
         } catch (Exception e) {
-            log.error("解析JWT claim失败: {}", claimName, e);
+            log.error("Failed to parse JWT claim: {}", claimName, e);
             return null;
         }
     }

@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件分享响应
+ * File share response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,92 +16,92 @@ import java.time.LocalDateTime;
 public class FileShareResponse {
     
     /**
-     * 分享ID
+     * Share ID
      */
     private Long shareId;
     
     /**
-     * 文件ID
+     * File ID
      */
     private Long fileId;
     
     /**
-     * 原始文件名
+     * Original file name
      */
     private String originalFilename;
     
     /**
-     * 文件URL
+     * File URL
      */
     private String fileUrl;
     
     /**
-     * 缩略图URL
+     * Thumbnail URL
      */
     private String thumbnailUrl;
     
     /**
-     * 分享者用户ID
+     * Sharer user ID
      */
     private Long shareFromUserId;
     
     /**
-     * 分享者用户名
+     * Sharer username
      */
     private String shareFromUsername;
     
     /**
-     * 接收者用户ID
+     * Recipient user ID
      */
     private Long shareToUserId;
     
     /**
-     * 接收者用户名
+     * Recipient username
      */
     private String shareToUsername;
     
     /**
-     * 分享类型
+     * Share type
      */
     private String shareType;
     
     /**
-     * 过期时间
+     * Expiration time
      */
     private LocalDateTime expiresAt;
     
     /**
-     * 权限级别
+     * Permission level
      */
     private String permissionLevel;
     
     /**
-     * 分享留言
+     * Share message
      */
     private String message;
     
     /**
-     * 是否已撤销
+     * Whether revoked
      */
     private Boolean revoked;
     
     /**
-     * 查看次数
+     * View count
      */
     private Integer viewCount;
     
     /**
-     * 下载次数
+     * Download count
      */
     private Integer downloadCount;
     
     /**
-     * 创建时间
+     * Creation time
      */
     private LocalDateTime createdAt;
     
     /**
-     * 更新时间
+     * Update time
      */
     private LocalDateTime updatedAt;
 }

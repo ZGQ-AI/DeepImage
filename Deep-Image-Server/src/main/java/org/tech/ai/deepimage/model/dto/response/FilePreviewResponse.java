@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件预览响应
+ * File preview response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,17 +16,17 @@ import java.time.LocalDateTime;
 public class FilePreviewResponse {
     
     /**
-     * 临时访问 URL（MinIO presigned URL）
+     * Temporary access URL (MinIO presigned URL)
      */
     private String previewUrl;
     
     /**
-     * 有效期（秒）
+     * Validity period (seconds)
      */
     private Integer expirySeconds;
     
     /**
-     * 过期时间
+     * Expiration time
      */
     private LocalDateTime expiresAt;
 }

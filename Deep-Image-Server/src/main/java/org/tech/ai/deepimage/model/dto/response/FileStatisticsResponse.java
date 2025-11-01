@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件统计响应
+ * File statistics response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,17 +16,17 @@ import java.time.LocalDateTime;
 public class FileStatisticsResponse {
     
     /**
-     * 总文件数
+     * Total file count
      */
     private Long totalFiles;
     
     /**
-     * 总存储大小（字节）
+     * Total storage size (bytes)
      */
     private Long totalSize;
     
     /**
-     * 按业务类型统计
+     * Statistics by business type
      */
     private Long imageCount;
     private Long documentCount;
@@ -35,20 +35,20 @@ public class FileStatisticsResponse {
     private Long tempCount;
     
     /**
-     * 分享统计
+     * Share statistics
      */
-    private Long shareOutCount;  // 分享出去的文件数
-    private Long shareInCount;   // 收到的分享数
+    private Long shareOutCount;  // Number of files shared out
+    private Long shareInCount;   // Number of shares received
     
     /**
-     * 访问统计
+     * Access statistics
      */
-    private Long totalDownloads;  // 总下载次数
-    private Long totalViews;      // 总查看次数
-    private Long totalUploads;    // 总上传次数
+    private Long totalDownloads;  // Total download count
+    private Long totalViews;      // Total view count
+    private Long totalUploads;    // Total upload count
     
     /**
-     * 最近上传时间
+     * Last upload time
      */
     private LocalDateTime lastUploadedAt;
 }

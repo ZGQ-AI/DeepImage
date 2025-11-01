@@ -1,10 +1,10 @@
 /**
- * 应用常量配置
- * 统一管理应用中所有硬编码的字符串、数字和配置值
+ * Application constants configuration
+ * Unified management of all hardcoded strings, numbers and configuration values in the application
  */
 
 /**
- * 页面标题常量
+ * Page title constants
  */
 export const PAGE_TITLES = {
   GALLERY: '我的图库',
@@ -16,7 +16,7 @@ export const PAGE_TITLES = {
 } as const
 
 /**
- * 页面描述常量
+ * Page description constants
  */
 export const PAGE_DESCRIPTIONS = {
   GALLERY: '管理您的图片收藏',
@@ -25,10 +25,10 @@ export const PAGE_DESCRIPTIONS = {
 } as const
 
 /**
- * 按钮文字常量
+ * Button text constants
  */
 export const BUTTON_TEXTS = {
-  // 通用操作
+  // Common operations
   UPLOAD: '上传更多',
   UPLOAD_COLLAPSE: '收起上传',
   BATCH_OPERATE: '批量操作',
@@ -50,7 +50,7 @@ export const BUTTON_TEXTS = {
   CREATE_TAG: '创建标签',
   REFRESH: '刷新',
   
-  // 文件操作
+  // File operations
   RENAME: '重命名',
   DOWNLOAD: '下载',
   PREVIEW: '预览',
@@ -59,46 +59,46 @@ export const BUTTON_TEXTS = {
 } as const
 
 /**
- * 提示信息常量
+ * Message constants
  */
 export const MESSAGES = {
-  // 上传相关
+  // Upload related
   UPLOAD_SUCCESS: (count: number) => `成功上传 ${count} 张图片`,
   UPLOAD_ERROR: (filename: string, error: string) => `${filename} 上传失败: ${error}`,
   
-  // 删除相关
+  // Delete related
   DELETE_CONFIRM: (count: number) => `确定要删除选中的 ${count} 张图片吗？删除后可在回收站中恢复。`,
   DELETE_SUCCESS: (filename: string) => `图片 "${filename}" 删除成功`,
   BATCH_DELETE_SUCCESS: (success: number) => `成功删除 ${success} 张图片`,
   BATCH_DELETE_PARTIAL: (success: number, failed: number) => `删除完成：成功 ${success} 张，失败 ${failed} 张`,
   
-  // 恢复相关
+  // Restore related
   RESTORE_CONFIRM: (count: number) => `确定要恢复选中的 ${count} 个文件吗？`,
   RESTORE_SUCCESS: (count: number) => `成功恢复 ${count} 个文件`,
   RESTORE_PARTIAL: (success: number, failed: number) => `恢复完成：成功 ${success} 个，失败 ${failed} 个`,
   
-  // 永久删除相关
+  // Permanent delete related
   PERMANENT_DELETE_CONFIRM: (count: number) => `确定要彻底删除选中的 ${count} 个文件吗？此操作不可恢复！`,
   PERMANENT_DELETE_SUCCESS: (count: number) => `成功删除 ${count} 个文件`,
   EMPTY_BIN_CONFIRM: '确定要清空回收站吗？所有文件将被彻底删除，此操作不可恢复！',
   EMPTY_BIN_SUCCESS: (count: number) => `已清空回收站，删除了 ${count} 个文件`,
   
-  // 重命名相关
+  // Rename related
   RENAME_SUCCESS: (filename: string) => `重命名成功：${filename}`,
   RENAME_NO_CHANGE: '文件名未改变',
   RENAME_EMPTY_ERROR: '文件名不能为空',
   
-  // 搜索相关
+  // Search related
   SEARCH_SUCCESS: (count: number) => `搜索到 ${count} 张图片`,
   SEARCH_NO_RESULTS: '未找到相关图片，请尝试其他关键词',
   SEARCH_KEYWORD_REQUIRED: '请输入搜索关键词',
   
-  // 下载相关
+  // Download related
   DOWNLOAD_START: '正在下载图片...',
   DOWNLOAD_SUCCESS: (filename: string) => `图片 "${filename}" 下载完成`,
   DOWNLOAD_ERROR: (error: string) => `下载失败: ${error}`,
   
-  // 其他
+  // Others
   LOADING_IMAGES: '加载图片失败',
   LOADING_RECYCLE_BIN: '加载回收站失败',
   NO_SELECTION: '请先选择要删除的图片',
@@ -108,42 +108,42 @@ export const MESSAGES = {
 } as const
 
 /**
- * 文件上传配置常量
+ * File upload configuration constants
  */
 export const UPLOAD_CONFIG = {
-  // 默认文件大小限制（MB）
+  // Default file size limit (MB)
   MAX_SIZE: 10,
-  // 默认最大文件数量
+  // Default maximum file count
   MAX_COUNT: 20,
-  // 搜索图片数量配置
+  // Search image count configuration
   SEARCH_COUNT: 10,
   SEARCH_COUNT_RANGE: {
     MIN: 1,
     MAX: 30,
   },
-  // 搜索关键词最大长度
+  // Maximum length of search keyword
   SEARCH_KEYWORD_MAX_LENGTH: 50,
 } as const
 
 /**
- * 分页配置常量
+ * Pagination configuration constants
  */
 export const PAGINATION_CONFIG = {
-  // 默认分页大小
+  // Default page size
   DEFAULT_PAGE_SIZE: 100,
-  // 小分页大小（回收站等）
+  // Small page size (for recycle bin, etc.)
   SMALL_PAGE_SIZE: 10,
-  // 分页选项
+  // Page size options
   PAGE_SIZE_OPTIONS: ['10', '20', '50', '100'],
-  // 分页文字模板
+  // Pagination text template
   SHOW_TOTAL: (total: number) => `共 ${total} 条`,
 } as const
 
 /**
- * 样式配置常量
+ * Style configuration constants
  */
 export const STYLE_CONFIG = {
-  // 网格列数
+  // Grid columns
   GRID_COLUMNS: {
     DEFAULT: 4,
     LARGE: 5,
@@ -151,22 +151,22 @@ export const STYLE_CONFIG = {
     SMALL: 2,
     MOBILE: 1,
   },
-  // 防抖延迟（毫秒）
+  // Debounce delay (milliseconds)
   DEBOUNCE_TIMEOUT: 500,
-  // 响应式断点
+  // Responsive breakpoints
   BREAKPOINTS: {
     LARGE: 1600,
     MEDIUM: 1200,
     SMALL: 768,
     MOBILE: 480,
   },
-  // 网格间距
+  // Grid gap
   GRID_GAP: {
     DEFAULT: 16,
     SMALL: 12,
     MOBILE: 0,
   },
-  // 图片容器高度
+  // Image container height
   IMAGE_CONTAINER_HEIGHT: {
     DEFAULT: 200,
     SMALL: 150,
@@ -174,7 +174,7 @@ export const STYLE_CONFIG = {
 } as const
 
 /**
- * 排序选项常量
+ * Sort option constants
  */
 export const SORT_OPTIONS = {
   CREATED_AT_DESC: {
@@ -204,7 +204,7 @@ export const SORT_OPTIONS = {
 } as const
 
 /**
- * 步骤描述常量（用于图片搜索）
+ * Step description constants (for image search)
  */
 export const STEP_DESCRIPTIONS = {
   SEARCH: {
@@ -222,7 +222,7 @@ export const STEP_DESCRIPTIONS = {
 } as const
 
 /**
- * 状态显示常量（用于图片搜索）
+ * Status display constants (for image search)
  */
 export const STATUS_CONFIG = {
   COMPLETED: {
@@ -240,7 +240,7 @@ export const STATUS_CONFIG = {
 } as const
 
 /**
- * 占位符文字常量
+ * Placeholder text constants
  */
 export const PLACEHOLDERS = {
   SEARCH_KEYWORD: '输入要搜索的关键词，如：樱花、风景、动物',
@@ -252,7 +252,7 @@ export const PLACEHOLDERS = {
 } as const
 
 /**
- * 空状态文字常量
+ * Empty state text constants
  */
 export const EMPTY_STATES = {
   GALLERY: {

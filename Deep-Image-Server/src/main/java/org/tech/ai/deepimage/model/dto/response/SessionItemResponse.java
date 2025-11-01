@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 会话项响应
+ * Session item response
  * 
  * @author zgq
  * @since 2025-10-01
@@ -14,17 +14,17 @@ import java.time.LocalDateTime;
 public class SessionItemResponse {
     
     /**
-     * 会话ID
+     * Session ID
      */
     private Long id;
     
     /**
-     * 设备信息
+     * Device information
      */
     private String deviceInfo;
     
     /**
-     * IP地址
+     * IP address
      */
     private String ipAddress;
     
@@ -34,22 +34,22 @@ public class SessionItemResponse {
     private String userAgent;
     
     /**
-     * 会话状态：0=已撤销，1=活跃
+     * Session status: 0=revoked, 1=active
      */
     private Integer active;
     
     /**
-     * 最后刷新时间
+     * Last refresh time
      */
     private LocalDateTime lastRefreshAt;
     
     /**
-     * 创建时间（登录时间）
+     * Creation time (login time)
      */
     private LocalDateTime createdAt;
     
     /**
-     * 是否为当前会话
+     * Whether it is the current session
      */
     private Boolean isCurrent;
 }

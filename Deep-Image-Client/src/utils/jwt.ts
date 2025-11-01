@@ -2,7 +2,7 @@ export interface DecodedJwtPayload {
   loginType?: string
   loginId?: number | string
   deviceType?: string
-  eff?: number // JWT 过期时间（毫秒级时间戳）
+  eff?: number // JWT expiration time (millisecond timestamp)
   rnStr?: string
   username?: string
   email?: string
@@ -36,14 +36,14 @@ export function decodeJwt(token: string): DecodedJwtPayload | null {
 }
 
 /**
- * 检查 token 是否已过期
+ * Check if token is expired
  * 
  * **Optimized with caching:** Caches expiration time to avoid repeated JWT decoding.
  * Cache is cleared when token changes or when clearTokenExpirationCache() is called.
  * 
  * @param token - JWT token
- * @param bufferSeconds - 提前多少秒判定为过期（默认 60 秒，即提前 1 分钟）
- * @returns true 表示已过期或即将过期，false 表示仍然有效
+ * @param bufferSeconds - How many seconds in advance to consider expired (default 60 seconds, i.e., 1 minute in advance)
+ * @returns true means expired or about to expire, false means still valid
  */
 export function isTokenExpired(token: string | null, bufferSeconds: number = 60): boolean {
   if (!token) {

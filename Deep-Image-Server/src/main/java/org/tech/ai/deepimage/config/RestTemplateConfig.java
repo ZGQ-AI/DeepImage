@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * RestTemplate配置类
+ * RestTemplate configuration class
  * 
  * @author zgq
  * @since 2025-10-01

@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Google OAuth服务
- * 专门处理OAuth2.0流程，不涉及数据库存储
+ * Google OAuth service
+ * Specifically handles OAuth 2.0 flow, does not involve database storage
  * 
  * @author zgq
  * @since 2025-10-02
@@ -35,7 +35,7 @@ public class GoogleOauthService {
     private RestTemplate restTemplate;
 
     /**
-     * 生成Google OAuth授权URL
+     * Generate Google OAuth authorization URL
      */
     public String generateAuthorizationUrl(String fromUrl) {
         String scope = String.join(" ", properties.getScope());
@@ -54,23 +54,23 @@ public class GoogleOauthService {
                 .build()
         );
         
-        log.info("生成Google OAuth授权URL，fromUrl: {}", fromUrl);
+        log.info("Generated Google OAuth authorization URL, fromUrl: {}", fromUrl);
         return url;
     }
 
     /**
-     * 生成nonce值（用于防止重放攻击）
+     * Generate nonce value (used to prevent replay attacks)
      */
     private String generateNonce() {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
     /**
-     * 使用授权码获取访问令牌
+     * Exchange authorization code for access token
      */
     public Map<String, Object> exchangeCodeForToken(String code) {
         try {
-            // 使用Helper构建请求参数
+            // Use Helper to build request parameters
             Map<String, String> params = GoogleOauthHelper.buildTokenRequestParams(
                 GoogleOauthHelper.tokenRequest()
                     .code(code)
@@ -80,7 +80,7 @@ public class GoogleOauthService {
                     .build()
             );
             
-            // 转换为MultiValueMap
+            // Convert to MultiValueMap
             MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
             params.forEach(requestBody::add);
 
@@ -97,14 +97,14 @@ public class GoogleOauthService {
             );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.info("成功获取Google访问令牌");
+                log.info("Successfully obtained Google access token");
                 return response.getBody();
             } else {
-                log.error("获取Google访问令牌失败: {}", response.getStatusCode());
+                log.error("Failed to get Google access token: {}", response.getStatusCode());
                 return null;
             }
         } catch (Exception e) {
-            log.error("获取Google访问令牌时发生异常", e);
+            log.error("Exception occurred while getting Google access token", e);
             return null;
         }
     }

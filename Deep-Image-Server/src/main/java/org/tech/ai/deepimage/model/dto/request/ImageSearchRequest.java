@@ -6,19 +6,19 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
- * 图片搜索请求 DTO（仅搜索，不下载）
+ * Image search request DTO (search only, no download)
  */
 @Data
 public class ImageSearchRequest {
 
     /**
-     * 搜索关键词
+     * Search keyword
      */
     @NotBlank(message = "搜索关键词不能为空")
     private String keyword;
 
     /**
-     * 需要搜索的图片数量
+     * Number of images to search
      */
     @Min(value = 1, message = "图片数量不能少于1张")
     @Max(value = 30, message = "图片数量不能超过30张")

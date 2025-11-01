@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.tech.ai.deepimage.entity.Permission;
 
 /**
- * 权限信息表 服务类
+ * Permission information table service class
  * 
  * @author zgq
  * @since 2025-09-29

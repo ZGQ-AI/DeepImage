@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * 角色信息表
+ * Role information table
  * 
  * @author zgq
  * @since 2025-09-29
@@ -17,55 +17,55 @@ import java.time.LocalDateTime;
 public class Role {
 
     /**
-     * 角色唯一标识，主键
+     * Role unique identifier, primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 角色显示名称，全局唯一
+     * Role display name, globally unique
      */
     @TableField("role_name")
     private String roleName;
 
     /**
-     * 角色代码，用于程序逻辑，全局唯一
+     * Role code, used for program logic, globally unique
      */
     @TableField("role_code")
     private String roleCode;
 
     /**
-     * 角色描述信息
+     * Role description information
      */
     @TableField("description")
     private String description;
 
     /**
-     * 删除标志：0=未删除，1=已删除
+     * Delete flag: 0=not deleted, 1=deleted
      */
     @TableField("delete_flag")
     private Integer deleteFlag;
 
     /**
-     * 角色创建时间
+     * Role creation time
      */
     @TableField(value = "created_at")
     private LocalDateTime createdAt;
 
     /**
-     * 角色信息最后更新时间
+     * Role information last update time
      */
     @TableField(value = "updated_at")
     private LocalDateTime updatedAt;
 
     /**
-     * 创建者用户ID
+     * Creator user ID
      */
     @TableField("created_by")
     private Long createdBy;
 
     /**
-     * 最后更新者用户ID
+     * Last updater user ID
      */
     @TableField("updated_by")
     private Long updatedBy;

@@ -4,7 +4,7 @@ import lombok.Data;
 import org.tech.ai.deepimage.constant.FileConstant;
 
 /**
- * 文件列表查询请求（统一接口）
+ * File list query request (unified interface)
  * 
  * @author zgq
  * @since 2025-10-02
@@ -13,32 +13,32 @@ import org.tech.ai.deepimage.constant.FileConstant;
 public class ListFilesRequest extends PageRequest {
     
     /**
-     * 业务类型（可选）
-     * 可选值：AVATAR, DOCUMENT, IMAGE, VIDEO, TEMP
+     * Business type (optional)
+     * Optional values: AVATAR, DOCUMENT, IMAGE, VIDEO, TEMP
      */
     private String businessType;
     
     /**
-     * 标签ID（可选）
-     * 按标签筛选文件
+     * Tag ID (optional)
+     * Filter files by tag
      */
     private Long tagId;
     
     /**
-     * 文件名搜索关键词（可选）
-     * 支持模糊搜索
+     * File name search keyword (optional)
+     * Supports fuzzy search
      */
     private String filename;
     
     /**
-     * 排序字段（可选）
-     * 可选值：createdAt, fileSize, originalFilename
+     * Sort field (optional)
+     * Optional values: createdAt, fileSize, originalFilename
      */
     private String sortBy = FileConstant.SORT_BY_CREATED_AT;
     
     /**
-     * 排序方向（可选）
-     * 可选值：asc, desc
+     * Sort direction (optional)
+     * Optional values: asc, desc
      */
     private String sortOrder = FileConstant.SORT_ORDER_DESC;
 }

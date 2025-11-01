@@ -16,7 +16,7 @@ import org.tech.ai.deepimage.util.CryptoUtil;
 import java.time.LocalDateTime;
 
 /**
- * 刷新令牌表 服务实现类
+ * Refresh token table service implementation class
  *
  * @author zgq
  * @since 2025-09-29

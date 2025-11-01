@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * 文件存在性检查请求
+ * File existence check request
  * 
  * @author zgq
  * @since 2025-10-02
@@ -14,19 +14,19 @@ import lombok.Data;
 public class FileExistsCheckRequest {
     
     /**
-     * 文件 SHA256 哈希值
+     * File SHA256 hash value
      */
     @NotBlank(message = "文件哈希不能为空")
     @Size(min = 64, max = 64, message = "哈希值长度必须为64位")
     private String fileHash;
     
     /**
-     * 原始文件名（可选）
+     * Original file name (optional)
      */
     private String originalFilename;
     
     /**
-     * 业务类型（可选）
+     * Business type (optional)
      */
     private String businessType;
 }

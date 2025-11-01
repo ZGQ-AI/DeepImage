@@ -1,13 +1,13 @@
 <!-- 
-  主应用组件
-  作为整个应用的根组件，负责渲染基础布局
+  Main Application Component
+  Serves as the root component of the entire application, responsible for rendering the base layout
 -->
 <template>
   <div id="app">
-    <!-- 使用基础布局组件，包含头部、内容区域和底部 -->
+    <!-- Use base layout component, includes header, content area and footer -->
     <BasicLayout />
 
-    <!-- 全局登录弹窗 -->
+    <!-- Global login modal -->
     <LoginModal
       v-model:open="authStore.loginModalVisible"
       :redirectPath="authStore.loginModalRedirectPath"
@@ -26,7 +26,7 @@ import { useUserStore } from './stores/useUserStore'
 const authStore = useAuthStore()
 const userStore = useUserStore()
 
-// 应用初始化时，如果有 token 则加载用户信息
+// On app initialization, if token exists, load user information
 onMounted(async () => {
   if (authStore.isAuthenticated && !userStore.profile) {
     try {
@@ -37,14 +37,14 @@ onMounted(async () => {
   }
 })
 
-// 登录成功处理
+// Handle login success
 const handleLoginSuccess = () => {
-  // 登录成功后，弹窗内部会处理跳转
-  // 这里可以添加额外的全局逻辑（如刷新数据等）
+  // After successful login, modal will handle navigation internally
+  // Additional global logic can be added here (e.g., refresh data, etc.)
   authStore.hideLoginModal()
 }
 </script>
 
 <style scoped>
-/* 应用根组件样式 */
+/* App root component styles */
 </style>

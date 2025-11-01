@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 图片下载服务实现类
+ * Image download service implementation class
  */
 @Slf4j
 @Service
@@ -48,21 +48,21 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
     public DownloadResult downloadImages(List<ImageInfo> images, Long userId, String keyword, List<Long> tagIds) {
         long startTime = System.currentTimeMillis();
 
-        log.info("开始批量下载图片，用户：{}，关键词：{}，图片数量：{}", userId, keyword, images.size());
+        log.info("Starting batch image download, user: {}, keyword: {}, image count: {}", userId, keyword, images.size());
 
         DownloadResult.DownloadResultBuilder resultBuilder = DownloadResult.builder()
                 .totalCount(images.size());
 
-        // 批量操作：收集所有成功下载的文件记录
+        // Batch operation: collect all successfully downloaded file records
         List<FileRecord> fileRecordsToSave = new ArrayList<>();
         List<DownloadResult.FailedImageInfo> failedImages = new ArrayList<>();
 
-        // 第一步：批量下载图片并准备文件记录
+        // Step 1: Batch download images and prepare file records
         for (ImageInfo imageInfo : images) {
             try {
-                log.debug("开始下载图片：{}", imageInfo.getUrl());
+                log.debug("Starting image download: {}", imageInfo.getUrl());
 
-                // 1. 下载图片数据
+                // 1. Download image data
                 URL url = new URL(imageInfo.getUrl());
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
@@ -74,19 +74,19 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
                 int responseCode = connection.getResponseCode();
                 BusinessException.assertTrue(
                         responseCode == HttpURLConnection.HTTP_OK,
-                        String.format("HTTP状态异常：%d", responseCode)
+                        String.format("HTTP status error: %d", responseCode)
                 );
 
                 String contentType = connection.getContentType();
                 BusinessException.assertTrue(
                         FileUtil.isImageType(contentType),
-                        String.format("不是图片类型：%s", contentType)
+                        String.format("Not an image type: %s", contentType)
                 );
 
                 int contentLength = connection.getContentLength();
                 BusinessException.throwIf(
                         contentLength > downloadProperties.getMaxFileSize(),
-                        String.format("文件过大：%.2fMB", contentLength / 1024.0 / 1024.0)
+                        String.format("File too large: %.2fMB", contentLength / 1024.0 / 1024.0)
                 );
 
                 byte[] imageData;
@@ -94,11 +94,11 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
                     imageData = IoUtil.readBytes(inputStream);
                 }
 
-                // 断言图片数据不为null且有内容
-                BusinessException.assertNotNull(imageData, "图片数据为空");
-                BusinessException.throwIf(imageData.length == 0, "图片数据长度为0");
+                // Assert image data is not null and has content
+                BusinessException.assertNotNull(imageData, "Image data is empty");
+                BusinessException.throwIf(imageData.length == 0, "Image data length is 0");
 
-                // 2. 生成对象名（遵循项目规范：{userId}/{businessType}/{date}/{uuid}.{extension}）
+                // 2. Generate object name (follow project specification: {userId}/{businessType}/{date}/{uuid}.{extension})
                 String extension = StringUtils.hasText(imageInfo.getExtension())
                         ? imageInfo.getExtension()
                         : downloadProperties.getDefaultExtension();
@@ -109,11 +109,11 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
                         extension
                 );
 
-                // 3. 上传到 MinIO
+                // 3. Upload to MinIO
                 String mimeType = FileUtil.getMimeType(extension);
                 String fileUrl = minioService.uploadFile(new ByteArrayInputStream(imageData), objectName, mimeType);
 
-                // 4. 创建文件记录
+                // 4. Create file record
                 FileRecord fileRecord = new FileRecord();
                 fileRecord.setUserId(userId);
                 fileRecord.setOriginalFilename(imageInfo.getTitle() != null ? imageInfo.getTitle() : "search_image");
@@ -127,54 +127,54 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
                 fileRecord.setBucketName(minioProperties.getBucket());
                 fileRecord.setFileUrl(fileUrl);
 
-                // 计算文件哈希
+                // Calculate file hash
                 String fileHash = HashUtil.sha256(imageData);
                 fileRecord.setFileHash(fileHash);
 
-                // 将文件记录添加到批量保存列表（暂不保存到数据库）
+                // Add file record to batch save list (not saved to database yet)
                 fileRecordsToSave.add(fileRecord);
-                log.debug("图片下载成功，待保存：{}", imageInfo.getUrl());
+                log.debug("Image download successful, pending save: {}", imageInfo.getUrl());
 
             } catch (Exception e) {
                 failedImages.add(DownloadResult.FailedImageInfo.builder()
                         .url(imageInfo.getUrl())
                         .errorMessage(e.getMessage())
                         .build());
-                log.error("图片下载异常：{}，错误：{}", imageInfo.getUrl(), e.getMessage(), e);
+                log.error("Image download exception: {}, error: {}", imageInfo.getUrl(), e.getMessage(), e);
             }
         }
 
-        // 第二步：批量保存文件记录到数据库（一次性操作）
+        // Step 2: Batch save file records to database (single operation)
         List<Long> successFileIds = new ArrayList<>();
         if (!fileRecordsToSave.isEmpty()) {
-            log.info("批量保存文件记录，数量：{}", fileRecordsToSave.size());
+            log.info("Batch saving file records, count: {}", fileRecordsToSave.size());
             boolean savedSuccess = fileRecordService.saveBatch(fileRecordsToSave);
 
             if (savedSuccess) {
-                // 收集成功保存的文件ID
+                // Collect successfully saved file IDs
                 fileRecordsToSave.forEach(record -> successFileIds.add(record.getId()));
-                log.info("文件记录批量保存成功：{} 条", successFileIds.size());
+                log.info("File records batch save successful: {} records", successFileIds.size());
                 
-                // 第三步：如果提供了标签，批量设置标签
+                // Step 3: If tags are provided, batch set tags
                 if (tagIds != null && !tagIds.isEmpty()) {
-                    log.info("批量设置标签，文件数：{}，标签数：{}", successFileIds.size(), tagIds.size());
+                    log.info("Batch setting tags, file count: {}, tag count: {}", successFileIds.size(), tagIds.size());
                     for (Long fileId : successFileIds) {
                         try {
                             fileTagService.batchSetFileTags(fileId, userId, tagIds);
                         } catch (Exception e) {
-                            log.error("设置文件标签失败，fileId: {}，错误：{}", fileId, e.getMessage(), e);
+                            log.error("Failed to set file tags, fileId: {}, error: {}", fileId, e.getMessage(), e);
                         }
                     }
                 }
             } else {
-                log.error("文件记录批量保存失败");
+                log.error("File records batch save failed");
             }
         }
 
         long endTime = System.currentTimeMillis();
         long totalTimeSeconds = (endTime - startTime) / ImageDownloadConstant.MILLIS_TO_SECONDS;
 
-        // 确定状态
+        // Determine status
         String status;
         if (failedImages.isEmpty()) {
             status = ImageDownloadConstant.STATUS_COMPLETED;
@@ -193,7 +193,7 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
                 .failedImages(failedImages)
                 .build();
 
-        log.info("批量下载完成，用户：{}，成功：{}/{}, 耗时：{}秒",
+        log.info("Batch download completed, user: {}, success: {}/{}, elapsed time: {} seconds",
                 userId, successFileIds.size(), images.size(), totalTimeSeconds);
 
         return result;

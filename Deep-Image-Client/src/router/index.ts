@@ -14,7 +14,7 @@ const router = createRouter({
       component: () => import('../pages/AuthCallback.vue'),
       meta: {
         public: true,
-        title: 'Google登录回调',
+        title: 'Google Login Callback',
       },
     },
     {
@@ -37,7 +37,7 @@ const router = createRouter({
       component: () => import('../pages/UserProfile.vue'),
       meta: {
         requiresAuth: true,
-        title: '个人中心',
+        title: 'User Profile',
       },
     },
     {
@@ -46,7 +46,7 @@ const router = createRouter({
       component: () => import('../pages/TagManagement.vue'),
       meta: {
         requiresAuth: true,
-        title: '标签管理',
+        title: 'Tag Management',
       },
     },
     {
@@ -55,7 +55,7 @@ const router = createRouter({
       component: () => import('../pages/ImageGallery.vue'),
       meta: {
         requiresAuth: true,
-        title: '我的图库',
+        title: 'My Gallery',
       },
     },
     {
@@ -64,7 +64,7 @@ const router = createRouter({
       component: () => import('../pages/ImageSearch.vue'),
       meta: {
         requiresAuth: true,
-        title: '图片搜索',
+        title: 'Image Search',
       },
     },
     {
@@ -73,7 +73,7 @@ const router = createRouter({
       component: () => import('../pages/RecycleBin.vue'),
       meta: {
         requiresAuth: true,
-        title: '回收站',
+        title: 'Recycle Bin',
       },
     },
   ],

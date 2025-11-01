@@ -8,7 +8,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 创建文件分享请求
+ * Create file share request
  * 
  * @author zgq
  * @since 2025-10-02
@@ -17,38 +17,38 @@ import java.time.LocalDateTime;
 public class CreateFileShareRequest {
     
     /**
-     * 文件ID
+     * File ID
      */
     @NotNull(message = "文件ID不能为空")
     private Long fileId;
     
     /**
-     * 分享目标用户ID
+     * Target user ID to share with
      */
     @NotNull(message = "分享目标用户ID不能为空")
     private Long shareToUserId;
     
     /**
-     * 分享类型
-     * 可选值：PERMANENT, TEMPORARY
+     * Share type
+     * Optional values: PERMANENT, TEMPORARY
      */
     @NotBlank(message = "分享类型不能为空")
     private String shareType;
     
     /**
-     * 过期时间（TEMPORARY 类型必填）
+     * Expiration time (required for TEMPORARY type)
      */
     private LocalDateTime expiresAt;
     
     /**
-     * 权限级别
-     * 可选值：VIEW, DOWNLOAD, EDIT
+     * Permission level
+     * Optional values: VIEW, DOWNLOAD, EDIT
      */
     @NotBlank(message = "权限级别不能为空")
     private String permissionLevel;
     
     /**
-     * 分享留言（可选）
+     * Share message (optional)
      */
     @Size(max = 500, message = "留言不能超过500字符")
     private String message;

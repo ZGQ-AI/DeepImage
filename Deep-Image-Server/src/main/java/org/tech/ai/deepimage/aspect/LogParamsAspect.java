@@ -14,8 +14,8 @@ import org.tech.ai.deepimage.annotation.LogParams;
 import java.lang.reflect.Method;
 
 /**
- * 参数日志切面
- * 自动打印被 @LogParams 注解标记的类的所有方法入参和执行信息
+ * Parameter logging aspect
+ * Automatically logs input parameters and execution information for all methods in classes marked with @LogParams annotation
  *
  * @author zgq
  * @since 2025-10-22
@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
 public class LogParamsAspect {
 
     /**
-     * 环绕通知：拦截被 @LogParams 注解标记的类的所有公共方法
+     * Around advice: intercept all public methods in classes marked with @LogParams annotation
      */
     @Around("@within(logParams) && execution(public * *(..))")
     public Object logParams(ProceedingJoinPoint joinPoint, LogParams logParams) throws Throwable {
@@ -35,21 +35,21 @@ public class LogParamsAspect {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = method.getName();
 
-        // 获取方法参数
+        // Get method parameters
         Object[] args = joinPoint.getArgs();
         String[] paramNames = signature.getParameterNames();
 
-        // 构建参数日志
+        // Build parameter log
         StringBuilder paramsLog = new StringBuilder();
-        paramsLog.append("用户：");
+        paramsLog.append("User: ");
         try {
             paramsLog.append(StpUtil.getLoginId());
         } catch (Exception e) {
-            paramsLog.append("未登录");
+            paramsLog.append("Not logged in");
         }
 
         if (args != null && args.length > 0) {
-            paramsLog.append("，参数：{");
+            paramsLog.append(", Parameters: {");
             for (int i = 0; i < args.length; i++) {
                 Object arg = args[i];
                 if (arg instanceof MultipartFile) {
@@ -59,7 +59,7 @@ public class LogParamsAspect {
                     paramsLog.append(", ");
                 }
                 paramsLog.append(paramNames[i]).append("=");
-                // 使用 JSON 序列化参数（更易读）
+                // Use JSON serialization for parameters (more readable)
                 try {
                     paramsLog.append(JSON.toJSONString(arg));
                 } catch (Exception e) {
@@ -71,7 +71,7 @@ public class LogParamsAspect {
 
         log.info(">>> [{}.{}] {}", className, methodName, paramsLog);
 
-        // 执行目标方法
+        // Execute target method
         long startTime = System.currentTimeMillis();
         Object result = null;
         try {
@@ -80,23 +80,23 @@ public class LogParamsAspect {
         } finally {
             long executionTime = System.currentTimeMillis() - startTime;
 
-            // 构建结果日志
+            // Build result log
             StringBuilder resultLog = new StringBuilder();
 
             if (logParams.printExecutionTime()) {
-                resultLog.append("耗时：").append(executionTime).append("ms");
+                resultLog.append("Elapsed time: ").append(executionTime).append("ms");
             }
 
             if (logParams.printResult() && result != null) {
                 if (!resultLog.isEmpty()) {
-                    resultLog.append("，");
+                    resultLog.append(", ");
                 }
-                resultLog.append("返回：");
+                resultLog.append("Return: ");
                 try {
                     String resultStr = JSON.toJSONString(result);
-                    // 如果返回值太长，截断
+                    // If return value is too long, truncate
                     if (resultStr.length() > 500) {
-                        resultLog.append(resultStr, 0, 500).append("...(已截断)");
+                        resultLog.append(resultStr, 0, 500).append("...(truncated)");
                     } else {
                         resultLog.append(resultStr);
                     }

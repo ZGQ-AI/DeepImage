@@ -1,5 +1,5 @@
 <!--
-  个人信息编辑表单组件
+  User Profile Edit Form Component
 -->
 <template>
   <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @finish="onSubmit">
@@ -72,10 +72,10 @@ import AvatarUpload from './AvatarUpload.vue'
 
 const userStore = useUserStore()
 
-// 表单引用
+// Form reference
 const formRef = ref()
 
-// 表单数据
+// Form data
 const form = reactive({
   username: '',
   email: '',
@@ -84,10 +84,10 @@ const form = reactive({
   verified: false,
 })
 
-// 加载状态
+// Loading state
 const loading = ref(false)
 
-// 表单校验规则
+// Form validation rules
 const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -107,7 +107,7 @@ const rules = {
   ],
 }
 
-// 初始化表单数据
+// Initialize form data
 function initForm() {
   if (userStore.profile) {
     form.username = userStore.profile.username
@@ -118,7 +118,7 @@ function initForm() {
   }
 }
 
-// 监听用户信息变化
+// Watch user profile changes
 watch(
   () => userStore.profile,
   () => {
@@ -127,13 +127,13 @@ watch(
   { immediate: true },
 )
 
-// 提交表单
+// Submit form
 async function onSubmit() {
   loading.value = true
   try {
     const request: UpdateUserProfileRequest = {}
 
-    // 只提交修改过的字段
+    // Only submit modified fields
     if (form.username !== userStore.profile?.username) {
       request.username = form.username
     }
@@ -144,7 +144,7 @@ async function onSubmit() {
       request.avatarUrl = form.avatarUrl || undefined
     }
 
-    // 如果没有修改，提示用户
+    // If no changes, return
     if (Object.keys(request).length === 0) {
       return
     }
@@ -155,18 +155,18 @@ async function onSubmit() {
   }
 }
 
-// 重置表单
+// Reset form
 function resetForm() {
   initForm()
 }
 
-// 头像上传成功回调
+// Avatar upload success callback
 function handleAvatarUploadSuccess() {
-  // 头像 URL 已通过 v-model 自动更新到 form.avatarUrl
+  // Avatar URL has been automatically updated to form.avatarUrl via v-model
   message.success('头像已更新，请点击"保存修改"按钮')
 }
 
-// 组件挂载时获取用户信息
+// Fetch user information on component mount
 onMounted(async () => {
   if (!userStore.profile) {
     await userStore.fetchProfile()

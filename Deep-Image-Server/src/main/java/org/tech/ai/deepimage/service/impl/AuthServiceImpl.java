@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenPairResponse loginByEmail(LoginRequest request) {
-        // 查询用户
+        // Query user
         User user = userService.getOne(new LambdaQueryWrapper<User>()
                 .eq(User::getEmail, request.getEmail()));
 
@@ -53,13 +53,13 @@ public class AuthServiceImpl implements AuthService {
                 ResponseConstant.UNAUTHORIZED,
                 ResponseConstant.EMAIL_NOT_VERIFIED_MESSAGE);
 
-        // 校验密码
+        // Validate password
         boolean passwordOk = CryptoUtil.match(request.getPassword(), user.getPasswordHash());
         BusinessException.throwIf(!passwordOk,
                 ResponseConstant.UNAUTHORIZED,
                 ResponseConstant.INVALID_CREDENTIALS_MESSAGE);
 
-        // 登录并生成 JWT（携带必要用户信息）
+        // Login and generate JWT (with necessary user information)
         SaLoginModel model = new SaLoginModel();
         model.setExtra(JwtClaimConstant.USERNAME, user.getUsername());
         model.setExtra(JwtClaimConstant.EMAIL, user.getEmail());
@@ -67,11 +67,11 @@ public class AuthServiceImpl implements AuthService {
         StpUtil.login(user.getId(), model);
         String accessToken = StpUtil.getTokenValue();
 
-        // 采集请求头中的 IP 与 UA
+        // Extract IP and UA from request headers
         String ip = HttpRequestUtil.extractClientIp();
         String userAgent = HttpRequestUtil.extractUserAgent();
 
-        // 持久化会话
+        // Persist session
         Session session = new Session();
         session.setUserId(user.getId());
         session.setAccessTokenHash(CryptoUtil.sha256Hex(accessToken));
@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
         sessionService.save(session);
 
 
-        // 生成并持久化 refresh token
+        // Generate and persist refresh token
         CreateRefreshTokenRequest createReq = new CreateRefreshTokenRequest();
         createReq.setUserId(user.getId());
         createReq.setSessionId(session.getId());
@@ -93,25 +93,25 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenPairResponse refreshToken(String refreshTokenPlain) {
-        // 1. 验证 refresh token 是否有效
+        // 1. Verify refresh token validity
         RefreshToken refreshToken = refreshTokenService.verifyAndGet(refreshTokenPlain);
         BusinessException.throwIf(refreshToken == null, ResponseConstant.UNAUTHORIZED, ResponseConstant.INVALID_REFRESH_TOKEN_MESSAGE);
 
-        // 2. 撤销旧的 refresh token
+        // 2. Revoke old refresh token
         refreshTokenService.revoke(refreshTokenPlain);
 
-        // 3. 获取用户信息
+        // 3. Get user information
         User user = userService.getById(refreshToken.getUserId());
         BusinessException.throwIf(user == null, ResponseConstant.UNAUTHORIZED, ResponseConstant.USER_NOT_FOUND_MESSAGE);
 
-        // 4. 生成新的 access token
+        // 4. Generate new access token
         StpUtil.login(user.getId(), new SaLoginModel()
                 .setExtra(JwtClaimConstant.USERNAME, user.getUsername())
                 .setExtra(JwtClaimConstant.EMAIL, user.getEmail())
                 .setExtra(JwtClaimConstant.AVATAR_URL, user.getAvatarUrl()));
         String accessToken = StpUtil.getTokenValue();
 
-        // 5. 更新会话信息
+        // 5. Update session information
         Session session = sessionService.getById(refreshToken.getSessionId());
         ConditionalUtil.ifNotNull(session,s->{
             session.setAccessTokenHash(CryptoUtil.sha256Hex(accessToken));
@@ -119,19 +119,19 @@ public class AuthServiceImpl implements AuthService {
             sessionService.updateById(s);
         });
 
-        // 6. 生成新的 refresh token
+        // 6. Generate new refresh token
         CreateRefreshTokenRequest createReq = new CreateRefreshTokenRequest();
         createReq.setUserId(user.getId());
         createReq.setSessionId(refreshToken.getSessionId());
         String newRefreshTokenPlain = refreshTokenService.createAndStoreRefreshToken(createReq);
 
-        // 7. 返回新的 token pair
+        // 7. Return new token pair
         return new TokenPairResponse(accessToken, newRefreshTokenPlain);
     }
 
     @Override
     public Boolean register(RegisterRequest request) {
-        // 校验 username/email 全局唯一（不区分逻辑删除）
+        // Validate username/email globally unique (not distinguishing logical deletion)
         BusinessException.throwIf(userService.existsByUsernameAll(request.getUsername()),
                 ResponseConstant.PARAM_ERROR,
                 ResponseConstant.EMAIL_OR_USERNAME_EXISTS_MESSAGE);
@@ -142,17 +142,17 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPasswordHash(CryptoUtil.encode(request.getPassword()));
-        //TODO: 暂时设置为true，因为我们还没做邮箱登录的功能
+        //TODO: Temporarily set to true, as we haven't implemented email verification yet
         user.setVerified(true);
         return userService.save(user);
     }
 
     @Override
     public Boolean logout() {
-        // 1. 获取当前登录用户ID
+        // 1. Get current logged-in user ID
         long loginUserId = StpUtil.getLoginIdAsLong();
 
-        // 2. 获取当前会话
+        // 2. Get current session
         String accessToken = StpUtil.getTokenValue();
 
         FindSessionByTokenRequest findReq = new FindSessionByTokenRequest();
@@ -160,12 +160,12 @@ public class AuthServiceImpl implements AuthService {
         findReq.setUserId(loginUserId);
         Session session = sessionService.findByAccessTokenAndUserId(findReq);
 
-        // 3. 标记会话为非活跃状态并撤销相关 token
+        // 3. Mark session as inactive and revoke related tokens
         ConditionalUtil.ifNotNull(session, s -> {
             s.setActive(SessionStatusEnum.INACTIVE.getValue());
             sessionService.updateById(s);
 
-            // 4. 撤销该会话关联的所有refresh token
+            // 4. Revoke all refresh tokens associated with this session
             RevokeRefreshTokenBySessionRequest revokeReq = new RevokeRefreshTokenBySessionRequest();
             revokeReq.setSessionId(s.getId());
             refreshTokenService.revokeAllBySessionId(revokeReq);
@@ -176,24 +176,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Boolean resetPassword(ResetPasswordRequest request) {
-        // 1) 按 email 查用户
+        // 1) Query user by email
         User user = userService.getOne(new LambdaQueryWrapper<User>()
                 .eq(User::getEmail, request.getEmail()));
         BusinessException.throwIf(user == null,
                 ResponseConstant.UNAUTHORIZED,
                 ResponseConstant.USER_NOT_FOUND_MESSAGE);
 
-        // 2) 校验旧密码
+        // 2) Validate old password
         boolean oldOk = CryptoUtil.match(request.getOldPassword(), user.getPasswordHash());
         BusinessException.throwIf(!oldOk,
                 ResponseConstant.UNAUTHORIZED,
                 ResponseConstant.INVALID_CREDENTIALS_MESSAGE);
 
-        // 3) 更新为新密码
+        // 3) Update to new password
         user.setPasswordHash(CryptoUtil.encode(request.getNewPassword()));
         userService.updateById(user);
 
-        // 4) 强制全端下线：按 userId 批量失活会话与撤销 refresh tokens
+        // 4) Force logout all devices: batch deactivate sessions and revoke refresh tokens by userId
         Long userId = user.getId();
         sessionService.lambdaUpdate()
                 .set(Session::getActive, SessionStatusEnum.INACTIVE.getValue())
@@ -215,21 +215,21 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenPairResponse loginByGoogle(User user) {
-        // 1. 使用Sa-Token登录
+        // 1. Login using Sa-Token
         StpUtil.login(user.getId(), new SaLoginModel()
                 .setExtra(JwtClaimConstant.EMAIL, user.getEmail())
                 .setExtra(JwtClaimConstant.USERNAME, user.getUsername())
                 .setExtra(JwtClaimConstant.AVATAR_URL, user.getAvatarUrl()));
 
-        // 2. 获取access_token
+        // 2. Get access_token
         String accessToken = StpUtil.getTokenValue();
         String accessTokenHash = CryptoUtil.sha256Hex(accessToken);
 
-        // 3. 采集请求头中的 IP 与 UA
+        // 3. Extract IP and UA from request headers
         String ip = HttpRequestUtil.extractClientIp();
         String userAgent = HttpRequestUtil.extractUserAgent();
 
-        // 4. 创建Session记录
+        // 4. Create Session record
         Session session = new Session();
         session.setUserId(user.getId());
         session.setAccessTokenHash(accessTokenHash);
@@ -241,19 +241,19 @@ public class AuthServiceImpl implements AuthService {
         session.setLastRefreshAt(LocalDateTime.now());
         sessionService.save(session);
 
-        // 5. 生成refresh_token
+        // 5. Generate refresh_token
         CreateRefreshTokenRequest createReq = new CreateRefreshTokenRequest();
         createReq.setUserId(user.getId());
         createReq.setSessionId(session.getId());
         String refreshTokenPlain = refreshTokenService.createAndStoreRefreshToken(createReq);
 
-        // 6. 返回TokenPairResponse
+        // 6. Return TokenPairResponse
         return new TokenPairResponse(accessToken, refreshTokenPlain);
     }
 
     @Override
     public User registerGoogleUser(RegisterGoogleUserRequest registerGoogleUserRequest) {
-        // 1. 检查email是否已存在
+        // 1. Check if email already exists
         User existingUser = userService.getOne(new LambdaQueryWrapper<User>()
                 .eq(User::getEmail, registerGoogleUserRequest.getEmail()));
         
@@ -261,7 +261,7 @@ public class AuthServiceImpl implements AuthService {
             return existingUser;
         }
 
-        // 2. 创建新用户
+        // 2. Create new user
         User user = new User();
         user.setEmail(registerGoogleUserRequest.getEmail());
         
@@ -273,16 +273,16 @@ public class AuthServiceImpl implements AuthService {
         
         ConditionalUtil.setIfNotBlank(registerGoogleUserRequest.getPicture(), user::setAvatarUrl);
         
-        // 设置随机密码（Google用户不需要密码登录）
+        // Set random password (Google users don't need password login)
         user.setPasswordHash(CryptoUtil.sha256Hex(UUID.randomUUID().toString()));
         
-        // Google账号默认已验证
+        // Google accounts are verified by default
         user.setVerified(true);
         
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         
-        // 3. 保存用户
+        // 3. Save user
         userService.save(user);
         
         return user;

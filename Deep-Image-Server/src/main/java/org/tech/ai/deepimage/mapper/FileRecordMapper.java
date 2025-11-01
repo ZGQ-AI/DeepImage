@@ -10,7 +10,7 @@ import org.tech.ai.deepimage.model.dto.response.TrashStatsResponse;
 import java.util.List;
 
 /**
- * 文件记录表 Mapper 接口
+ * File record table Mapper interface
  * 
  * @author zgq
  * @since 2025-10-01
@@ -19,14 +19,14 @@ import java.util.List;
 public interface FileRecordMapper extends BaseMapper<FileRecord> {
 
     /**
-     * 批量更新删除标记
+     * Batch update delete flag
      */
     int batchUpdateDeleteFlag(@Param("fileIds") List<Long> fileIds,
                                @Param("userId") Long userId,
                                @Param("deleteFlag") Integer deleteFlag);
 
     /**
-     * 查询回收站文件（忽略 @TableLogic，支持分页）
+     * Query recycle bin files (ignore @TableLogic, support pagination)
      */
     Page<FileRecord> selectTrashFiles(
             Page<FileRecord> page,
@@ -34,22 +34,22 @@ public interface FileRecordMapper extends BaseMapper<FileRecord> {
     );
 
     /**
-     * 批量彻底删除文件
+     * Batch permanently delete files
      */
     int permanentDeleteBatch(@Param("fileIds") List<Long> fileIds, @Param("userId") Long userId);
 
     /**
-     * 查询回收站统计信息
+     * Query recycle bin statistics
      */
     TrashStatsResponse selectTrashStats(@Param("userId") Long userId);
 
     /**
-     * 查询用户回收站所有文件ID
+     * Query all file IDs in user's recycle bin
      */
     List<Long> selectTrashFileIds(@Param("userId") Long userId);
 
     /**
-     * 查询回收站中的指定文件（绕过 @TableLogic）
+     * Query specified files in recycle bin (bypass @TableLogic)
      */
     List<FileRecord> selectTrashFilesByIds(@Param("fileIds") List<Long> fileIds, @Param("userId") Long userId);
 }

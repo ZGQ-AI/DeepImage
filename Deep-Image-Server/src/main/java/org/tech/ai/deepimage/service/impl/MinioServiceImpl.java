@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * MinIO对象存储服务实现
+ * MinIO object storage service implementation
  * 
  * @author zgq
 * @since 2025-10-02
@@ -33,7 +33,7 @@ public class MinioServiceImpl implements MinioService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
 
-    // ========== 文件上传 ==========
+    // ========== File Upload ==========
 
     @Override
     public String uploadFile(InputStream inputStream, String objectName, String contentType) {
@@ -43,7 +43,7 @@ public class MinioServiceImpl implements MinioService {
     @Override
     public String uploadFile(String bucketName, InputStream inputStream, String objectName, String contentType) {
         try {
-            // 构建上传参数
+            // Build upload parameters
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(objectName)
@@ -51,19 +51,19 @@ public class MinioServiceImpl implements MinioService {
                     .contentType(contentType != null ? contentType : "application/octet-stream")
                     .build();
 
-            // 执行上传
+            // Execute upload
             minioClient.putObject(args);
 
-            log.info("文件上传成功: bucket={}, object={}", bucketName, objectName);
+            log.info("File upload successful: bucket={}, object={}", bucketName, objectName);
             return getFileUrl(bucketName, objectName);
 
         } catch (Exception e) {
-            log.error("文件上传失败: bucket={}, object={}", bucketName, objectName, e);
-            throw BusinessException.serverError("文件上传失败: " + e.getMessage());
+            log.error("File upload failed: bucket={}, object={}", bucketName, objectName, e);
+            throw BusinessException.serverError("File upload failed: " + e.getMessage());
         }
     }
 
-    // ========== 文件下载 ==========
+    // ========== File Download ==========
 
     @Override
     public InputStream downloadFile(String objectName) {
@@ -79,16 +79,16 @@ public class MinioServiceImpl implements MinioService {
                     .build();
 
             InputStream stream = minioClient.getObject(args);
-            log.info("文件下载成功: bucket={}, object={}", bucketName, objectName);
+            log.info("File download successful: bucket={}, object={}", bucketName, objectName);
             return stream;
 
         } catch (Exception e) {
-            log.error("文件下载失败: bucket={}, object={}", bucketName, objectName, e);
-            throw BusinessException.notFound("文件不存在: " + objectName);
+            log.error("File download failed: bucket={}, object={}", bucketName, objectName, e);
+            throw BusinessException.notFound("File not found: " + objectName);
         }
     }
 
-    // ========== 文件删除 ==========
+    // ========== File Delete ==========
 
     @Override
     public void deleteFile(String objectName) {
@@ -104,11 +104,11 @@ public class MinioServiceImpl implements MinioService {
                     .build();
 
             minioClient.removeObject(args);
-            log.info("文件删除成功: bucket={}, object={}", bucketName, objectName);
+            log.info("File delete successful: bucket={}, object={}", bucketName, objectName);
 
         } catch (Exception e) {
-            log.error("文件删除失败: bucket={}, object={}", bucketName, objectName, e);
-            throw BusinessException.serverError("文件删除失败: " + e.getMessage());
+            log.error("File delete failed: bucket={}, object={}", bucketName, objectName, e);
+            throw BusinessException.serverError("File delete failed: " + e.getMessage());
         }
     }
 
@@ -120,7 +120,7 @@ public class MinioServiceImpl implements MinioService {
     @Override
     public void deleteFiles(String bucketName, List<String> objectNames) {
         try {
-            // 构建删除对象列表
+            // Build delete object list
             List<DeleteObject> objects = objectNames.stream()
                     .map(DeleteObject::new)
                     .collect(Collectors.toList());
@@ -130,25 +130,25 @@ public class MinioServiceImpl implements MinioService {
                     .objects(objects)
                     .build();
 
-            // 执行批量删除
+            // Execute batch delete
             Iterable<Result<DeleteError>> results = minioClient.removeObjects(args);
 
-            // 检查删除结果
+            // Check delete results
             for (Result<DeleteError> result : results) {
                 DeleteError error = result.get();
-                log.error("文件删除失败: bucket={}, object={}, message={}",
+                log.error("File delete failed: bucket={}, object={}, message={}",
                         bucketName, error.objectName(), error.message());
             }
 
-            log.info("批量删除文件成功: bucket={}, count={}", bucketName, objectNames.size());
+            log.info("Batch delete files successful: bucket={}, count={}", bucketName, objectNames.size());
 
         } catch (Exception e) {
-            log.error("批量删除文件失败: bucket={}", bucketName, e);
-            throw BusinessException.serverError("批量删除文件失败: " + e.getMessage());
+            log.error("Batch delete files failed: bucket={}", bucketName, e);
+            throw BusinessException.serverError("Batch delete files failed: " + e.getMessage());
         }
     }
 
-    // ========== 预签名URL ==========
+    // ========== Presigned URL ==========
 
     @Override
     public String getPresignedUploadUrl(String objectName, int expires) {
@@ -173,16 +173,16 @@ public class MinioServiceImpl implements MinioService {
                     .build();
 
             String url = minioClient.getPresignedObjectUrl(args);
-            log.info("获取预签名URL成功: bucket={}, object={}, method={}", bucketName, objectName, method);
+            log.info("Get presigned URL successful: bucket={}, object={}, method={}", bucketName, objectName, method);
             return url;
 
         } catch (Exception e) {
-            log.error("获取预签名URL失败: bucket={}, object={}", bucketName, objectName, e);
-            throw BusinessException.serverError("获取预签名URL失败: " + e.getMessage());
+            log.error("Get presigned URL failed: bucket={}, object={}", bucketName, objectName, e);
+            throw BusinessException.serverError("Failed to get presigned URL: " + e.getMessage());
         }
     }
 
-    // ========== 文件查询 ==========
+    // ========== File Query ==========
 
     @Override
     public List<FileObjectInfoResponse> listFiles(String prefix) {
@@ -208,12 +208,12 @@ public class MinioServiceImpl implements MinioService {
                 files.add(info);
             }
 
-            log.info("列出文件成功: bucket={}, prefix={}, count={}", bucketName, prefix, files.size());
+            log.info("List files successful: bucket={}, prefix={}, count={}", bucketName, prefix, files.size());
             return files;
 
         } catch (Exception e) {
-            log.error("列出文件失败: bucket={}, prefix={}", bucketName, prefix, e);
-            throw BusinessException.serverError("列出文件失败: " + e.getMessage());
+            log.error("List files failed: bucket={}, prefix={}", bucketName, prefix, e);
+            throw BusinessException.serverError("Failed to list files: " + e.getMessage());
         }
     }
 
@@ -234,12 +234,12 @@ public class MinioServiceImpl implements MinioService {
             FileObjectInfoResponse info = FileObjectInfoResponse.from(stat);
             info.setUrl(getFileUrl(bucketName, objectName));
 
-            log.info("获取文件信息成功: bucket={}, object={}", bucketName, objectName);
+            log.info("Get file info successful: bucket={}, object={}", bucketName, objectName);
             return info;
 
         } catch (Exception e) {
-            log.error("获取文件信息失败: bucket={}, object={}", bucketName, objectName, e);
-            throw BusinessException.notFound("文件不存在: " + objectName);
+            log.error("Get file info failed: bucket={}, object={}", bucketName, objectName, e);
+            throw BusinessException.notFound("File not found: " + objectName);
         }
     }
 
@@ -264,7 +264,7 @@ public class MinioServiceImpl implements MinioService {
         }
     }
 
-    // ========== 存储桶管理 ==========
+    // ========== Bucket Management ==========
 
     @Override
     public boolean bucketExists(String bucketName) {
@@ -276,8 +276,8 @@ public class MinioServiceImpl implements MinioService {
             return minioClient.bucketExists(args);
 
         } catch (Exception e) {
-            log.error("检查存储桶失败: bucket={}", bucketName, e);
-            throw BusinessException.serverError("检查存储桶失败: " + e.getMessage());
+            log.error("Check bucket failed: bucket={}", bucketName, e);
+            throw BusinessException.serverError("Failed to check bucket: " + e.getMessage());
         }
     }
 
@@ -285,7 +285,7 @@ public class MinioServiceImpl implements MinioService {
     public void createBucket(String bucketName) {
         try {
             if (bucketExists(bucketName)) {
-                log.warn("存储桶已存在: bucket={}", bucketName);
+                log.warn("Bucket already exists: bucket={}", bucketName);
                 return;
             }
 
@@ -294,11 +294,11 @@ public class MinioServiceImpl implements MinioService {
                     .build();
 
             minioClient.makeBucket(args);
-            log.info("创建存储桶成功: bucket={}", bucketName);
+            log.info("Create bucket successful: bucket={}", bucketName);
 
         } catch (Exception e) {
-            log.error("创建存储桶失败: bucket={}", bucketName, e);
-            throw BusinessException.serverError("创建存储桶失败: " + e.getMessage());
+            log.error("Create bucket failed: bucket={}", bucketName, e);
+            throw BusinessException.serverError("Failed to create bucket: " + e.getMessage());
         }
     }
 
@@ -310,11 +310,11 @@ public class MinioServiceImpl implements MinioService {
                     .build();
 
             minioClient.removeBucket(args);
-            log.info("删除存储桶成功: bucket={}", bucketName);
+            log.info("Delete bucket successful: bucket={}", bucketName);
 
         } catch (Exception e) {
-            log.error("删除存储桶失败: bucket={}", bucketName, e);
-            throw BusinessException.serverError("删除存储桶失败: " + e.getMessage());
+            log.error("Delete bucket failed: bucket={}", bucketName, e);
+            throw BusinessException.serverError("Failed to delete bucket: " + e.getMessage());
         }
     }
 
@@ -326,16 +326,16 @@ public class MinioServiceImpl implements MinioService {
                     .map(Bucket::name)
                     .collect(Collectors.toList());
 
-            log.info("列出存储桶成功: count={}", bucketNames.size());
+            log.info("List buckets successful: count={}", bucketNames.size());
             return bucketNames;
 
         } catch (Exception e) {
-            log.error("列出存储桶失败", e);
-            throw BusinessException.serverError("列出存储桶失败: " + e.getMessage());
+            log.error("List buckets failed", e);
+            throw BusinessException.serverError("Failed to list buckets: " + e.getMessage());
         }
     }
 
-    // ========== 复制和移动 ==========
+    // ========== Copy and Move ==========
 
     @Override
     public void copyObject(String sourceBucket, String sourceObject, String targetBucket, String targetObject) {
@@ -352,11 +352,11 @@ public class MinioServiceImpl implements MinioService {
                     .build();
 
             minioClient.copyObject(args);
-            log.info("复制对象成功: {}:{} -> {}:{}", sourceBucket, sourceObject, targetBucket, targetObject);
+            log.info("Copy object successful: {}:{} -> {}:{}", sourceBucket, sourceObject, targetBucket, targetObject);
 
         } catch (Exception e) {
-            log.error("复制对象失败: {}:{} -> {}:{}", sourceBucket, sourceObject, targetBucket, targetObject, e);
-            throw BusinessException.serverError("复制对象失败: " + e.getMessage());
+            log.error("Copy object failed: {}:{} -> {}:{}", sourceBucket, sourceObject, targetBucket, targetObject, e);
+            throw BusinessException.serverError("Failed to copy object: " + e.getMessage());
         }
     }
 
@@ -366,14 +366,14 @@ public class MinioServiceImpl implements MinioService {
         copyObject(bucket, sourceObject, bucket, targetObject);
     }
 
-    // ========== 私有工具方法 ==========
+    // ========== Private Helper Methods ==========
 
     /**
-     * 获取文件访问URL
+     * Get file access URL
      * 
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
-     * @return 文件访问URL
+     * @param bucketName Bucket name
+     * @param objectName Object name
+     * @return File access URL
      */
     private String getFileUrl(String bucketName, String objectName) {
         return String.format("%s/%s/%s", minioProperties.getEndpoint(), bucketName, objectName);

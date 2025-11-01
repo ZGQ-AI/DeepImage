@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 图片信息 DTO
+ * Image information DTO
  */
 @Data
 @Builder
@@ -15,32 +15,32 @@ import lombok.NoArgsConstructor;
 public class ImageInfo {
 
     /**
-     * 图片URL（已清理参数）
+     * Image URL (parameters cleaned)
      */
     private String url;
 
     /**
-     * 图片标题/描述
+     * Image title/description
      */
     private String title;
 
     /**
-     * 图片宽度
+     * Image width
      */
     private Integer width;
 
     /**
-     * 图片高度
+     * Image height
      */
     private Integer height;
 
     /**
-     * 原始URL（未清理）
+     * Original URL (not cleaned)
      */
     private String originalUrl;
 
     /**
-     * 图片文件扩展名
+     * Image file extension
      */
     private String extension;
 }

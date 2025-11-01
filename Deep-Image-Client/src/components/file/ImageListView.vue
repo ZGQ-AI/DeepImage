@@ -1,7 +1,7 @@
 <template>
   <div class="list-view">
     <div class="list-container">
-      <!-- 表头 -->
+      <!-- Table header -->
       <div class="list-header">
         <div v-if="selectionMode" class="header-cell checkbox-col"></div>
         <div class="header-cell thumbnail-col">预览</div>
@@ -26,7 +26,7 @@
         <div v-if="!selectionMode" class="header-cell actions-col">操作</div>
       </div>
 
-      <!-- 列表内容 -->
+      <!-- List content -->
       <div class="list-body">
         <div
           v-for="image in sortedImages"
@@ -54,7 +54,7 @@
             <div class="file-name">{{ image.originalFilename }}</div>
             <div class="file-type">
               <span>{{ getFileExtension(image.originalFilename) }}</span>
-              <!-- 标签显示 -->
+              <!-- Tag display -->
               <div v-if="image.tags && image.tags.length > 0" class="image-tags">
                 <a-tag 
                   v-for="tag in image.tags.slice(0, 3)" 
@@ -129,13 +129,13 @@
       </div>
     </div>
 
-    <!-- 加载更多指示器 -->
+    <!-- Load more indicator -->
     <div v-if="loading" class="loading-indicator">
       <a-spin size="large" />
       <p>加载中...</p>
     </div>
 
-    <!-- 空状态 -->
+    <!-- Empty state -->
     <div v-if="!loading && images.length === 0" class="empty-list">
       <PictureOutlined :style="{ fontSize: '48px', color: '#d9d9d9' }" />
       <p>暂无图片</p>
@@ -181,21 +181,21 @@ const emit = defineEmits<{
   toggleSelect: [fileId: number]
 }>()
 
-// 判断图片是否被选中
+// Check if image is selected
 const isImageSelected = (fileId: number) => {
   return props.selectedFileIds?.has(fileId) || false
 }
 
-// 切换选择
+// Toggle selection
 const handleToggleSelect = (fileId: number) => {
   emit('toggleSelect', fileId)
 }
 
-// 排序状态
+// Sort state
 const sortField = ref<'name' | 'size' | 'date'>('date')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 
-// 排序后的图片列表
+// Sorted image list
 const sortedImages = computed(() => {
   const sorted = [...props.images].sort((a, b) => {
     let compareValue = 0
@@ -218,7 +218,7 @@ const sortedImages = computed(() => {
   return sorted
 })
 
-// 处理排序
+// Handle sort
 const handleSort = (field: 'name' | 'size' | 'date') => {
   if (sortField.value === field) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
@@ -228,8 +228,8 @@ const handleSort = (field: 'name' | 'size' | 'date') => {
   }
 }
 
-// 格式化日期（相对时间，如"今天"、"昨天"等）
-// 注意：这个函数与utils/time.ts中的formatDate不同，保留本地实现
+// Format date (relative time, e.g., "today", "yesterday", etc.)
+// Note: This function differs from formatDate in utils/time.ts, keeping local implementation
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
@@ -244,33 +244,33 @@ const formatDate = (dateString: string): string => {
   return `${Math.floor(days / 365)}年前`
 }
 
-// formatDateTime 已从 utils/time.ts 导入
-// formatFileSize 已从 utils/file.ts 导入
+// formatDateTime imported from utils/time.ts
+// formatFileSize imported from utils/file.ts
 
-// 获取文件扩展名
+// Get file extension
 const getFileExtension = (filename: string): string => {
   const extension = filename.split('.').pop()?.toUpperCase()
   return extension || ''
 }
 
-// 图片加载错误处理
+// Image load error handling
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
-  // 防止无限循环：如果已经是 placeholder，不再重试
+  // Prevent infinite loop: if already placeholder, don't retry
   if (img.src.includes('placeholder-image.png') || img.src.includes('data:image')) {
     return
   }
-  // 使用 base64 内联灰色占位图，避免额外请求
+  // Use base64 inline gray placeholder image to avoid additional requests
   img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYfmlqDovb3lpLHotKU8L3RleHQ+PC9zdmc+'
 }
 
-// 事件处理
+// Event handlers
 const handleImageClick = (image: FileInfoResponse) => {
-  // 如果是选择模式，点击切换选择
+  // If in selection mode, click toggles selection
   if (props.selectionMode) {
     handleToggleSelect(image.fileId)
   } else {
-    // 否则预览
+    // Otherwise preview
     handlePreview(image)
   }
 }
@@ -498,7 +498,7 @@ const handleDelete = (image: FileInfoResponse) => {
   font-size: 16px;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 1024px) {
   .list-header,
   .list-item {

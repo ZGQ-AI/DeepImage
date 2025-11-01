@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件上传响应
+ * File upload response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,42 +16,42 @@ import java.time.LocalDateTime;
 public class FileUploadResponse {
     
     /**
-     * 文件ID
+     * File ID
      */
     private Long fileId;
     
     /**
-     * 原始文件名
+     * Original file name
      */
     private String originalFilename;
     
     /**
-     * 文件访问 URL
+     * File access URL
      */
     private String fileUrl;
     
     /**
-     * 缩略图 URL（仅图片类型）
+     * Thumbnail URL (image types only)
      */
     private String thumbnailUrl;
     
     /**
-     * 文件大小（字节）
+     * File size (bytes)
      */
     private Long fileSize;
     
     /**
-     * 内容类型
+     * Content type
      */
     private String contentType;
     
     /**
-     * 文件哈希值
+     * File hash value
      */
     private String fileHash;
     
     /**
-     * 上传时间
+     * Upload time
      */
     private LocalDateTime uploadedAt;
 }

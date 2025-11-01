@@ -1,12 +1,12 @@
 <!-- 
-  全局头部导航组件
-  包含网站Logo、导航菜单和用户登录按钮
+  Global Header Navigation Component
+  Contains website logo, navigation menu, and user login button
 -->
 <template>
   <div id="globalHeader">
-    <!-- 使用 Ant Design 的行布局，不换行 -->
+    <!-- Use Ant Design row layout, no wrap -->
     <a-row :wrap="false">
-      <!-- Logo区域：固定宽度110px -->
+      <!-- Logo area: fixed width 110px -->
       <a-col flex="110px">
         <router-link to="/">
           <div class="title-bar">
@@ -16,7 +16,7 @@
         </router-link>
       </a-col>
 
-      <!-- 导航菜单区域：自适应宽度 -->
+      <!-- Navigation menu area: auto width -->
       <a-col flex="auto">
         <a-menu
           v-model:selectedKeys="current"
@@ -26,13 +26,13 @@
         />
       </a-col>
 
-      <!-- 用户操作区域：固定宽度100px -->
+      <!-- User action area: fixed width 160px -->
       <a-col flex="160px">
         <div class="user-login-status">
           <template v-if="userStore.loginUser.id">
             <a-dropdown trigger="['click']">
               <a-space class="user-entry">
-                <!-- 优先显示用户头像，没有头像则显示用户名首字母 -->
+                <!-- Prioritize showing user avatar, show username initials if no avatar -->
                 <a-avatar size="small" :src="userStore.profile?.avatarUrl">
                   <template v-if="!userStore.profile?.avatarUrl">
                     {{ initials }}
@@ -114,11 +114,11 @@ router.afterEach((to) => {
 })
 
 const goLogin = () => {
-  // 使用弹窗登录，而不是路由跳转
+  // Use modal login instead of route navigation
   authStore.showLoginModal()
 }
 
-// 计算用户名首字符（用于头像兜底）
+// Compute username initial (for avatar fallback)
 const initials = computed(() => {
   const name = userStore.profile?.username || ''
   return name ? name.slice(0, 1).toUpperCase() : '?'
@@ -127,7 +127,7 @@ const initials = computed(() => {
 async function onUserMenuClick({ key }: { key: string }) {
   if (key === 'logout') {
     await authStore.logout()
-    router.push('/') // 退出后回到首页
+    router.push('/') // Return to home page after logout
   } else if (key === 'profile') {
     router.push('/profile')
   } else if (key === 'tags') {

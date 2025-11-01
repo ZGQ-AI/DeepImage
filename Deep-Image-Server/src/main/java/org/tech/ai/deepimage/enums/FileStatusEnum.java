@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.enums;
 import lombok.Getter;
 
 /**
- * 文件状态枚举
+ * File status enum
  * 
  * @author zgq
  * @since 2025-10-01

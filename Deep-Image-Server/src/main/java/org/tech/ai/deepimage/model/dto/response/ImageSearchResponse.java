@@ -9,7 +9,7 @@ import org.tech.ai.deepimage.model.dto.ImageInfo;
 import java.util.List;
 
 /**
- * 图片搜索响应 DTO
+ * Image search response DTO
  */
 @Data
 @Builder
@@ -18,22 +18,22 @@ import java.util.List;
 public class ImageSearchResponse {
 
     /**
-     * 搜索关键词
+     * Search keyword
      */
     private String keyword;
 
     /**
-     * 搜索到的图片列表
+     * Found images list
      */
     private List<ImageInfo> images;
 
     /**
-     * 实际搜索到的图片数量
+     * Actual found image count
      */
     private Integer totalCount;
 
     /**
-     * 搜索耗时（毫秒）
+     * Search elapsed time (milliseconds)
      */
     private Long searchTimeMs;
 }

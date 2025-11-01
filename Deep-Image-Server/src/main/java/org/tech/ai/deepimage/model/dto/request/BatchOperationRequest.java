@@ -7,8 +7,8 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 批量操作请求（统一）
- * 用于批量删除、批量恢复等操作
+ * Batch operation request (unified)
+ * Used for batch delete, batch restore, etc.
  * 
  * @author zgq
  * @since 2025-10-23
@@ -17,7 +17,7 @@ import java.util.List;
 public class BatchOperationRequest {
     
     /**
-     * 文件ID列表
+     * File ID list
      */
     @NotEmpty(message = "文件ID列表不能为空")
     @Size(max = 100, message = "单次最多操作100个文件")

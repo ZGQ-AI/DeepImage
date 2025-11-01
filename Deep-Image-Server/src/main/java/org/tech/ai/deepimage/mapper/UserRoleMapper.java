@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.tech.ai.deepimage.entity.UserRole;
 
 /**
- * 用户角色关联表 Mapper 接口
+ * User-role association table Mapper interface
  * 
  * @author zgq
  * @since 2025-09-29

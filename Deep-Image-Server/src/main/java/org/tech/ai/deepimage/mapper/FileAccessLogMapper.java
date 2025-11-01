@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.tech.ai.deepimage.entity.FileAccessLog;
 
 /**
- * 文件访问日志表 Mapper 接口
+ * File access log table Mapper interface
  * 
  * @author zgq
  * @since 2025-10-01

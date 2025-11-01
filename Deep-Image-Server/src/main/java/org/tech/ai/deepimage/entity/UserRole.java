@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 用户角色关联表
+ * User-role association table
  * 
  * @author zgq
  * @since 2025-09-29
@@ -16,37 +16,37 @@ import java.time.LocalDateTime;
 public class UserRole {
 
     /**
-     * 关联记录唯一标识，主键
+     * Association record unique identifier, primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 用户ID，引用sys_users表
+     * User ID, references sys_users table
      */
     @TableField("user_id")
     private Long userId;
 
     /**
-     * 角色ID，引用sys_roles表
+     * Role ID, references sys_roles table
      */
     @TableField("role_id")
     private Long roleId;
 
     /**
-     * 删除标志：0=未删除，1=已删除
+     * Delete flag: 0=not deleted, 1=deleted
      */
     @TableField("delete_flag")
     private Integer deleteFlag;
 
     /**
-     * 关联关系创建时间
+     * Association relationship creation time
      */
     @TableField(value = "created_at")
     private LocalDateTime createdAt;
 
     /**
-     * 关联关系最后更新时间
+     * Association relationship last update time
      */
     @TableField(value = "updated_at")
     private LocalDateTime updatedAt;

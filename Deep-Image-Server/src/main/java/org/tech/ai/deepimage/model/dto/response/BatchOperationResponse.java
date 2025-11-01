@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 批量操作响应（统一）
+ * Batch operation response (unified)
  * 
  * @author zgq
  * @since 2025-10-23
@@ -18,17 +18,17 @@ import lombok.NoArgsConstructor;
 public class BatchOperationResponse {
     
     /**
-     * 总操作数量
+     * Total operation count
      */
     private Integer total;
     
     /**
-     * 成功数量
+     * Success count
      */
     private Integer success;
     
     /**
-     * 失败数量
+     * Failed count
      */
     private Integer failed;
 }

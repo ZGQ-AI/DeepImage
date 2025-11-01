@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 会话列表响应
+ * Session list response
  * 
  * @author zgq
  * @since 2025-10-01
@@ -14,22 +14,22 @@ import java.util.List;
 public class SessionListResponse {
     
     /**
-     * 会话列表
+     * Session list
      */
     private List<SessionItemResponse> sessions;
     
     /**
-     * 总数
+     * Total count
      */
     private Long total;
     
     /**
-     * 当前页码
+     * Current page number
      */
     private Integer page;
     
     /**
-     * 每页数量
+     * Page size
      */
     private Integer pageSize;
 }

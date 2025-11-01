@@ -6,8 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 标签表实体
- * 用户自定义标签用于文件分类
+ * Tag table entity
+ * User-defined tags for file categorization
  * 
  * @author zgq
  * @since 2025-10-01
@@ -17,43 +17,43 @@ import java.time.LocalDateTime;
 public class Tag {
 
     /**
-     * 标签唯一标识，主键
+     * Tag unique identifier, primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 标签所属用户ID，用户隔离
+     * Tag owner user ID, user isolation
      */
     @TableField("user_id")
     private Long userId;
 
     /**
-     * 标签名称，如：#工作, #旅行, #重要
+     * Tag name, e.g.: #工作, #旅行, #重要
      */
     @TableField("tag_name")
     private String tagName;
 
     /**
-     * 标签颜色，十六进制格式，如：#FF5733
+     * Tag color, hexadecimal format, e.g.: #FF5733
      */
     @TableField("color")
     private String color;
 
     /**
-     * 标签使用次数统计
+     * Tag usage count statistics
      */
     @TableField("usage_count")
     private Integer usageCount;
 
     /**
-     * 标签创建时间
+     * Tag creation time
      */
     @TableField("created_at")
     private LocalDateTime createdAt;
 
     /**
-     * 标签最后更新时间
+     * Tag last update time
      */
     @TableField("updated_at")
     private LocalDateTime updatedAt;

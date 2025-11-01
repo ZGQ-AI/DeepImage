@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { AppstoreOutlined, BarsOutlined } from '@ant-design/icons-vue'
 
-// 视图模式类型定义
+// View mode type definition
 export type ViewMode = 'grid' | 'list'
 
 // Props
@@ -43,10 +43,10 @@ const emit = defineEmits<{
   change: [mode: ViewMode]
 }>()
 
-// 计算当前模式
+// Compute current mode
 const currentMode = computed(() => props.modelValue)
 
-// 处理模式切换
+// Handle mode change
 const handleModeChange = (mode: ViewMode) => {
   if (mode !== currentMode.value) {
     emit('update:modelValue', mode)

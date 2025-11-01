@@ -7,7 +7,7 @@ import org.tech.ai.deepimage.mapper.RoleMapper;
 import org.tech.ai.deepimage.service.RoleService;
 
 /**
- * 角色信息表 服务实现类
+ * Role information table service implementation class
  * 
  * @author zgq
  * @since 2025-09-29

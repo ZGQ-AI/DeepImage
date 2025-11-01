@@ -3,7 +3,7 @@ package org.tech.ai.deepimage.enums;
 import lombok.Getter;
 
 /**
- * 文件访问类型枚举
+ * File access type enum
  * 
  * @author zgq
  * @since 2025-10-01

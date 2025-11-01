@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.tech.ai.deepimage.entity.FileRecord;
 
 /**
- * 文件记录Service接口
+ * File record Service interface
  * 
  * @author zgq
  * @since 2025-10-01

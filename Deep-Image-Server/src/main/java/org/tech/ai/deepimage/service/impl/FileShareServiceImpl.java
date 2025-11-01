@@ -10,7 +10,7 @@ import org.tech.ai.deepimage.mapper.FileShareMapper;
 import org.tech.ai.deepimage.service.FileShareService;
 
 /**
- * 文件分享Service实现类
+ * File share Service implementation class
  * 
  * @author zgq
  * @since 2025-10-02

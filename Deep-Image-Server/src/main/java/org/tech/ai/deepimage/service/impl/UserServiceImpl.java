@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 用户信息表 服务实现类
+ * User information table service implementation class
  * 
  * @author zgq
  * @since 2025-09-29
@@ -56,13 +56,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserProfileResponse getCurrentUserProfile(Long userId) {
-        // 查询用户信息，如果不存在则抛出404异常
+        // Query user information, throw 404 exception if not exists
         User user = BusinessException.assertNotNull(
             this.getById(userId), 
             ResponseConstant.USER_NOT_FOUND_MESSAGE
         );
         
-        // 转换为响应对象
+        // Convert to response object
         UserProfileResponse response = new UserProfileResponse();
         BeanUtils.copyProperties(user, response);
         return response;
@@ -70,13 +70,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserProfileResponse updateUserProfile(Long userId, UpdateUserProfileRequest request) {
-        // 查询用户
+        // Query user
         User user = BusinessException.assertNotNull(
             this.getById(userId), 
             ResponseConstant.USER_NOT_FOUND_MESSAGE
         );
         
-        // 如果要更新用户名，检查是否已被占用（排除自己）
+        // If updating username, check if already taken (exclude self)
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
             LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(User::getUsername, request.getUsername())
@@ -88,61 +88,61 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setUsername(request.getUsername());
         }
         
-        // 更新手机号
+        // Update phone number
         if (request.getPhone() != null) {
             user.setPhone(request.getPhone());
         }
         
-        // 更新头像URL
+        // Update avatar URL
         if (request.getAvatarUrl() != null) {
             user.setAvatarUrl(request.getAvatarUrl());
         }
         
-        // 更新时间
+        // Update time
         user.setUpdatedAt(LocalDateTime.now());
         
-        // 保存更新
+        // Save update
         this.updateById(user);
         
-        // 返回更新后的用户信息
+        // Return updated user information
         return getCurrentUserProfile(userId);
     }
 
     @Override
     public SessionListResponse listUserSessions(Long userId) {
-        // 获取当前access_token的hash，用于标记当前会话
+        // Get current access_token hash, used to mark current session
         String currentTokenHash = null;
         try {
             String currentToken = StpUtil.getTokenValue();
             currentTokenHash = CryptoUtil.sha256Hex(currentToken);
         } catch (Exception e) {
-            // 如果获取失败，不影响查询
+            // If get fails, does not affect query
         }
         
-        // 构建查询条件 - 只查询活跃的会话
+        // Build query conditions - only query active sessions
         LambdaQueryWrapper<Session> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Session::getUserId, userId)
-                    .eq(Session::getActive, SessionStatusEnum.ACTIVE.getValue())  // 固定查询活跃会话
-                    .orderByDesc(Session::getCreatedAt);  // 按创建时间降序排列
+                    .eq(Session::getActive, SessionStatusEnum.ACTIVE.getValue())  // Fixed query active sessions
+                    .orderByDesc(Session::getCreatedAt);  // Order by creation time descending
         
-        // 查询所有活跃会话（不分页，通常会话数量不会太多）
+        // Query all active sessions (no pagination, usually session count won't be too many)
         List<Session> sessions = sessionService.list(queryWrapper);
         
-        // 直接从结果中获取总数，避免额外的count查询
+        // Get total directly from results, avoid additional count query
         long total = sessions.size();
         
-        // 转换为响应对象
+        // Convert to response objects
         final String finalCurrentTokenHash = currentTokenHash;
         List<SessionItemResponse> items = sessions.stream().map(session -> {
             SessionItemResponse item = new SessionItemResponse();
             BeanUtils.copyProperties(session, item);
-            // 标记是否为当前会话
+            // Mark whether it is current session
             item.setIsCurrent(finalCurrentTokenHash != null && 
                              finalCurrentTokenHash.equals(session.getAccessTokenHash()));
             return item;
         }).collect(Collectors.toList());
         
-        // 构建响应
+        // Build response
         SessionListResponse response = new SessionListResponse();
         response.setSessions(items);
         response.setTotal(total);
@@ -154,20 +154,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Boolean deleteSession(Long userId, Long sessionId) {
-        // 查询会话，如果不存在则抛出404异常
+        // Query session, throw 404 exception if not exists
         Session session = BusinessException.assertNotNull(
             sessionService.getById(sessionId), 
             ResponseConstant.SESSION_NOT_FOUND_MESSAGE
         );
         
-        // 验证会话是否属于当前用户
+        // Validate session belongs to current user
         BusinessException.assertTrue(
             session.getUserId().equals(userId),
             ResponseConstant.FORBIDDEN,
             ResponseConstant.SESSION_NOT_BELONG_TO_USER_MESSAGE
         );
         
-        // 禁止删除当前会话
+        // Prohibit deleting current session
         String currentToken = StpUtil.getTokenValue();
         String currentTokenHash = CryptoUtil.sha256Hex(currentToken);
         BusinessException.assertFalse(
@@ -176,12 +176,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             ResponseConstant.CANNOT_DELETE_CURRENT_SESSION_MESSAGE
         );
         
-        // 标记会话为非活跃
+        // Mark session as inactive
         session.setActive(SessionStatusEnum.INACTIVE.getValue());
         session.setUpdatedAt(LocalDateTime.now());
         sessionService.updateById(session);
         
-        // 撤销该会话关联的所有refresh_token
+        // Revoke all refresh_tokens associated with this session
         LambdaQueryWrapper<RefreshToken> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RefreshToken::getSessionId, sessionId)
                .eq(RefreshToken::getRevoked, RefreshTokenStatusEnum.NOT_REVOKED.getValue());
@@ -196,7 +196,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public DeleteOtherSessionsResponse deleteOtherSessions(Long userId) {
-        // 获取当前会话ID
+        // Get current session ID
         String currentToken = StpUtil.getTokenValue();
         
         FindSessionByTokenRequest req = new FindSessionByTokenRequest();
@@ -206,7 +206,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         Long currentSessionId = currentSession != null ? currentSession.getId() : null;
         
-        // 批量更新其他会话为非活跃状态
+        // Batch update other sessions to inactive status
         LambdaQueryWrapper<Session> sessionWrapper = new LambdaQueryWrapper<>();
         sessionWrapper.eq(Session::getUserId, userId)
                      .eq(Session::getActive, SessionStatusEnum.ACTIVE.getValue());
@@ -214,16 +214,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             sessionWrapper.ne(Session::getId, currentSessionId);
         }
         
-        // 获取要删除的会话数量
+        // Get count of sessions to delete
         long count = sessionService.count(sessionWrapper);
         
-        // 执行更新
+        // Execute update
         Session updateSession = new Session();
         updateSession.setActive(SessionStatusEnum.INACTIVE.getValue());
         updateSession.setUpdatedAt(LocalDateTime.now());
         sessionService.update(updateSession, sessionWrapper);
         
-        // 批量撤销相关的refresh_token
+        // Batch revoke related refresh_tokens
         LambdaQueryWrapper<RefreshToken> tokenWrapper = new LambdaQueryWrapper<>();
         tokenWrapper.eq(RefreshToken::getUserId, userId)
                    .eq(RefreshToken::getRevoked, RefreshTokenStatusEnum.NOT_REVOKED.getValue());

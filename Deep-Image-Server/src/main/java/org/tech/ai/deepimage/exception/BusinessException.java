@@ -6,8 +6,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
- * 业务异常类
- * 提供优雅的异常抛出方式
+ * Business exception class
+ * Provides elegant exception throwing methods
  * 
  * @author zgq
  * @since 2025-09-29
@@ -23,7 +23,7 @@ public class BusinessException extends RuntimeException {
         this.code = code;
     }
 
-    // ========== 基础工厂方法 ==========
+    // ========== Basic Factory Methods ==========
 
     public static BusinessException of(int code, String message) {
         return new BusinessException(code, message);
@@ -37,10 +37,10 @@ public class BusinessException extends RuntimeException {
         return new BusinessException(ResponseConstant.SYSTEM_ERROR, ResponseConstant.SYSTEM_ERROR_MESSAGE);
     }
 
-    // ========== 条件抛出方法 ==========
+    // ========== Conditional Throw Methods ==========
 
     /**
-     * 如果条件为true，则抛出异常
+     * Throw exception if condition is true
      */
     public static void throwIf(boolean condition, int code, String message) {
         if (condition) {
@@ -49,7 +49,7 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * 如果条件为true，则抛出异常（默认500错误码）
+     * Throw exception if condition is true (default 500 error code)
      */
     public static void throwIf(boolean condition, String message) {
         if (condition) {
@@ -57,10 +57,10 @@ public class BusinessException extends RuntimeException {
         }
     }
 
-    // ========== 断言式方法 ==========
+    // ========== Assertion Methods ==========
 
     /**
-     * 断言对象不为null，否则抛出异常
+     * Assert object is not null, otherwise throw exception
      */
     public static <T> T assertNotNull(T object, int code, String message) {
         if (object == null) {
@@ -70,14 +70,14 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * 断言对象不为null，否则抛出404异常
+     * Assert object is not null, otherwise throw 404 exception
      */
     public static <T> T assertNotNull(T object, String message) {
         return assertNotNull(object, ResponseConstant.NOT_FOUND, message);
     }
 
     /**
-     * 断言条件为true，否则抛出异常
+     * Assert condition is true, otherwise throw exception
      */
     public static void assertTrue(boolean condition, int code, String message) {
         if (!condition) {
@@ -86,14 +86,14 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * 断言条件为true，否则抛出异常（默认400错误码）
+     * Assert condition is true, otherwise throw exception (default 400 error code)
      */
     public static void assertTrue(boolean condition, String message) {
         assertTrue(condition, ResponseConstant.PARAM_ERROR, message);
     }
 
     /**
-     * 断言条件为false，否则抛出异常
+     * Assert condition is false, otherwise throw exception
      */
     public static void assertFalse(boolean condition, int code, String message) {
         if (condition) {
@@ -102,79 +102,79 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * 断言条件为false，否则抛出异常（默认400错误码）
+     * Assert condition is false, otherwise throw exception (default 400 error code)
      */
     public static void assertFalse(boolean condition, String message) {
         assertFalse(condition, ResponseConstant.PARAM_ERROR, message);
     }
 
-    // ========== 常见HTTP状态码快捷方法 ==========
+    // ========== Common HTTP Status Code Convenience Methods ==========
 
     /**
-     * 抛出400错误（参数错误）
+     * Throw 400 error (parameter error)
      */
     public static BusinessException badRequest(String message) {
         return new BusinessException(ResponseConstant.PARAM_ERROR, message);
     }
 
     /**
-     * 抛出400错误（格式化消息）
+     * Throw 400 error (formatted message)
      */
     public static BusinessException badRequest(String format, Object... args) {
         return new BusinessException(ResponseConstant.PARAM_ERROR, String.format(format, args));
     }
 
     /**
-     * 抛出401错误（未授权）
+     * Throw 401 error (unauthorized)
      */
     public static BusinessException unauthorized(String message) {
         return new BusinessException(ResponseConstant.UNAUTHORIZED, message);
     }
 
     /**
-     * 抛出401错误（默认消息）
+     * Throw 401 error (default message)
      */
     public static BusinessException unauthorized() {
         return new BusinessException(ResponseConstant.UNAUTHORIZED, ResponseConstant.UNAUTHORIZED_MESSAGE);
     }
 
     /**
-     * 抛出403错误（无权限）
+     * Throw 403 error (forbidden)
      */
     public static BusinessException forbidden(String message) {
         return new BusinessException(ResponseConstant.FORBIDDEN, message);
     }
 
     /**
-     * 抛出403错误（默认消息）
+     * Throw 403 error (default message)
      */
     public static BusinessException forbidden() {
         return new BusinessException(ResponseConstant.FORBIDDEN, ResponseConstant.FORBIDDEN_MESSAGE);
     }
 
     /**
-     * 抛出404错误（资源不存在）
+     * Throw 404 error (resource not found)
      */
     public static BusinessException notFound(String message) {
         return new BusinessException(ResponseConstant.NOT_FOUND, message);
     }
 
     /**
-     * 抛出404错误（格式化消息）
+     * Throw 404 error (formatted message)
      */
     public static BusinessException notFound(String format, Object... args) {
         return new BusinessException(ResponseConstant.NOT_FOUND, String.format(format, args));
     }
 
     /**
-     * 抛出500错误（系统错误）
+     * Throw 500 error (system error)
      */
     public static BusinessException serverError(String message) {
         return new BusinessException(ResponseConstant.SYSTEM_ERROR, message);
     }
 
     /**
-     * 抛出500错误（默认消息）
+     * Throw 500 error (default message)
      */
     public static BusinessException serverError() {
         return new BusinessException(ResponseConstant.SYSTEM_ERROR, ResponseConstant.SYSTEM_ERROR_MESSAGE);

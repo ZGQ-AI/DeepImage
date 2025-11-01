@@ -1,9 +1,9 @@
 /**
- * 设备相关工具函数
+ * Device-related utility functions
  */
 
 /**
- * 解析User-Agent，返回设备名称
+ * Parse User-Agent and return device name
  */
 export function parseDeviceName(userAgent: string): string {
   if (!userAgent) return '未知设备'
@@ -20,7 +20,7 @@ export function parseDeviceName(userAgent: string): string {
 }
 
 /**
- * 判断是否为桌面设备
+ * Check if it's a desktop device
  */
 export function isDesktop(userAgent: string): boolean {
   if (!userAgent) return false
@@ -28,7 +28,7 @@ export function isDesktop(userAgent: string): boolean {
 }
 
 /**
- * 解析浏览器名称
+ * Parse browser name
  */
 export function parseBrowserName(userAgent: string): string {
   if (!userAgent) return '未知浏览器'

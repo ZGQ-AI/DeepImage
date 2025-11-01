@@ -6,8 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文件访问日志表实体
- * 记录文件访问行为
+ * File access log table entity
+ * Records file access behavior
  * 
  * @author zgq
  * @since 2025-10-01
@@ -17,49 +17,49 @@ import java.time.LocalDateTime;
 public class FileAccessLog {
 
     /**
-     * 日志记录唯一标识
+     * Log record unique identifier
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 被访问的文件ID
+     * Accessed file ID
      */
     @TableField("file_id")
     private Long fileId;
 
     /**
-     * 访问用户ID，未登录用户为NULL
+     * Access user ID, NULL for unauthenticated users
      */
     @TableField("user_id")
     private Long userId;
 
     /**
-     * 访问类型枚举: DOWNLOAD, PREVIEW, UPLOAD
+     * Access type enum: DOWNLOAD, PREVIEW, UPLOAD
      */
     @TableField("access_type")
     private String accessType;
 
     /**
-     * 访问IP地址
+     * Access IP address
      */
     @TableField("ip_address")
     private String ipAddress;
 
     /**
-     * 用户代理信息
+     * User agent information
      */
     @TableField("user_agent")
     private String userAgent;
 
     /**
-     * 分享ID，如果是通过分享访问
+     * Share ID, if accessed through share
      */
     @TableField("share_id")
     private Long shareId;
 
     /**
-     * 访问时间
+     * Access time
      */
     @TableField("created_at")
     private LocalDateTime createdAt;

@@ -9,7 +9,7 @@ import org.tech.ai.deepimage.mapper.FileAccessLogMapper;
 import org.tech.ai.deepimage.service.FileAccessLogService;
 
 /**
- * 文件访问日志Service实现类
+ * File access log Service implementation class
  * 
  * @author zgq
  * @since 2025-10-02

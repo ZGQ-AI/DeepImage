@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 批量删除响应
+ * Batch delete response
  * 
  * @author zgq
  * @since 2025-10-02
@@ -16,17 +16,17 @@ import java.util.List;
 public class BatchDeleteResponse {
     
     /**
-     * 成功数量
+     * Success count
      */
     private Integer successCount;
     
     /**
-     * 失败数量
+     * Failed count
      */
     private Integer failedCount;
     
     /**
-     * 失败的文件ID列表
+     * Failed file ID list
      */
     private List<Long> failedFileIds;
 }

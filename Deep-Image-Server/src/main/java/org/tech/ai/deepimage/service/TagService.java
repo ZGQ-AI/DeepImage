@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 标签Service接口
+ * Tag Service interface
  * 
  * @author zgq
  * @since 2025-10-01
@@ -19,72 +19,72 @@ import java.util.Map;
 public interface TagService extends IService<Tag> {
     
     /**
-     * 创建标签
+     * Create tag
      * 
-     * @param request 创建标签请求
-     * @return 标签响应
+     * @param request Create tag request
+     * @return Tag response
      */
     TagResponse createTag(CreateTagRequest request);
     
     /**
-     * 查询当前用户所有标签
+     * Query all tags of current user
      * 
-     * @return 标签列表
+     * @return Tag list
      */
     List<TagResponse> listUserTags();
     
     /**
-     * 更新标签
+     * Update tag
      * 
-     * @param request 更新标签请求
-     * @return 标签响应
+     * @param request Update tag request
+     * @return Tag response
      */
     TagResponse updateTag(UpdateTagRequest request);
     
     /**
-     * 删除标签
+     * Delete tag
      * 
-     * @param request 删除标签请求
+     * @param request Delete tag request
      */
     void deleteTag(DeleteTagRequest request);
     
     /**
-     * 批量增加标签使用计数
+     * Batch increase tag usage count
      * 
-     * @param tagIds 标签ID集合
+     * @param tagIds Tag ID set
      */
     void batchIncreaseUsageCount(java.util.Set<Long> tagIds);
     
     /**
-     * 批量减少标签使用计数（每个标签-1）
+     * Batch decrease tag usage count (decrease by 1 for each tag)
      * 
-     * @param tagIds 标签ID集合
+     * @param tagIds Tag ID set
      */
     void batchDecreaseUsageCount(java.util.Set<Long> tagIds);
 
     /**
-     * 批量减少标签使用计数（按指定数量）
+     * Batch decrease tag usage count (by specified amount)
      * 
-     * @param tagCountMap 标签ID -> 减少数量的映射
+     * @param tagCountMap Tag ID -> decrease amount mapping
      */
     void batchDecreaseUsageCountByAmount(Map<Long, Integer> tagCountMap);
     
     /**
-     * 批量查询标签（验证权限）
+     * Batch query tags (validate permissions)
      * 
-     * @param tagIds 标签ID列表
-     * @param userId 用户ID
-     * @return 有效的标签列表
+     * @param tagIds Tag ID list
+     * @param userId User ID
+     * @return Valid tag list
      */
     List<Tag> listValidTagsByIds(List<Long> tagIds, Long userId);
     
     /**
-     * 获取用户的标签（校验权限）
-     * 如果标签不存在或不属于该用户，抛出异常
+     * Get user's tag (validate permissions)
+     * Throws exception if tag does not exist or does not belong to this user
      * 
-     * @param tagId 标签ID
-     * @param userId 用户ID
-     * @return 标签实体
+     * @param tagId Tag ID
+     * @param userId User ID
+     * @return Tag entity
      */
     Tag getUserTag(Long tagId, Long userId);
 }

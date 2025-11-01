@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * 查询文件访问日志请求
+ * Query file access logs request
  * 
  * @author zgq
  * @since 2025-10-02
@@ -13,7 +13,7 @@ import lombok.Data;
 public class GetFileAccessLogsRequest extends PageRequest {
     
     /**
-     * 文件ID
+     * File ID
      */
     @NotNull(message = "文件ID不能为空")
     private Long fileId;

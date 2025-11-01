@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 
 /**
- * 哈希工具类
+ * Hash utility class
  * 
  * @author zgq
  * @since 2025-10-02
@@ -18,10 +18,10 @@ public class HashUtil {
     private static final int BUFFER_SIZE = 8192;
     
     /**
-     * 计算字节数组的 SHA-256 哈希值
+     * Calculate SHA-256 hash value of byte array
      * 
-     * @param data 字节数组
-     * @return 64位十六进制字符串
+     * @param data Byte array
+     * @return 64-character hexadecimal string
      */
     public static String sha256(byte[] data) {
         try {
@@ -29,16 +29,16 @@ public class HashUtil {
             byte[] hashBytes = digest.digest(data);
             return bytesToHex(hashBytes);
         } catch (Exception e) {
-            log.error("计算SHA-256哈希失败", e);
-            throw new RuntimeException("计算文件哈希失败", e);
+            log.error("Failed to calculate SHA-256 hash", e);
+            throw new RuntimeException("Failed to calculate file hash", e);
         }
     }
     
     /**
-     * 计算输入流的 SHA-256 哈希值
+     * Calculate SHA-256 hash value of input stream
      * 
-     * @param inputStream 输入流
-     * @return 64位十六进制字符串
+     * @param inputStream Input stream
+     * @return 64-character hexadecimal string
      */
     public static String sha256(InputStream inputStream) {
         try {
@@ -53,26 +53,26 @@ public class HashUtil {
             byte[] hashBytes = digest.digest();
             return bytesToHex(hashBytes);
         } catch (Exception e) {
-            log.error("计算SHA-256哈希失败", e);
-            throw new RuntimeException("计算文件哈希失败", e);
+            log.error("Failed to calculate SHA-256 hash", e);
+            throw new RuntimeException("Failed to calculate file hash", e);
         }
     }
     
     /**
-     * 计算字符串的 SHA-256 哈希值
+     * Calculate SHA-256 hash value of string
      * 
-     * @param text 字符串
-     * @return 64位十六进制字符串
+     * @param text String
+     * @return 64-character hexadecimal string
      */
     public static String sha256(String text) {
         return sha256(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
     
     /**
-     * 将字节数组转换为十六进制字符串
+     * Convert byte array to hexadecimal string
      * 
-     * @param bytes 字节数组
-     * @return 十六进制字符串
+     * @param bytes Byte array
+     * @return Hexadecimal string
      */
     private static String bytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder(bytes.length * 2);

@@ -7,7 +7,7 @@ import org.tech.ai.deepimage.mapper.UserRoleMapper;
 import org.tech.ai.deepimage.service.UserRoleService;
 
 /**
- * 用户角色关联表 服务实现类
+ * User-role association table service implementation class
  * 
  * @author zgq
  * @since 2025-09-29

@@ -1,6 +1,6 @@
 <!--
-  重命名对话框组件
-  用于文件重命名操作
+  Rename Dialog Component
+  Used for file rename operations
 -->
 <template>
   <a-modal
@@ -29,11 +29,11 @@
 import { ref, watch, nextTick, computed } from 'vue'
 
 interface Props {
-  /** 是否显示 */
+  /** Whether to show */
   open: boolean
-  /** 当前文件名 */
+  /** Current filename */
   currentFilename: string
-  /** 加载状态 */
+  /** Loading state */
   loading?: boolean
 }
 
@@ -52,7 +52,7 @@ const inputRef = ref<{ focus: () => void; select: () => void } | null>(null)
 const filename = ref('')
 const extension = ref('')
 
-// 解析文件名和扩展名
+// Parse filename and extension
 const parseFilename = (fullName: string) => {
   const lastDotIndex = fullName.lastIndexOf('.')
   if (lastDotIndex !== -1) {
@@ -67,14 +67,14 @@ const parseFilename = (fullName: string) => {
   }
 }
 
-// 监听 open 变化
+// Watch open changes
 watch(() => props.open, (newVal) => {
   visible.value = newVal
   if (newVal) {
     const { name, extension: ext } = parseFilename(props.currentFilename)
     filename.value = name
     extension.value = ext
-    // 聚焦输入框
+    // Focus input field
     nextTick(() => {
       inputRef.value?.focus()
       inputRef.value?.select()
@@ -82,7 +82,7 @@ watch(() => props.open, (newVal) => {
   }
 })
 
-// 监听 visible 变化，同步到父组件
+// Watch visible changes and sync to parent component
 watch(visible, (newVal) => {
   emit('update:open', newVal)
 })
@@ -91,26 +91,26 @@ const placeholder = computed(() => {
   return extension.value ? `请输入文件名（扩展名: ${extension.value}）` : '请输入文件名'
 })
 
-// 确认重命名
+// Confirm rename
 const handleConfirm = () => {
   const finalName = (filename.value.trim() + extension.value).trim()
   
-  // 验证文件名
+  // Validate filename
   if (!finalName || finalName === extension.value) {
-    // 文件名不能为空，但不在这里显示错误，由父组件处理
-    // 因为父组件可能需要自定义错误消息
+    // Filename cannot be empty, but don't show error here, let parent component handle it
+    // because parent component may need custom error messages
     return
   }
   
   if (finalName === props.currentFilename) {
     visible.value = false
-    return // 文件名未改变，直接关闭
+    return // Filename unchanged, close directly
   }
   
   emit('confirm', finalName)
 }
 
-// 取消
+// Cancel
 const handleCancel = () => {
   visible.value = false
   emit('cancel')

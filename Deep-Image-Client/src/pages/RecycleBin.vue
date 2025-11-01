@@ -5,7 +5,7 @@
       <p class="bin-description">{{ PAGE_DESCRIPTIONS.RECYCLE_BIN }}</p>
     </div>
 
-    <!-- 统计信息 -->
+    <!-- Statistics -->
     <div v-if="stats" class="stats-card">
       <div class="stat-item">
         <span class="stat-label">文件数量</span>
@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <!-- 批量操作工具栏 -->
+    <!-- Batch operation toolbar -->
     <BatchToolbar
       v-if="images.length > 0 || pagination.total > 0"
       :is-all-selected="isAllSelected"
@@ -59,16 +59,16 @@
       </template>
     </BatchToolbar>
 
-    <!-- 图片展示区域 -->
+    <!-- Image display area -->
     <div class="bin-content">
-      <!-- 空状态 -->
+      <!-- Empty state -->
       <div v-if="images.length === 0 && !loading" class="empty-state">
         <DeleteOutlined :style="{ fontSize: '64px', color: '#d9d9d9' }" />
         <h3>回收站是空的</h3>
         <p>已删除的文件会在这里保留</p>
       </div>
 
-      <!-- 图片列表 -->
+      <!-- Image list -->
       <div v-else-if="images.length > 0" class="images-container">
         <ImageMasonryView
           v-if="viewMode === 'grid'"
@@ -91,7 +91,7 @@
         />
       </div>
       
-      <!-- 分页 -->
+      <!-- Pagination -->
       <div v-if="pagination.total > 0" class="pagination-wrapper">
         <a-pagination
           v-model:current="pagination.current"
@@ -106,7 +106,7 @@
       </div>
     </div>
 
-    <!-- 图片预览弹窗 -->
+    <!-- Image preview modal -->
     <a-image-preview-group 
       :preview="{
         visible: previewVisible,
@@ -145,7 +145,7 @@ import { PAGE_TITLES, PAGE_DESCRIPTIONS, BUTTON_TEXTS, MESSAGES, PAGINATION_CONF
 import type { FileInfoResponse, TrashStatsResponse } from '../types/file'
 import type { ViewMode } from '../components/file/ViewModeToggle.vue'
 
-// 状态管理
+// State management
 const images = ref<FileInfoResponse[]>([])
 const loading = ref(false)
 const viewMode = ref<ViewMode>('grid')
@@ -153,7 +153,7 @@ const previewVisible = ref(false)
 const currentImageIndex = ref(0)
 const stats = ref<TrashStatsResponse | null>(null)
 
-// 分页状态
+// Pagination state
 const pagination = ref<{
   current: number
   pageSize: number
@@ -164,17 +164,17 @@ const pagination = ref<{
   total: 0
 })
 
-// 批量操作状态（回收站始终处于选择模式）
+// Batch operation state (recycle bin always in selection mode)
 const selectedFileIds = ref<Set<number>>(new Set())
 
-// 计算是否全选
+// Compute if all selected
 const isAllSelected = computed(() => {
   return images.value.length > 0 && selectedFileIds.value.size === images.value.length
 })
 
-// formatFileSize 已从 utils/file.ts 导入
+// formatFileSize imported from utils/file.ts
 
-// 加载统计信息
+// Load statistics
 const loadStats = async () => {
   try {
     const response = await getTrashStats()
@@ -182,11 +182,11 @@ const loadStats = async () => {
       stats.value = response.data.data
     }
   } catch (error) {
-    console.error('加载统计信息失败:', error)
+    console.error('Failed to load statistics:', error)
   }
 }
 
-// 加载回收站文件
+// Load recycle bin files
 const loadTrash = async () => {
   try {
     loading.value = true
@@ -204,35 +204,35 @@ const loadTrash = async () => {
       pagination.value.pageSize = (pageData.size || PAGINATION_CONFIG.SMALL_PAGE_SIZE) as typeof pagination.value.pageSize
     }
   } catch (error: any) {
-    console.error('加载回收站失败:', error)
+    console.error('Failed to load recycle bin:', error)
     message.error(MESSAGES.LOADING_RECYCLE_BIN)
   } finally {
     loading.value = false
   }
 }
 
-// 视图模式切换
+// View mode change
 const handleViewModeChange = (mode: ViewMode) => {
   localStorage.setItem('recycle-bin-view-mode', mode)
 }
 
-// 处理分页变化
+// Handle pagination change
 const handlePageChange = (page: number, pageSize: number) => {
   pagination.value.current = page
   pagination.value.pageSize = pageSize as typeof pagination.value.pageSize
-  selectedFileIds.value.clear() // 切换页面时清空选择
+  selectedFileIds.value.clear() // Clear selection when switching pages
   loadTrash()
 }
 
-// 处理每页大小变化
+// Handle page size change
 const handlePageSizeChange = (current: number, size: number) => {
-  pagination.value.current = 1 // 改变每页大小时重置到第一页
+  pagination.value.current = 1 // Reset to first page when changing page size
   pagination.value.pageSize = size as typeof pagination.value.pageSize
-  selectedFileIds.value.clear() // 切换页面时清空选择
+  selectedFileIds.value.clear() // Clear selection when switching pages
   loadTrash()
 }
 
-// 图片预览
+// Image preview
 const handleImagePreview = (image: FileInfoResponse) => {
   currentImageIndex.value = images.value.findIndex(img => img.fileId === image.fileId)
   if (currentImageIndex.value === -1) {
@@ -241,7 +241,7 @@ const handleImagePreview = (image: FileInfoResponse) => {
   previewVisible.value = true
 }
 
-// 切换单个文件选择
+// Toggle single file selection
 const handleToggleSelect = (fileId: number) => {
   if (selectedFileIds.value.has(fileId)) {
     selectedFileIds.value.delete(fileId)
@@ -250,7 +250,7 @@ const handleToggleSelect = (fileId: number) => {
   }
 }
 
-// 全选/取消全选
+// Select all / deselect all
 const handleSelectAll = (checked: boolean) => {
   if (checked) {
     images.value.forEach(img => selectedFileIds.value.add(img.fileId))
@@ -259,7 +259,7 @@ const handleSelectAll = (checked: boolean) => {
   }
 }
 
-// 批量恢复
+// Batch restore
 const handleBatchRestore = async () => {
   const count = selectedFileIds.value.size
   if (count === 0) {
@@ -288,7 +288,7 @@ const handleBatchRestore = async () => {
           
           selectedFileIds.value.clear()
           
-          // 重新加载当前页和统计信息
+          // Reload current page and statistics
           await Promise.all([loadTrash(), loadStats()])
           
           if (result.failed > 0) {
@@ -306,7 +306,7 @@ const handleBatchRestore = async () => {
           throw new Error(response.data.message || '批量恢复失败')
         }
       } catch (error) {
-        console.error('批量恢复失败:', error)
+        console.error('Failed to batch restore:', error)
         message.error({
           content: `批量恢复失败: ${error instanceof Error ? error.message : '未知错误'}`,
           key: 'batch-restore'
@@ -316,7 +316,7 @@ const handleBatchRestore = async () => {
   })
 }
 
-// 批量彻底删除
+// Batch permanent delete
 const handleBatchPermanentDelete = async () => {
   const count = selectedFileIds.value.size
   if (count === 0) {
@@ -346,7 +346,7 @@ const handleBatchPermanentDelete = async () => {
           
           selectedFileIds.value.clear()
           
-          // 重新加载当前页和统计信息
+          // Reload current page and statistics
           await Promise.all([loadTrash(), loadStats()])
           
           if (result.failed > 0) {
@@ -364,7 +364,7 @@ const handleBatchPermanentDelete = async () => {
           throw new Error(response.data.message || '批量删除失败')
         }
       } catch (error) {
-        console.error('批量删除失败:', error)
+        console.error('Failed to batch delete:', error)
         message.error({
           content: `批量删除失败: ${error instanceof Error ? error.message : '未知错误'}`,
           key: 'batch-delete'
@@ -374,7 +374,7 @@ const handleBatchPermanentDelete = async () => {
   })
 }
 
-// 清空回收站
+// Empty recycle bin
 const handleEmptyBin = async () => {
   Modal.confirm({
     title: '清空回收站',
@@ -396,9 +396,9 @@ const handleEmptyBin = async () => {
           const result = response.data.data
           
           selectedFileIds.value.clear()
-          pagination.value.current = 1 // 重置到第一页
+          pagination.value.current = 1 // Reset to first page
           
-          // 重新加载当前页和统计信息
+          // Reload current page and statistics
           await Promise.all([loadTrash(), loadStats()])
           
           message.success({
@@ -409,7 +409,7 @@ const handleEmptyBin = async () => {
           throw new Error(response.data.message || '清空回收站失败')
         }
       } catch (error) {
-        console.error('清空回收站失败:', error)
+        console.error('Failed to empty recycle bin:', error)
         message.error({
           content: `清空回收站失败: ${error instanceof Error ? error.message : '未知错误'}`,
           key: 'empty-bin'
@@ -419,7 +419,7 @@ const handleEmptyBin = async () => {
   })
 }
 
-// 初始化用户偏好
+// Initialize user preferences
 const initUserPreferences = () => {
   const savedViewMode = localStorage.getItem('recycle-bin-view-mode') as ViewMode
   if (savedViewMode && ['grid', 'list'].includes(savedViewMode)) {
@@ -427,7 +427,7 @@ const initUserPreferences = () => {
   }
 }
 
-// 页面加载
+// Page load
 onMounted(() => {
   initUserPreferences()
   loadTrash()

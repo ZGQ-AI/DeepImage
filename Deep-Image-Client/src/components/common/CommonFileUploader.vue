@@ -1,11 +1,11 @@
 <!--
-  通用文件上传组件
-  支持三种上传方式：点击选择、拖拽、粘贴
-  提供灵活的配置以适应不同业务场景
+  Common File Uploader Component
+  Supports three upload methods: click to select, drag and drop, paste
+  Provides flexible configuration to adapt to different business scenarios
 -->
 <template>
   <div class="common-file-uploader" :class="[`mode-${mode}`, { disabled }]">
-    <!-- 上传区域 -->
+    <!-- Upload area -->
     <div
       ref="uploadZoneRef"
       class="upload-zone"
@@ -23,12 +23,12 @@
       @blur="isPasteFocused = false"
     >
       <div class="upload-content">
-        <!-- 上传图标 -->
+        <!-- Upload icon -->
         <div class="upload-icon">
           <UploadOutlined :style="{ fontSize: '36px', color: '#1890ff' }" />
         </div>
 
-        <!-- 上传文字提示 -->
+        <!-- Upload text hint -->
         <div class="upload-text">
           <p class="main-text">
             {{ uploadText || getDefaultUploadText() }}
@@ -40,19 +40,19 @@
           </p>
         </div>
 
-        <!-- 点击选择文件按钮 - 主要操作入口 -->
+        <!-- Click to select file button - main operation entry -->
         <a-button type="link" size="small" @click.stop="handleClickSelect">
           点击选择文件
         </a-button>
 
-        <!-- 格式提示 -->
+        <!-- Format hint -->
         <p class="format-hint">
           支持 {{ getFormatText() }}，最大 {{ maxSize }}MB
         </p>
       </div>
     </div>
 
-    <!-- 隐藏的文件输入 -->
+    <!-- Hidden file input -->
     <input
       ref="fileInputRef"
       type="file"
@@ -62,7 +62,7 @@
       @change="handleFileInputChange"
     />
 
-    <!-- 文件列表（可选） -->
+    <!-- File list (optional) -->
     <div v-if="fileList.length > 0 && listType" class="file-list">
       <div
         v-for="file in fileList"
@@ -158,20 +158,20 @@ const getFormatText = () => {
   return props.accept.replace('*/', '').toUpperCase()
 }
 
-// 点击上传区域
+// Click upload area
 const handleClickZone = () => {
   if (props.disabled) return
-  // 点击区域聚焦，方便粘贴
+  // Focus area for paste convenience
   uploadZoneRef.value?.focus()
 }
 
-// 点击选择文件按钮
+// Click select file button
 const handleClickSelect = () => {
   if (props.disabled) return
   fileInputRef.value?.click()
 }
 
-// 文件输入变化
+// File input change
 const handleFileInputChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   const files = target.files
@@ -179,23 +179,23 @@ const handleFileInputChange = (event: Event) => {
 
   processFiles(Array.from(files))
   
-  // 清空 input，允许选择相同文件
+  // Clear input to allow selecting the same file
   target.value = ''
 }
 
-// 拖拽悬停
+// Drag over
 const handleDragOver = () => {
   if (props.disabled || !props.enableDragDrop) return
   isDragActive.value = true
 }
 
-// 拖拽离开
+// Drag leave
 const handleDragLeave = () => {
   if (!props.enableDragDrop) return
   isDragActive.value = false
 }
 
-// 拖拽释放
+// Drop
 const handleDrop = (event: DragEvent) => {
   if (props.disabled || !props.enableDragDrop) return
   isDragActive.value = false
@@ -206,14 +206,14 @@ const handleDrop = (event: DragEvent) => {
   processFiles(Array.from(files))
 }
 
-// 粘贴处理
+// Paste handling
 const handlePaste = async (event: ClipboardEvent) => {
   if (props.disabled || !props.enablePaste) return
 
   const items = event.clipboardData?.items
   const text = event.clipboardData?.getData('text')
 
-  // 优先处理图片文件
+  // Prioritize processing image files
   if (items) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
@@ -228,7 +228,7 @@ const handlePaste = async (event: ClipboardEvent) => {
     }
   }
 
-  // 如果启用了 URL 输入，处理图片链接
+  // If URL input is enabled, process image links
   if (props.enableUrlInput && text && isImageUrl(text)) {
     event.preventDefault()
     try {
@@ -242,21 +242,21 @@ const handlePaste = async (event: ClipboardEvent) => {
   }
 }
 
-// 处理文件列表
+// Process file list
 const processFiles = (files: File[]) => {
-  // 验证文件数量
+  // Validate file count
   if (!props.multiple && files.length > 1) {
     message.warning('只能选择一个文件')
     files = [files[0]]
   }
 
-  // 对于单选模式，直接替换；对于多选模式，检查总数限制
+  // For single select mode, replace directly; for multiple select mode, check total limit
   if (props.multiple && props.maxCount && fileList.value.length + files.length > props.maxCount) {
     message.warning(`最多只能上传 ${props.maxCount} 个文件`)
     return
   }
 
-  // 验证每个文件
+  // Validate each file
   const validFiles: File[] = []
   for (const file of files) {
     if (validateFile(file)) {
@@ -266,7 +266,7 @@ const processFiles = (files: File[]) => {
 
   if (validFiles.length === 0) return
 
-  // 转换为 UploadFile 格式
+  // Convert to UploadFile format
   const uploadFiles: UploadFile[] = validFiles.map(file => ({
     uid: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name: file.name,
@@ -277,27 +277,27 @@ const processFiles = (files: File[]) => {
     thumbUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
   }))
 
-  // 更新文件列表
+  // Update file list
   if (props.multiple) {
     fileList.value = [...fileList.value, ...uploadFiles]
   } else {
     fileList.value = uploadFiles
   }
 
-  // 触发事件
+  // Emit events
   emit('file-select', validFiles)
   emit('change', fileList.value)
 }
 
-// 文件验证
+// File validation
 const validateFile = (file: File): boolean => {
-  // 类型验证
+  // Type validation
   if (props.accept !== '*' && !matchAccept(file.type, props.accept)) {
     message.error(`不支持的文件类型: ${file.type}`)
     return false
   }
 
-  // 大小验证
+  // Size validation
   const maxBytes = props.maxSize * 1024 * 1024
   if (file.size > maxBytes) {
     message.error(`文件大小不能超过 ${props.maxSize}MB`)
@@ -307,7 +307,7 @@ const validateFile = (file: File): boolean => {
   return true
 }
 
-// 匹配 accept 类型
+// Match accept type
 const matchAccept = (fileType: string, accept: string): boolean => {
   const acceptTypes = accept.split(',').map(t => t.trim())
   return acceptTypes.some(type => {
@@ -319,7 +319,7 @@ const matchAccept = (fileType: string, accept: string): boolean => {
   })
 }
 
-// 判断是否是图片 URL
+// Check if URL is an image URL
 const isImageUrl = (url: string): boolean => {
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     return false
@@ -328,7 +328,7 @@ const isImageUrl = (url: string): boolean => {
   return imageExts.some(ext => url.toLowerCase().includes(ext))
 }
 
-// URL 转文件
+// Convert URL to file
 const convertUrlToFile = async (url: string): Promise<File | null> => {
   try {
     const response = await fetch(url, { mode: 'cors' })
@@ -341,7 +341,7 @@ const convertUrlToFile = async (url: string): Promise<File | null> => {
   }
 }
 
-// 移除文件
+// Remove file
 const handleRemoveFile = (file: UploadFile) => {
   const index = fileList.value.findIndex(f => f.uid === file.uid)
   if (index > -1) {
@@ -349,16 +349,16 @@ const handleRemoveFile = (file: UploadFile) => {
     emit('file-remove', file)
     emit('change', fileList.value)
     
-    // 释放 Blob URL
+    // Release Blob URL
     if (file.thumbUrl && file.thumbUrl.startsWith('blob:')) {
       URL.revokeObjectURL(file.thumbUrl)
     }
   }
 }
 
-// formatFileSize 已从 utils/file.ts 导入
+// formatFileSize is imported from utils/file.ts
 
-// 暴露方法给父组件
+// Expose methods to parent component
 defineExpose({
   clearFiles: () => {
     fileList.value.forEach(file => {
@@ -464,7 +464,7 @@ defineExpose({
   margin: 12px 0 0 0;
 }
 
-/* 文件列表 */
+/* File list */
 .file-list {
   margin-top: 16px;
 }

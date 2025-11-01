@@ -70,26 +70,26 @@ public class AuthController {
     }
 
     /**
-     * 发起Google OAuth登录
-     * 重定向用户到Google授权页面
+     * Initiate Google OAuth login
+     * Redirect user to Google authorization page
      */
     @GetMapping("/google/login")
     public void googleLogin(@RequestParam String fromUrl,
                             HttpServletResponse response) throws IOException {
         try {
             String authorizationUrl = googleOauthService.generateAuthorizationUrl(fromUrl);
-            log.info("重定向到Google OAuth授权页面");
+            log.info("Redirecting to Google OAuth authorization page");
             response.sendRedirect(authorizationUrl);
         } catch (Exception e) {
-            log.error("生成Google OAuth授权URL失败", e);
+            log.error("Failed to generate Google OAuth authorization URL", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
                     ResponseConstant.GOOGLE_OAUTH_SERVICE_UNAVAILABLE);
         }
     }
 
     /**
-     * Google OAuth回调处理
-     * 处理授权码，获取用户信息，重定向到fromUrl并带上token
+     * Google OAuth callback handler
+     * Process authorization code, get user information, redirect to fromUrl with token
      */
     @GetMapping("/google/callback")
     public void googleCallback(@RequestParam(required = false) String code,
@@ -97,21 +97,21 @@ public class AuthController {
                                 @RequestParam(required = false) String error,
                                 HttpServletRequest request,
                                 HttpServletResponse response) throws IOException {
-        // 尝试从state中提取fromUrl，失败则使用默认值或Referer
+        // Try to extract fromUrl from state, fallback to default value or Referer on failure
         String fromUrl = ResponseConstant.DEFAULT_FRONTEND_URL;
         
         try {
-            // 1. 使用Helper验证回调参数
+            // 1. Use Helper to validate callback parameters
             GoogleOauthHelper.OauthCallbackValidation validation =
                     GoogleOauthHelper.validateCallbackParams(code, state, error);
 
-            // 2. 尽早解析state参数，提取fromUrl（用于后续错误重定向）
+            // 2. Parse state parameter early, extract fromUrl (for subsequent error redirect)
             if (StringUtils.hasText(state)) {
                 try {
                     fromUrl = GoogleOauthHelper.parseStateString(state);
-                    log.info("解析state参数成功，fromUrl: {}", fromUrl);
+                    log.info("Successfully parsed state parameter, fromUrl: {}", fromUrl);
                 } catch (Exception e) {
-                    log.warn("解析state参数失败，尝试使用Referer", e);
+                    log.warn("Failed to parse state parameter, trying to use Referer", e);
                     String referer = request.getHeader("Referer");
                     if (StringUtils.hasText(referer)) {
                         fromUrl = referer;
@@ -120,7 +120,7 @@ public class AuthController {
             }
 
             if (!validation.isValid()) {
-                log.error("OAuth回调参数验证失败: {}", validation.getErrorMessage());
+                log.error("OAuth callback parameter validation failed: {}", validation.getErrorMessage());
                 String errorUrl = GoogleOauthHelper.buildErrorRedirectUrl(
                         fromUrl,
                         validation.getErrorCode()
@@ -129,12 +129,12 @@ public class AuthController {
                 return;
             }
 
-            // 3. 使用授权码获取访问令牌
+            // 3. Use authorization code to get access token
             Map<String, Object> tokenResponse = googleOauthService.exchangeCodeForToken(
                     validation.getCode());
             
             if (!GoogleOauthHelper.validateTokenResponse(tokenResponse)) {
-                log.error("获取Google访问令牌失败");
+                log.error("Failed to get Google access token");
                 String errorUrl = GoogleOauthHelper.buildErrorRedirectUrl(
                         fromUrl,
                         ResponseConstant.GOOGLE_OAUTH_TOKEN_EXCHANGE_FAILED
@@ -143,10 +143,10 @@ public class AuthController {
                 return;
             }
 
-            // 4. 直接获取id_token，无需额外API调用
+            // 4. Directly get id_token, no additional API call needed
             String idToken = (String) tokenResponse.get(GoogleOauthHelper.ID_TOKEN);
             if (!StringUtils.hasText(idToken)) {
-                log.error("Google OAuth响应中缺少id_token");
+                log.error("Missing id_token in Google OAuth response");
                 String errorUrl = GoogleOauthHelper.buildErrorRedirectUrl(
                         fromUrl,
                         ResponseConstant.GOOGLE_OAUTH_MISSING_ID_TOKEN
@@ -155,15 +155,15 @@ public class AuthController {
                 return;
             }
 
-            log.info("成功获取Google id_token");
+            log.info("Successfully obtained Google id_token");
 
-            // 5. 从Google id_token中提取用户信息
+            // 5. Extract user information from Google id_token
             String email = JwtUtil.getClaimAsString(idToken, JwtClaimConstant.EMAIL);
             String name = JwtUtil.getClaimAsString(idToken, JwtClaimConstant.NAME);
             String picture = JwtUtil.getClaimAsString(idToken, JwtClaimConstant.PICTURE);
             
             if (!StringUtils.hasText(email)) {
-                log.error("无法从Google id_token中提取email");
+                log.error("Unable to extract email from Google id_token");
                 String errorUrl = GoogleOauthHelper.buildErrorRedirectUrl(
                         fromUrl,
                         ResponseConstant.GOOGLE_OAUTH_MISSING_EMAIL
@@ -172,32 +172,32 @@ public class AuthController {
                 return;
             }
 
-            log.info("从Google id_token中提取用户信息，email: {}, name: {}, picture: {}", 
+            log.info("Extracted user information from Google id_token, email: {}, name: {}, picture: {}", 
                     email, name, picture);
 
-            // 6. 构建GoogleUserInfo对象
+            // 6. Build GoogleUserInfo object
             RegisterGoogleUserRequest registerGoogleUserRequest = new RegisterGoogleUserRequest(email, name, picture);
 
-            // 7. 检查用户是否存在，不存在则自动注册
+            // 7. Check if user exists, auto-register if not exists
             User user = authService.registerGoogleUser(registerGoogleUserRequest);
-            log.info("Google用户准备就绪，userId: {}", user.getId());
+            log.info("Google user ready, userId: {}", user.getId());
 
-            // 8. 执行登录，创建Session和RefreshToken
+            // 8. Perform login, create Session and RefreshToken
             TokenPairResponse tokenPair = authService.loginByGoogle(user);
 
-            // 9. 使用Helper构建成功重定向URL，带上新生成的token
+            // 9. Use Helper to build success redirect URL with newly generated token
             String successUrl = GoogleOauthHelper.buildSuccessRedirectUrl(
                     fromUrl,
                     tokenPair.getAccessToken(),
                     tokenPair.getRefreshToken()
             );
 
-            log.info("Google OAuth登录成功，重定向到: {}", successUrl);
+            log.info("Google OAuth login successful, redirecting to: {}", successUrl);
             response.sendRedirect(successUrl);
 
         } catch (Exception e) {
-            log.error("处理Google OAuth回调时发生异常", e);
-            // 使用前面提取的fromUrl，如果还没有则使用默认值
+            log.error("Exception occurred while processing Google OAuth callback", e);
+            // Use previously extracted fromUrl, or default value if not available
             String errorUrl = GoogleOauthHelper.buildErrorRedirectUrl(
                     fromUrl,
                     ResponseConstant.GOOGLE_OAUTH_CALLBACK_PROCESSING_FAILED

@@ -1,5 +1,5 @@
 <!--
-  标签列表组件
+  Tag List Component
 -->
 <template>
   <div class="tag-list">
@@ -17,7 +17,7 @@
           class="tag-card"
           :style="{ borderLeftColor: tag.color || '#1890ff' }"
         >
-          <!-- 标签信息 -->
+          <!-- Tag information -->
           <div class="tag-info">
             <div class="tag-header">
               <div class="tag-name-wrapper">
@@ -39,7 +39,7 @@
             </div>
           </div>
 
-          <!-- 操作按钮 -->
+          <!-- Action buttons -->
           <div class="tag-actions">
             <a-button type="text" size="small" @click="$emit('edit', tag)">
               <EditOutlined />
@@ -89,7 +89,7 @@ withDefaults(defineProps<Props>(), {
 
 defineEmits<Emits>()
 
-// 格式化时间
+// Format time
 function formatTime(dateStr: string): string {
   return formatTimeUtil(dateStr)
 }
@@ -192,7 +192,7 @@ function formatTime(dateStr: string): string {
   font-size: 13px;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 768px) {
   .tag-grid {
     grid-template-columns: 1fr;

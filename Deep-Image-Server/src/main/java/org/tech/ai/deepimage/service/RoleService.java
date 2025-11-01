@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.tech.ai.deepimage.entity.Role;
 
 /**
- * 角色信息表 服务类
+ * Role information table service class
  * 
  * @author zgq
  * @since 2025-09-29

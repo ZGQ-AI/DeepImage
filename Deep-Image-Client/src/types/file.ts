@@ -1,26 +1,26 @@
 /**
- * 文件相关类型定义
+ * File-related type definitions
  */
 
 /**
- * 文件业务类型枚举
- * 与后端 BusinessTypeEnum 保持一致
+ * File business type enumeration
+ * Keep consistent with backend BusinessTypeEnum
  */
 export enum BusinessType {
-  /** 头像 */
+  /** Avatar */
   AVATAR = 'AVATAR',
-  /** 文档 */
+  /** Document */
   DOCUMENT = 'DOCUMENT',
-  /** 图片 */
+  /** Image */
   IMAGE = 'IMAGE',
-  /** 视频 */
+  /** Video */
   VIDEO = 'VIDEO',
-  /** 临时文件 */
+  /** Temporary file */
   TEMP = 'TEMP',
 }
 
 /**
- * 业务类型描述映射
+ * Business type description mapping
  */
 export const BusinessTypeLabels: Record<BusinessType, string> = {
   [BusinessType.AVATAR]: '头像',
@@ -31,258 +31,258 @@ export const BusinessTypeLabels: Record<BusinessType, string> = {
 }
 
 /**
- * 文件上传响应
+ * File upload response
  */
 export interface FileUploadResponse {
-  /** 文件ID */
+  /** File ID */
   fileId: number
-  /** 原始文件名 */
+  /** Original filename */
   originalFilename: string
-  /** 文件访问 URL */
+  /** File access URL */
   fileUrl: string
-  /** 缩略图 URL（仅图片类型） */
+  /** Thumbnail URL (image types only) */
   thumbnailUrl?: string
-  /** 文件大小（字节） */
+  /** File size in bytes */
   fileSize: number
-  /** 内容类型 */
+  /** Content type */
   contentType: string
-  /** 文件哈希值 */
+  /** File hash value */
   fileHash: string
-  /** 上传时间 */
+  /** Upload time */
   uploadedAt: string
 }
 
 /**
- * 文件信息响应
+ * File information response
  */
 export interface FileInfoResponse {
-  /** 文件ID */
+  /** File ID */
   fileId: number
-  /** 原始文件名 */
+  /** Original filename */
   originalFilename: string
-  /** 文件访问 URL */
+  /** File access URL */
   fileUrl: string
-  /** 缩略图 URL */
+  /** Thumbnail URL */
   thumbnailUrl?: string
-  /** 文件大小（字节） */
+  /** File size in bytes */
   fileSize: number
-  /** 内容类型 */
+  /** Content type */
   contentType: string
-  /** 业务类型 */
+  /** Business type */
   businessType: string
-  /** 创建时间 */
+  /** Creation time */
   createdAt: string
-  /** 更新时间 */
+  /** Update time */
   updatedAt: string
-  /** 关联标签 */
+  /** Associated tags */
   tags?: TagInfo[]
 }
 
 
 /**
- * 分页响应
+ * Pagination response
  */
 export interface PageResponse<T> {
-  /** 当前页数据 */
+  /** Current page data */
   records: T[]
-  /** 总记录数 */
+  /** Total record count */
   total: number
-  /** 当前页码 */
+  /** Current page number */
   current: number
-  /** 每页数量 */
+  /** Page size */
   size: number
-  /** 总页数 */
+  /** Total pages */
   pages: number
 }
 
 /**
- * 查询文件列表请求（统一接口）
+ * Query file list request (unified interface)
  */
 export interface ListFilesRequest {
-  /** 业务类型（可选） */
+  /** Business type (optional) */
   businessType?: BusinessType
-  /** 标签ID（可选） */
+  /** Tag ID (optional) */
   tagId?: number
-  /** 文件名搜索关键词（可选） */
+  /** Filename search keyword (optional) */
   filename?: string
-  /** 排序字段（可选）：createdAt, fileSize, originalFilename */
+  /** Sort field (optional): createdAt, fileSize, originalFilename */
   sortBy?: string
-  /** 排序方向（可选）：asc, desc */
+  /** Sort direction (optional): asc, desc */
   sortOrder?: string
-  /** 页码，默认第1页 */
+  /** Page number, default page 1 */
   page?: number
-  /** 每页数量，默认20条 */
+  /** Page size, default 20 */
   pageSize?: number
 }
 
 /**
- * 文件详情响应
+ * File details response
  */
 export interface FileDetailResponse {
-  /** 文件ID */
+  /** File ID */
   fileId: number
-  /** 原始文件名 */
+  /** Original filename */
   originalFilename: string
-  /** 文件访问 URL */
+  /** File access URL */
   fileUrl: string
-  /** 缩略图 URL */
+  /** Thumbnail URL */
   thumbnailUrl?: string
-  /** 文件大小（字节） */
+  /** File size in bytes */
   fileSize: number
-  /** 内容类型 */
+  /** Content type */
   contentType: string
-  /** 业务类型 */
+  /** Business type */
   businessType: string
-  /** 文件哈希值 */
+  /** File hash value */
   fileHash: string
-  /** 元数据（JSON） */
+  /** Metadata (JSON) */
   metadata?: Record<string, any>
-  /** 创建时间 */
+  /** Creation time */
   createdAt: string
-  /** 更新时间 */
+  /** Update time */
   updatedAt: string
-  /** 关联标签 */
+  /** Associated tags */
   tags?: TagInfo[]
 }
 
 /**
- * 标签信息
+ * Tag information
  */
 export interface TagInfo {
-  /** 标签ID */
+  /** Tag ID */
   tagId: number
-  /** 标签名称 */
+  /** Tag name */
   tagName: string
-  /** 标签颜色 */
+  /** Tag color */
   color?: string
 }
 
 /**
- * 重命名文件请求
+ * Rename file request
  */
 export interface RenameFileRequest {
-  /** 文件ID */
+  /** File ID */
   fileId: number
-  /** 新文件名 */
+  /** New filename */
   newFilename: string
 }
 
 /**
- * 批量操作请求（统一）
+ * Batch operation request (unified)
  */
 export interface BatchOperationRequest {
-  /** 文件ID列表 */
+  /** File ID list */
   fileIds: number[]
 }
 
 /**
- * 操作结果
+ * Operation result
  */
 export interface OperationResult {
-  /** 文件ID */
+  /** File ID */
   fileId: number
-  /** 状态: success | failed */
+  /** Status: success | failed */
   status: string
-  /** 失败原因（仅在失败时有值） */
+  /** Failure reason (only present when failed) */
   reason?: string
 }
 
 /**
- * 批量操作响应（统一）
+ * Batch operation response (unified)
  */
 export interface BatchOperationResponse {
-  /** 总操作数量 */
+  /** Total operation count */
   total: number
-  /** 成功数量 */
+  /** Success count */
   success: number
-  /** 失败数量 */
+  /** Failed count */
   failed: number
-  /** 操作结果详情列表 */
+  /** Operation result details list */
   results: OperationResult[] | null
 }
 
 /**
- * 添加文件标签请求
+ * Add file tags request
  */
 export interface AddFileTagsRequest {
-  /** 文件ID */
+  /** File ID */
   fileId: number
-  /** 标签ID列表 */
+  /** Tag ID list */
   tagIds: number[]
 }
 
 
 /**
- * 文件预览URL响应
+ * File preview URL response
  */
 export interface FilePreviewResponse {
-  /** 预览URL */
+  /** Preview URL */
   previewUrl: string
-  /** 过期时间（秒） */
+  /** Expiration time (seconds) */
   expirySeconds: number
 }
 
 /**
- * 文件统计响应
+ * File statistics response
  */
 export interface FileStatisticsResponse {
-  /** 总文件数 */
+  /** Total file count */
   totalFileCount: number
-  /** 总存储大小（字节） */
+  /** Total storage size (bytes) */
   totalFileSize: number
-  /** 按业务类型统计 */
+  /** Statistics by business type */
   byBusinessType: Record<string, FileTypeStatistics>
-  /** 最近上传的文件 */
+  /** Recently uploaded files */
   recentFiles?: FileInfoResponse[]
 }
 
 /**
- * 文件类型统计
+ * File type statistics
  */
 export interface FileTypeStatistics {
-  /** 文件数量 */
+  /** File count */
   count: number
-  /** 总大小（字节） */
+  /** Total size (bytes) */
   totalSize: number
 }
 
 /**
- * 检查文件存在请求
+ * Check file exists request
  */
 export interface FileExistsCheckRequest {
-  /** 文件哈希 */
+  /** File hash */
   fileHash: string
-  /** 业务类型 */
+  /** Business type */
   businessType: BusinessType
 }
 
 /**
- * 文件存在响应
+ * File exists response
  */
 export interface FileExistsResponse {
-  /** 是否存在 */
+  /** Whether exists */
   exists: boolean
-  /** 如果存在，返回文件信息 */
+  /** If exists, return file info */
   fileInfo?: FileInfoResponse
 }
 
 
 /**
- * 回收站查询请求
+ * Recycle bin query request
  */
 export interface RecycleBinQueryRequest {
-  /** 页码 */
+  /** Page number */
   page?: number
-  /** 每页数量 */
+  /** Page size */
   size?: number
 }
 
 /**
- * 回收站统计响应
+ * Recycle bin statistics response
  */
 export interface TrashStatsResponse {
-  /** 回收站文件数量 */
+  /** Recycle bin file count */
   count: number
-  /** 回收站总大小（字节） */
+  /** Recycle bin total size (bytes) */
   totalSize: number
 }

@@ -1,9 +1,9 @@
 <!--
-  用户中心页面
+  User Profile Page
 -->
 <template>
   <div class="user-profile-page">
-    <!-- 页面头部 -->
+    <!-- Page header -->
     <a-page-header title="个人中心" @back="() => router.back()">
       <template #extra>
         <a-space>
@@ -12,17 +12,17 @@
       </template>
     </a-page-header>
 
-    <!-- 主要内容区域 -->
+    <!-- Main content area -->
     <div class="content-wrapper">
       <a-row :gutter="[16, 16]">
-        <!-- 左侧：个人信息 -->
+        <!-- Left: User profile -->
         <a-col :xs="24" :lg="14">
           <a-card title="个人信息" :bordered="false" class="profile-card">
             <ProfileForm />
           </a-card>
         </a-col>
 
-        <!-- 右侧：登录设备管理 -->
+        <!-- Right: Login device management -->
         <a-col :xs="24" :lg="10">
           <a-card title="登录设备管理" :bordered="false" class="session-card">
             <template #extra>
@@ -58,7 +58,7 @@ const userStore = useUserStore()
 
 const loading = ref(false)
 
-// 刷新所有数据
+// Refresh all data
 async function handleRefresh() {
   loading.value = true
   try {
@@ -74,12 +74,12 @@ async function handleRefresh() {
   }
 }
 
-// 删除其他所有会话
+// Delete all other sessions
 async function handleDeleteOtherSessions() {
   await userStore.deleteOtherSessions()
 }
 
-// 页面初始化
+// Page initialization
 onMounted(async () => {
   try {
     await handleRefresh()
@@ -133,7 +133,7 @@ onMounted(async () => {
   padding: 24px;
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 992px) {
   .content-wrapper {
     padding: 0 12px;

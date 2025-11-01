@@ -7,7 +7,7 @@ import org.tech.ai.deepimage.mapper.FileRecordMapper;
 import org.tech.ai.deepimage.service.FileRecordService;
 
 /**
- * 文件记录Service实现类
+ * File record Service implementation class
  * 
  * @author zgq
  * @since 2025-10-01

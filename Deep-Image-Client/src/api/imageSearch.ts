@@ -8,12 +8,12 @@ import type {
 import type { ApiResponse } from '@/types/api'
 
 /**
- * 图片搜索 API
+ * Image search API
  */
 export class ImageSearchApi {
   
   /**
-   * 搜索图片
+   * Search images
    */
   static async searchImages(params: SearchImageRequest): Promise<SearchImageResponse> {
     const response = await request.post<ApiResponse<SearchImageResponse>>(
@@ -24,7 +24,7 @@ export class ImageSearchApi {
   }
 
   /**
-   * 下载选中的图片（同步）
+   * Download selected images (synchronous)
    */
   static async downloadImages(params: ImageDownloadRequest): Promise<DownloadResult> {
     const response = await request.post<ApiResponse<DownloadResult>>(

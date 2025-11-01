@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 同步下载结果DTO
+ * Synchronous download result DTO
  */
 @Data
 @Builder
@@ -18,44 +18,44 @@ import java.util.List;
 public class DownloadResult {
 
     /**
-     * 下载状态
+     * Download status
      */
     private String status; // "completed", "partial", "failed"
     
     /**
-     * 成功下载数量
+     * Successfully downloaded count
      */
     private int successCount;
     
     /**
-     * 失败下载数量
+     * Failed download count
      */
     private int failedCount;
     
     /**
-     * 总数量
+     * Total count
      */
     private int totalCount;
     
     /**
-     * 耗时（秒）
+     * Elapsed time (seconds)
      */
     private long totalTimeSeconds;
     
     /**
-     * 成功下载的文件ID列表
+     * Successfully downloaded file ID list
      */
     @Builder.Default
     private List<Long> downloadedFileIds = new ArrayList<>();
     
     /**
-     * 失败图片信息
+     * Failed image information
      */
     @Builder.Default
     private List<FailedImageInfo> failedImages = new ArrayList<>();
     
     /**
-     * 失败图片信息
+     * Failed image information
      */
     @Data
     @Builder
