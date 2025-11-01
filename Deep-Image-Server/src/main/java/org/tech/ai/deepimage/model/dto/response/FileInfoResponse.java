@@ -67,6 +67,11 @@ public class FileInfoResponse {
     private String visibility;
     
     /**
+     * User ID of the file owner
+     */
+    private Long userId;
+    
+    /**
      * Tags associated with file
      */
     private List<TagResponse> tags;

@@ -76,6 +76,8 @@ export interface FileInfoResponse {
   createdAt: string
   /** Update time */
   updatedAt: string
+  /** User ID of the file owner */
+  userId?: number
   /** Associated tags */
   tags?: TagInfo[]
 }

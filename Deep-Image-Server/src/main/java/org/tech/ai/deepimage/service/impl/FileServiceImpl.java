@@ -871,6 +871,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .businessType(fileRecord.getBusinessType())
                 .status(fileRecord.getStatus())
                 .visibility(fileRecord.getVisibility())
+                .userId(fileRecord.getUserId())
                 .tags(tags)
                 .referenceCount(fileRecord.getReferenceCount())
                 .createdAt(fileRecord.getCreatedAt())

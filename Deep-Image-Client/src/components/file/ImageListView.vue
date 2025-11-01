@@ -23,7 +23,7 @@
             {{ sortOrder === 'asc' ? '↑' : '↓' }}
           </span>
         </div>
-        <div v-if="!selectionMode" class="header-cell actions-col">操作</div>
+        <div v-if="!selectionMode && hasOwnerImages" class="header-cell actions-col">操作</div>
       </div>
 
       <!-- List content -->
@@ -80,7 +80,7 @@
             <div class="date-secondary">{{ formatDateTime(image.createdAt) }}</div>
           </div>
           
-          <div v-if="!selectionMode" class="list-cell actions-col">
+          <div v-if="!selectionMode && isOwner(image)" class="list-cell actions-col">
             <div class="action-buttons">
               <a-button 
                 type="text" 
@@ -155,7 +155,11 @@ import {
 } from '@ant-design/icons-vue'
 import { formatFileSize } from '../../utils/file'
 import { formatDateTime } from '../../utils/time'
+import { useUserStore } from '../../stores/useUserStore'
 import type { FileInfoResponse } from '../../types/file'
+
+// Get current user
+const userStore = useUserStore()
 
 // Props
 interface Props {
@@ -185,6 +189,17 @@ const emit = defineEmits<{
 const isImageSelected = (fileId: number) => {
   return props.selectedFileIds?.has(fileId) || false
 }
+
+// Check if current user is the owner of the file
+const isOwner = (image: FileInfoResponse): boolean => {
+  if (!image.userId) return false
+  return image.userId === userStore.profile?.id
+}
+
+// Check if any image belongs to current user (for header column visibility)
+const hasOwnerImages = computed(() => {
+  return props.images.some(image => isOwner(image))
+})
 
 // Toggle selection
 const handleToggleSelect = (fileId: number) => {

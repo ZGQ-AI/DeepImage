@@ -23,8 +23,8 @@
               @error="handleImageError"
               loading="lazy"
             />
-            <!-- Action overlay shown on hover -->
-            <div v-if="!selectionMode" class="image-overlay">
+            <!-- Action overlay shown on hover (only for file owner) -->
+            <div v-if="!selectionMode && isOwner(image)" class="image-overlay">
               <div class="image-actions">
                 <a-button 
                   type="text" 
@@ -125,7 +125,11 @@ import {
   DeleteOutlined 
 } from '@ant-design/icons-vue'
 import { formatFileSize } from '../../utils/file'
+import { useUserStore } from '../../stores/useUserStore'
 import type { FileInfoResponse } from '../../types/file'
+
+// Get current user
+const userStore = useUserStore()
 
 // Get filename without extension
 const getFileNameWithoutExtension = (filename: string, fileExtension?: string): string => {
@@ -179,6 +183,12 @@ const emit = defineEmits<{
 // Check if image is selected
 const isImageSelected = (fileId: number) => {
   return props.selectedFileIds?.has(fileId) || false
+}
+
+// Check if current user is the owner of the file
+const isOwner = (image: FileInfoResponse): boolean => {
+  if (!image.userId) return false
+  return image.userId === userStore.profile?.id
 }
 
 // Toggle selection
