@@ -21,6 +21,7 @@ import org.tech.ai.deepimage.service.ImageDownloadService;
 import org.tech.ai.deepimage.service.MinioService;
 import org.tech.ai.deepimage.util.FileUtil;
 import org.tech.ai.deepimage.util.HashUtil;
+import org.tech.ai.deepimage.util.MetadataUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
     private final FileTagService fileTagService;
     private final MinioProperties minioProperties;
     private final ImageDownloadProperties downloadProperties;
+    private final MetadataUtil metadataUtil;
 
     @Override
     @Transactional
@@ -130,6 +132,10 @@ public class ImageDownloadServiceImpl implements ImageDownloadService {
                 // Calculate file hash
                 String fileHash = HashUtil.sha256(imageData);
                 fileRecord.setFileHash(fileHash);
+
+                // Extract metadata
+                String metadataJson = metadataUtil.extractMetadataAsJson(downloadProperties.getBusinessType(), imageData, contentType);
+                fileRecord.setMetadata(metadataJson);
 
                 // Add file record to batch save list (not saved to database yet)
                 fileRecordsToSave.add(fileRecord);

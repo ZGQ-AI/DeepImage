@@ -32,12 +32,12 @@
         <p>目前还没有用户分享公开照片，请稍后再来看看</p>
       </div>
 
-      <!-- Load more button -->
-      <div v-if="images.length > 0 && hasMore" class="load-more-container">
-        <a-button type="primary" :loading="loading" @click="loadMore">
-          加载更多
-        </a-button>
-      </div>
+      <!-- Load more trigger (invisible element at bottom for scroll detection) -->
+      <div 
+        v-if="images.length > 0 && hasMore" 
+        ref="loadMoreTrigger"
+        class="load-more-trigger"
+      ></div>
     </div>
 
     <!-- Image preview modal -->
@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { PictureOutlined } from '@ant-design/icons-vue'
 import ImageMasonryView from '../components/file/ImageMasonryView.vue'
@@ -93,7 +93,7 @@ const loading = ref(false)
 const previewVisible = ref(false)
 const currentImageIndex = ref(0)
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(50)
 const hasMore = ref(true)
 
 // Properties modal state
@@ -140,11 +140,53 @@ const loadPublicPhotos = async (page = 1, append = false) => {
   }
 }
 
+// Load more trigger element ref
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+
+// Intersection Observer for auto-loading on scroll
+let observer: IntersectionObserver | null = null
+
 // Load more photos
 const loadMore = () => {
   if (!loading.value && hasMore.value) {
     loadPublicPhotos(currentPage.value + 1, true)
   }
+}
+
+// Setup intersection observer for auto-loading
+const setupIntersectionObserver = () => {
+  if (typeof IntersectionObserver === 'undefined') {
+    // Fallback for browsers without IntersectionObserver
+    return
+  }
+
+  // Cleanup existing observer
+  if (observer) {
+    observer.disconnect()
+  }
+
+  // Create new observer
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !loading.value && hasMore.value) {
+          loadMore()
+        }
+      })
+    },
+    {
+      root: null,
+      rootMargin: '200px', // Start loading 200px before reaching the bottom
+      threshold: 0.1
+    }
+  )
+
+  // Observe the trigger element
+  nextTick(() => {
+    if (loadMoreTrigger.value) {
+      observer?.observe(loadMoreTrigger.value)
+    }
+  })
 }
 
 // Handle image preview
@@ -337,22 +379,44 @@ const handleImageDelete = async (image: FileInfoResponse) => {
   })
 }
 
+// Watch for images changes to setup observer
+watch(
+  () => [images.value.length, hasMore.value],
+  () => {
+    setupIntersectionObserver()
+  }
+)
+
 // Load photos on mount
 onMounted(() => {
   loadPublicPhotos(1, false)
+  setupIntersectionObserver()
+})
+
+// Cleanup observer on unmount
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
 })
 </script>
 
 <style scoped>
 .home-view {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  width: 100%;
+  margin-left: -20px;
+  margin-right: -20px;
+  width: calc(100% + 40px);
 }
 
 .home-header {
   text-align: center;
   margin-bottom: 48px;
+  padding: 0 24px;
 }
 
 .home-header h1 {
@@ -370,6 +434,8 @@ onMounted(() => {
 
 .gallery-container {
   min-height: 400px;
+  margin: 0;
+  padding: 0;
 }
 
 .loading-container,
@@ -379,6 +445,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 24px;
+  margin: 0 24px;
   text-align: center;
 }
 
@@ -399,15 +466,19 @@ onMounted(() => {
   margin: 0;
 }
 
-.load-more-container {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0;
+.load-more-trigger {
+  height: 1px;
+  width: 100%;
+  margin: 20px 0;
+  visibility: hidden;
 }
 
 @media (max-width: 768px) {
   .home-view {
-    padding: 16px;
+    padding: 0;
+    margin-left: -20px;
+    margin-right: -20px;
+    width: calc(100% + 40px);
   }
 
   .home-header h1 {

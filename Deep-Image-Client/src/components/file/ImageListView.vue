@@ -85,14 +85,6 @@
               <a-button 
                 type="text" 
                 size="small" 
-                @click.stop="handlePreview(image)"
-                title="预览"
-              >
-                <EyeOutlined />
-              </a-button>
-              <a-button 
-                type="text" 
-                size="small" 
                 @click.stop="handleDownload(image)"
                 title="下载"
               >
@@ -101,10 +93,10 @@
               <a-button 
                 type="text" 
                 size="small" 
-                @click.stop="handleRename(image)"
-                title="重命名"
+                @click.stop="handleViewDetails(image)"
+                title="文件详情"
               >
-                <EditOutlined />
+                <InfoCircleOutlined />
               </a-button>
               <a-button 
                 type="text" 
@@ -140,6 +132,13 @@
       <PictureOutlined :style="{ fontSize: '48px', color: '#d9d9d9' }" />
       <p>暂无图片</p>
     </div>
+
+    <!-- File Details Drawer -->
+    <FileMetadataDrawer
+      v-model:open="metadataDrawerOpen"
+      :file-info="selectedFileForMetadata"
+      @save="handleDrawerSave"
+    />
   </div>
 </template>
 
@@ -147,12 +146,12 @@
 import { ref, computed } from 'vue'
 import { 
   PictureOutlined, 
-  EyeOutlined,
   DownloadOutlined,
-  EditOutlined,
+  InfoCircleOutlined,
   TagOutlined,
   DeleteOutlined 
 } from '@ant-design/icons-vue'
+import FileMetadataDrawer from './FileMetadataDrawer.vue'
 import { formatFileSize } from '../../utils/file'
 import { formatDateTime } from '../../utils/time'
 import { useUserStore } from '../../stores/useUserStore'
@@ -184,6 +183,10 @@ const emit = defineEmits<{
   loadMore: []
   toggleSelect: [fileId: number]
 }>()
+
+// Drawer state
+const metadataDrawerOpen = ref(false)
+const selectedFileForMetadata = ref<FileInfoResponse | null>(null)
 
 // Check if image is selected
 const isImageSelected = (fileId: number) => {
@@ -330,8 +333,26 @@ const handleDownload = (image: FileInfoResponse) => {
   emit('download', image)
 }
 
-const handleRename = (image: FileInfoResponse) => {
-  emit('rename', image)
+const handleViewDetails = (image: FileInfoResponse) => {
+  selectedFileForMetadata.value = image
+  metadataDrawerOpen.value = true
+}
+
+// Handle save from drawer (filename and/or visibility)
+const handleDrawerSave = async (fileId: number, updateData: { originalFilename?: string; visibility?: string }) => {
+  // Find the file
+  const image = props.images.find(img => img.fileId === fileId)
+  if (image) {
+    // Create a new image object with updated properties
+    const updatedImage = { 
+      ...image, 
+      ...(updateData.originalFilename && { originalFilename: updateData.originalFilename }),
+      ...(updateData.visibility && { visibility: updateData.visibility })
+    }
+    // Emit rename event (backward compatible with existing parent handlers)
+    // The parent component will detect changes and handle API call
+    emit('rename', updatedImage)
+  }
 }
 
 const handleManageTags = (image: FileInfoResponse) => {
@@ -480,6 +501,7 @@ const handleDelete = (image: FileInfoResponse) => {
   word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;

@@ -27,6 +27,7 @@ import org.tech.ai.deepimage.service.*;
 import org.tech.ai.deepimage.util.FileUtil;
 import org.tech.ai.deepimage.util.HashUtil;
 import org.tech.ai.deepimage.util.HttpRequestUtil;
+import org.tech.ai.deepimage.util.MetadataUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -56,6 +57,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
     private final FileAccessLogService fileAccessLogService;
     private final UserService userService;
     private final FileRecordService fileRecordService;
+    private final MetadataUtil metadataUtil;
 
     // ========== File Upload ==========
 
@@ -102,16 +104,19 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
             String fileUrl = minioService.uploadFile(
                     new ByteArrayInputStream(fileBytes), objectName, file.getContentType());
 
-            // 8. Save file record
-            FileRecord fileRecord = buildFileRecord(userId, file, objectName, fileUrl, fileHash, request);
+            // 8. Extract metadata
+            String metadataJson = metadataUtil.extractMetadataAsJson(request.getBusinessType(), fileBytes, file.getContentType());
+
+            // 9. Save file record
+            FileRecord fileRecord = buildFileRecord(userId, file, objectName, fileUrl, fileHash, request, metadataJson);
             save(fileRecord);
 
-            // 9. Associate tags (using FileTagService)
+            // 10. Associate tags (using FileTagService)
             if (CollectionUtils.isNotEmpty(request.getTagIds())) {
                 fileTagService.batchSetFileTags(fileRecord.getId(), userId, request.getTagIds());
             }
 
-            // 10. Log access
+            // 11. Log access
             logFileAccess(fileRecord.getId(), userId, AccessTypeEnum.UPLOAD.name());
 
             log.info("File upload successful: fileId={}", fileRecord.getId());
@@ -819,7 +824,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
      * Build FileRecord entity
      */
     private FileRecord buildFileRecord(Long userId, MultipartFile file, String objectName,
-                                       String fileUrl, String fileHash, UploadFileRequest request) {
+                                       String fileUrl, String fileHash, UploadFileRequest request, String metadataJson) {
         FileRecord fileRecord = new FileRecord();
         fileRecord.setUserId(userId);
         fileRecord.setBucketName(minioProperties.getBucket());
@@ -833,6 +838,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
         fileRecord.setVisibility(FileVisibilityEnum.PRIVATE.name());
         fileRecord.setFileUrl(fileUrl);
         fileRecord.setFileHash(fileHash);
+        fileRecord.setMetadata(metadataJson);
         // Database default values: delete_flag=0, reference_count=0, created_at=now, updated_at=now
         return fileRecord;
     }
@@ -876,6 +882,7 @@ public class FileServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> i
                 .referenceCount(fileRecord.getReferenceCount())
                 .createdAt(fileRecord.getCreatedAt())
                 .updatedAt(fileRecord.getUpdatedAt())
+                .metadata(fileRecord.getMetadata())
                 .build();
     }
 

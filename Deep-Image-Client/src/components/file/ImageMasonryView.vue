@@ -2,7 +2,7 @@
   <div class="grid-view">
     <div class="grid-container">
       <div
-        v-for="image in images"
+        v-for="image in shuffledImages"
         :key="image.fileId"
         class="grid-item"
         :class="{ 'selected': isImageSelected(image.fileId) }"
@@ -23,56 +23,39 @@
               @error="handleImageError"
               loading="lazy"
             />
-            <!-- Action overlay shown on hover (only for file owner) -->
-            <div v-if="!selectionMode && isOwner(image)" class="image-overlay">
-              <div class="image-actions">
+            <!-- More action button (only visible on hover, positioned at bottom right of image) -->
+            <div v-if="!selectionMode && isOwner(image)" class="image-more-button">
+              <a-dropdown 
+                :trigger="['click']"
+                placement="bottomRight"
+              >
                 <a-button 
                   type="text" 
-                  size="small" 
-                  @click.stop="handlePreview(image)"
-                  class="action-btn"
-                  title="预览"
+                  size="small"
+                  class="more-btn"
+                  @click.stop
                 >
-                  <EyeOutlined />
+                  <MoreOutlined />
                 </a-button>
-                <a-button 
-                  type="text" 
-                  size="small" 
-                  @click.stop="handleDownload(image)"
-                  class="action-btn"
-                  title="下载"
-                >
-                  <DownloadOutlined />
-                </a-button>
-                <a-button 
-                  type="text" 
-                  size="small" 
-                  @click.stop="handleRename(image)"
-                  class="action-btn"
-                  title="重命名"
-                >
-                  <EditOutlined />
-                </a-button>
-                <a-button 
-                  type="text" 
-                  size="small" 
-                  @click.stop="handleManageTags(image)"
-                  class="action-btn"
-                  title="管理标签"
-                >
-                  <TagOutlined />
-                </a-button>
-                <a-button 
-                  type="text" 
-                  size="small" 
-                  danger
-                  @click.stop="handleDelete(image)"
-                  class="action-btn"
-                  title="删除"
-                >
-                  <DeleteOutlined />
-                </a-button>
-              </div>
+                <template #overlay>
+                  <a-menu @click="(e: { key: string }) => handleMenuClick(e, image)">
+                    <a-menu-item key="download">
+                      <DownloadOutlined /> 下载
+                    </a-menu-item>
+                    <a-menu-divider />
+                    <a-menu-item key="details">
+                      <EditOutlined /> 文件详情
+                    </a-menu-item>
+                    <a-menu-item key="tags">
+                      <TagOutlined /> 管理标签
+                    </a-menu-item>
+                    <a-menu-divider />
+                    <a-menu-item key="delete" danger>
+                      <DeleteOutlined /> 删除
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+              </a-dropdown>
             </div>
           </div>
           
@@ -108,25 +91,34 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="!loading && images.length === 0" class="empty-grid">
+    <div v-if="!loading && shuffledImages.length === 0" class="empty-grid">
       <PictureOutlined :style="{ fontSize: '48px', color: '#d9d9d9' }" />
       <p>暂无图片</p>
     </div>
+
+    <!-- File Details Drawer -->
+    <FileMetadataDrawer
+      v-model:open="metadataDrawerOpen"
+      :file-info="selectedFileForMetadata"
+      @save="handleDrawerSave"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { 
   PictureOutlined, 
-  EyeOutlined,
   DownloadOutlined,
   EditOutlined,
   TagOutlined,
-  DeleteOutlined 
+  DeleteOutlined,
+  MoreOutlined
 } from '@ant-design/icons-vue'
 import { formatFileSize } from '../../utils/file'
 import { useUserStore } from '../../stores/useUserStore'
 import type { FileInfoResponse } from '../../types/file'
+import FileMetadataDrawer from './FileMetadataDrawer.vue'
 
 // Get current user
 const userStore = useUserStore()
@@ -167,6 +159,35 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false
+})
+
+// Shuffled images for better distribution in masonry layout
+// Uses deterministic hash-based shuffling to ensure stable but randomized order
+const shuffledImages = computed(() => {
+  // Only shuffle if we have images
+  if (props.images.length === 0) return []
+  
+  // Create a deterministic hash function based on fileId
+  const hash = (n: number): number => {
+    let h = n
+    h = ((h >> 16) ^ h) * 0x45d9f3b
+    h = ((h >> 16) ^ h) * 0x45d9f3b
+    h = (h >> 16) ^ h
+    return h >>> 0
+  }
+  
+  // Sort images by hash value, which creates a deterministic but seemingly random order
+  // This ensures:
+  // 1. Same images always appear in the same order (stable)
+  // 2. New images will appear in different positions (distributed)
+  // 3. Images are evenly distributed across columns
+  const shuffled = [...props.images].sort((a, b) => {
+    const hashA = hash(a.fileId)
+    const hashB = hash(b.fileId)
+    return hashA - hashB
+  })
+  
+  return shuffled
 })
 
 // Emits
@@ -237,17 +258,63 @@ const handleManageTags = (image: FileInfoResponse) => {
 const handleDelete = (image: FileInfoResponse) => {
   emit('delete', image)
 }
+
+// Metadata drawer state
+const metadataDrawerOpen = ref(false)
+const selectedFileForMetadata = ref<FileInfoResponse | null>(null)
+
+const handleViewMetadata = (image: FileInfoResponse) => {
+  selectedFileForMetadata.value = image
+  metadataDrawerOpen.value = true
+}
+
+// Handle save from drawer (filename and/or visibility)
+const handleDrawerSave = async (fileId: number, updateData: { originalFilename?: string; visibility?: string }) => {
+  // Find the file (search in original images array, not shuffled)
+  const image = props.images.find(img => img.fileId === fileId)
+  if (image) {
+    // Create a new image object with updated properties
+    const updatedImage = { 
+      ...image, 
+      ...(updateData.originalFilename && { originalFilename: updateData.originalFilename }),
+      ...(updateData.visibility && { visibility: updateData.visibility })
+    }
+    // Emit rename event (backward compatible with existing parent handlers)
+    // The parent component will detect changes and handle API call
+    emit('rename', updatedImage)
+  }
+}
+
+// Handle menu item click
+const handleMenuClick = ({ key }: { key: string }, image: FileInfoResponse) => {
+  switch (key) {
+    case 'download':
+      handleDownload(image)
+      break
+    case 'details':
+      handleViewMetadata(image)
+      break
+    case 'tags':
+      handleManageTags(image)
+      break
+    case 'delete':
+      handleDelete(image)
+      break
+  }
+}
 </script>
 
 <style scoped>
 .grid-view {
   width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .grid-container {
   column-count: 4;
-  column-gap: 16px;
-  padding: 8px;
+  column-gap: 4px;
+  padding: 0;
 }
 
 .grid-item {
@@ -255,7 +322,7 @@ const handleDelete = (image: FileInfoResponse) => {
   cursor: pointer;
   width: 100%;
   break-inside: avoid;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .grid-item.selected .image-wrapper {
@@ -265,18 +332,23 @@ const handleDelete = (image: FileInfoResponse) => {
 .image-wrapper {
   position: relative;
   width: 100%;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: transparent;
+  box-shadow: none;
   transition: all 0.3s ease;
+}
+
+.image-wrapper:hover {
+  z-index: 5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .image-container {
   position: relative;
   width: 100%;
-  background: #f5f5f5;
-  border-radius: 12px 12px 0 0;
+  background: #1a1a1a;
+  border-radius: 8px 8px 0 0;
   overflow: hidden;
 }
 
@@ -291,66 +363,83 @@ const handleDelete = (image: FileInfoResponse) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.image-wrapper:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
 .grid-image {
   width: 100%;
   height: auto;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .image-wrapper:hover .grid-image {
-  transform: scale(1.02);
+  transform: scale(1.05);
 }
 
-.image-overlay {
+/* More button (bottom right corner, only visible on hover) */
+.image-more-button {
   position: absolute;
-  top: 0;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.image-wrapper:hover .image-more-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.more-btn {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  color: white !important;
+  border: none !important;
+  padding: 0;
+}
+
+.more-btn:hover {
+  background: rgba(0, 0, 0, 0.8) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
+  color: white !important;
+}
+
+.more-btn :deep(.anticon) {
+  font-size: 16px;
+}
+
+/* Image card info area (only visible on hover, overlay style) */
+.image-card-info {
+  position: absolute;
+  bottom: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.3) 70%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
+  padding: 16px 12px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  border-radius: 0 0 8px 8px;
   opacity: 0;
   transition: opacity 0.3s ease;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  pointer-events: none;
 }
 
-.image-container:hover .image-overlay {
+.image-wrapper:hover .image-card-info {
   opacity: 1;
-}
-
-.image-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 12px;
-  width: 100%;
-}
-
-/* Image card info area (always visible) */
-.image-card-info {
-  padding: 12px;
-  background: white;
-  border-radius: 0 0 12px 12px;
 }
 
 .image-card-title {
   font-size: 14px;
   font-weight: 500;
-  color: #1f2937;
-  margin: 0 0 8px 0;
+  color: white;
+  margin: 0 0 6px 0;
   word-break: break-all;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -358,17 +447,19 @@ const handleDelete = (image: FileInfoResponse) => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .image-card-meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .image-card-size {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .image-card-tags {
@@ -382,6 +473,15 @@ const handleDelete = (image: FileInfoResponse) => {
   font-size: 11px;
   padding: 2px 8px;
   line-height: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(4px);
+}
+
+.image-card-tags :deep(.ant-tag:hover) {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 :deep(.action-btn) {
@@ -442,31 +542,20 @@ const handleDelete = (image: FileInfoResponse) => {
 @media (max-width: 768px) {
   .grid-container {
     column-count: 2;
-    column-gap: 12px;
-    padding: 4px;
+    column-gap: 3px;
   }
   
   .grid-item {
-    margin-bottom: 12px;
+    margin-bottom: 3px;
   }
   
   .image-card-info {
-    padding: 10px;
+    padding: 12px 10px 10px;
   }
   
   .image-card-title {
     font-size: 13px;
     margin-bottom: 6px;
-  }
-  
-  .image-actions {
-    gap: 6px;
-    padding: 6px;
-  }
-  
-  :deep(.action-btn) {
-    width: 28px;
-    height: 28px;
   }
 }
 
@@ -477,11 +566,11 @@ const handleDelete = (image: FileInfoResponse) => {
   }
   
   .grid-item {
-    margin-bottom: 10px;
+    margin-bottom: 2px;
   }
   
   .image-card-info {
-    padding: 8px;
+    padding: 12px 8px 8px;
   }
   
   .image-card-title {

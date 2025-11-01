@@ -90,5 +90,10 @@ public class FileInfoResponse {
      * Update time
      */
     private LocalDateTime updatedAt;
+    
+    /**
+     * Extended metadata (JSON string format), contains file-specific metadata like image width/height, etc.
+     */
+    private String metadata;
 }
 

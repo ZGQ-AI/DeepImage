@@ -166,13 +166,6 @@
       @tags-updated="handleTagsUpdated"
     />
 
-    <!-- Image properties modal -->
-    <ImagePropertiesModal
-      v-model:open="propertiesModalVisible"
-      :file-detail="currentFileDetail"
-      :loading="updatingProperties"
-      @confirm="handlePropertiesConfirm"
-    />
   </div>
 </template>
 
@@ -186,8 +179,7 @@ import ImageListView from '../components/file/ImageListView.vue'
 import ViewModeToggle from '../components/file/ViewModeToggle.vue'
 import FileTagManager from '../components/file/FileTagManager.vue'
 import BatchToolbar from '../components/common/BatchToolbar.vue'
-import ImagePropertiesModal from '../components/common/ImagePropertiesModal.vue'
-import { listFiles, downloadFile, batchDeleteFiles, updateFileProperties, getFileDetail } from '../api/file'
+import { listFiles, downloadFile, batchDeleteFiles, updateFileProperties } from '../api/file'
 import { listTags } from '../api/tag'
 import { BusinessType } from '../types/file'
 import { PAGE_TITLES, PAGE_DESCRIPTIONS, BUTTON_TEXTS, MESSAGES, UPLOAD_CONFIG, PAGINATION_CONFIG, SORT_OPTIONS, PLACEHOLDERS, STYLE_CONFIG } from '../config/constants'
@@ -205,10 +197,6 @@ const previewImage = ref<FileInfoResponse | null>(null)
 const currentImageIndex = ref(0)
 const tagManagerVisible = ref(false)
 const currentImageForTag = ref<FileInfoResponse | null>(null)
-const propertiesModalVisible = ref(false)
-const currentImageForRename = ref<FileInfoResponse | null>(null)
-const currentFileDetail = ref<import('../types/file').FileDetailResponse | null>(null)
-const updatingProperties = ref(false)
 const availableTags = ref<TagResponse[]>([])
 const selectedTagId = ref<number | null>(null)
 
@@ -404,62 +392,54 @@ const handleImageDownload = async (image: FileInfoResponse) => {
 }
 
 const handleImageRename = async (image: FileInfoResponse) => {
-  currentImageForRename.value = image
-  try {
-    // Get file detail with sensitive information filtered
-    const response = await getFileDetail(image.fileId, true)
-    if (response.data.code === 200 && response.data.data) {
-      currentFileDetail.value = response.data.data
-      propertiesModalVisible.value = true
-    } else {
-      message.error('获取文件详情失败')
-    }
-  } catch (error) {
-    console.error('Failed to get file detail:', error)
-    message.error('获取文件详情失败')
-  }
-}
-
-const handlePropertiesConfirm = async (updateData: { originalFilename?: string; visibility?: string }) => {
-  if (!currentImageForRename.value) return
+  // Check if this is from drawer save (has updated properties)
+  // We need to check against the current image in the list
+  const currentImage = images.value.find(img => img.fileId === image.fileId)
+  const hasFilenameChange = currentImage && currentImage.originalFilename !== image.originalFilename
+  const hasVisibilityChange = currentImage && (currentImage.visibility || 'PRIVATE') !== (image.visibility || 'PRIVATE')
+  const isDrawerSave = hasFilenameChange || hasVisibilityChange
   
-  const image = currentImageForRename.value
-  
-  try {
-    updatingProperties.value = true
-    message.loading({
-      content: '正在更新文件属性...',
-      key: `update-props-${image.fileId}`,
-      duration: 0
-    })
-
-    // Call update properties API
-    const response = await updateFileProperties(image.fileId, {
-      originalFilename: updateData.originalFilename,
-      visibility: updateData.visibility as 'PRIVATE' | 'PUBLIC' | undefined
-    })
-    
-    if (response.data.code === 200 && response.data.data) {
-      propertiesModalVisible.value = false
-      
-      // Reload image list to reflect changes (especially for visibility changes that might affect filtering/sorting)
-      await loadImages()
-      
-      message.success({
-        content: '文件属性更新成功',
-        key: `update-props-${image.fileId}`
+  if (isDrawerSave) {
+    // Direct update from drawer (filename and/or visibility)
+    try {
+      message.loading({
+        content: '正在更新文件属性...',
+        key: `update-${image.fileId}`,
+        duration: 0
       })
-    } else {
-      throw new Error(response.data.message || '更新失败')
+
+      const updateData: { originalFilename?: string; visibility?: 'PRIVATE' | 'PUBLIC' } = {}
+      if (hasFilenameChange) {
+        updateData.originalFilename = image.originalFilename
+      }
+      if (hasVisibilityChange) {
+        updateData.visibility = (image.visibility || 'PRIVATE') as 'PRIVATE' | 'PUBLIC'
+      }
+
+      const response = await updateFileProperties(image.fileId, updateData)
+      
+      if (response.data.code === 200) {
+        // Reload image list to reflect changes
+        await loadImages()
+        
+        const changes = []
+        if (hasFilenameChange) changes.push(`文件名：${image.originalFilename}`)
+        if (hasVisibilityChange) changes.push(`可见性：${image.visibility === 'PUBLIC' ? '公开' : '私有'}`)
+        
+        message.success({
+          content: `更新成功：${changes.join('，')}`,
+          key: `update-${image.fileId}`
+        })
+      } else {
+        throw new Error(response.data.message || '更新失败')
+      }
+    } catch (error) {
+      console.error('Failed to update file properties:', error)
+      message.error({
+        content: `更新失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        key: `update-${image.fileId}`
+      })
     }
-  } catch (error) {
-    console.error('Failed to update file properties:', error)
-    message.error({
-      content: `更新失败: ${error instanceof Error ? error.message : '未知错误'}`,
-      key: `update-props-${image.fileId}`
-    })
-  } finally {
-    updatingProperties.value = false
   }
 }
 
@@ -642,14 +622,19 @@ onMounted(() => {
 
 <style scoped>
 .image-gallery {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  width: 100%;
+  margin-left: -20px;
+  margin-right: -20px;
+  width: calc(100% + 40px);
 }
 
 .gallery-header {
   text-align: center;
   margin-bottom: 48px;
+  padding: 0 24px;
 }
 
 .gallery-header h1 {
@@ -695,7 +680,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  padding: 0 8px;
+  padding: 0 24px;
 }
 
 .toolbar-left {
@@ -719,6 +704,8 @@ onMounted(() => {
 .upload-section {
   margin-bottom: 32px;
   padding: 24px;
+  margin-left: 24px;
+  margin-right: 24px;
   background: #fafafa;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
@@ -730,6 +717,8 @@ onMounted(() => {
   align-items: center;
   padding: 16px 24px;
   margin-bottom: 16px;
+  margin-left: 24px;
+  margin-right: 24px;
   background: #f0f9ff;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
@@ -748,6 +737,8 @@ onMounted(() => {
 
 .images-container {
   width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .image-card {

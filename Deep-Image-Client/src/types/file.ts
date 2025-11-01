@@ -80,6 +80,10 @@ export interface FileInfoResponse {
   userId?: number
   /** Associated tags */
   tags?: TagInfo[]
+  /** Extended metadata (JSON string) */
+  metadata?: string | null
+  /** File visibility: PRIVATE, PUBLIC, SHARED */
+  visibility?: string
 }
 
 

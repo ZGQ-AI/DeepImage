@@ -19,7 +19,7 @@ CREATE TABLE di_file_records (
     file_url VARCHAR(1000) NOT NULL,
     thumbnail_url VARCHAR(1000),
     file_hash VARCHAR(64) NOT NULL,
-    metadata JSONB,
+    metadata TEXT,
     reference_count INT DEFAULT 0,
     delete_flag SMALLINT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
